@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title><%= htmlWebpackPlugin.options.title %></title>
+    <meta name="description" content="<%= htmlWebpackPlugin.options.description %>"/>
+</head>
+<body>
+<div id="root"></div>
+<% for (var i in htmlWebpackPlugin.options.files && htmlWebpackPlugin.options.files.js) { %>
+<script crossorigin type="text/javascript" src="<%= htmlWebpackPlugin.options.files.js[i].url %>"></script>
+<% } %>
+
+</body>
+</html>

@@ -1,0 +1,47 @@
+module.exports = {
+  env: {
+    browser: true,
+    es6: true,
+  },
+  extends: "airbnb",
+  parser: "@typescript-eslint/parser",
+  globals: {
+    Atomics: "readonly",
+    SharedArrayBuffer: "readonly",
+  },
+  parserOptions: {
+    ecmaFeatures: {
+      jsx: true,
+    },
+    ecmaVersion: 2018,
+    sourceType: "module",
+  },
+  plugins: ["react", "@typescript-eslint/eslint-plugin"],
+  rules: {
+    "global-require": 0,
+    "import/no-unresolved": 0,
+    quotes: ["error", "double"],
+    "import/extensions": 0,
+    "@typescript-eslint/no-unused-vars": ["error"],
+    "react/jsx-filename-extension": [
+      2,
+      { extensions: [".js", ".jsx", ".ts", ".tsx"] },
+    ],
+    "react/react-in-jsx-scope": 0,
+    "react/function-component-definition": [
+      1,
+      {
+        namedComponents: "arrow-function",
+      },
+    ],
+    "react/jsx-props-no-spreading": "off",
+    "class-methods-use-this": "off",
+    "prefer-promise-reject-errors": "off",
+    "import/prefer-default-export": "off",
+    "array-callback-return": "off",
+    "consistent-return": "off",
+    "max-len": "off",
+    camelcase: "off",
+    "no-return-await": "off",
+  },
+};

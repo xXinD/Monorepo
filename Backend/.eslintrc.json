@@ -1,0 +1,38 @@
+{
+  "env": {
+    "node": true
+  },
+  "extends": "eslint:recommended",
+  "parserOptions": {
+    "ecmaVersion": 12
+  },
+  "globals": {
+    "Promise": "readonly"
+  },
+  "rules": {
+    "no-console": "off",
+    "no-var": "error",
+    "prefer-const": "error",
+    "quotes": ["error", "single"],
+    "semi": ["error", "always"],
+    "no-unused-vars": "warn",
+    "no-use-before-define": ["error", { "functions": false }],
+    "require-await": "error",
+    "valid-jsdoc": "error",
+    "max-len": "off"
+  },
+  "overrides": [
+    {
+      "files": ["*.js"],
+      "rules": {
+        "no-restricted-syntax": [
+          "error",
+          {
+            "selector": "ImportDeclaration",
+            "message": "ES6 module import is not allowed."
+          }
+        ]
+      }
+    }
+  ]
+}

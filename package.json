@@ -1,0 +1,34 @@
+{
+  "name": "Monorepo",
+  "version": "0.0.1",
+  "description": "Monorepo",
+  "main": "index.js",
+  "scripts": {
+    "start-frontend": "cd ../Monorepo/Frontend && npm run start",
+    "start-backend": "cd ../Monorepo/Backend && npm run start-dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com:XindongG/Monorepo.git"
+  },
+  "keywords": [
+    "node;Koa2;chatGPT"
+  ],
+  "author": "XinD",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/XindongG/Monorepo/issues"
+  },
+  "homepage": "https://github.com/ixindong/node-koa2-project#readme",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "Monorepo/*"
+    ]
+  },
+  "dependencies": {
+    "@types/axios": "^0.14.0",
+    "axios": "^1.3.4",
+    "typescript": "^5.0.2"
+  }
+}
