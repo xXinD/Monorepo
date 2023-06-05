@@ -24,7 +24,8 @@ export interface LiveOptions {
   roomAddress?: string;
   // 视频文件所在目录
   videoDir?: string;
-  video_dir?: string;
+  fileType?: string;
+  fileName?: string;
   // 编码器
   encoder?: string;
   // 是否开启硬件加速
@@ -106,28 +107,33 @@ async function updateLiveStreamStatus(id: string, status: number) {
  * @param {Object} ctx Koa 上下文
  * @returns {Promise<void>} Promise 对象
  */
-async function playVideoFiles(options: LiveOptions, ctx: any): Promise<unknown> {
-  if (childProcesses.has(options.uniqueId)) {
-    childProcesses.delete(options.uniqueId);
+async function playVideoFiles(
+  options: LiveOptions,
+  ctx: any
+): Promise<unknown> {
+  console.log(options, "options");
+  if (childProcesses.has(options.unique_id)) {
+    childProcesses.delete(options.unique_id);
   }
   const { controllers } = await si.graphics();
   // eslint-disable-next-line no-nested-ternary
   let graphicsEncoder: string;
   if (options.isItHardware === 1) {
     if (controllers[0].vendor === "NVIDIA") {
-      graphicsEncoder = options.encoder === "h264" ? "h264_nvenc" : "hevc_nvenc";
+      graphicsEncoder =
+        options.encoder === "h264" ? "h264_nvenc" : "hevc_nvenc";
     } else {
-      graphicsEncoder = options.encoder === "h264" ? "h264_videotoolbox" : "hevc_videotoolbox";
+      graphicsEncoder =
+        options.encoder === "h264" ? "h264_videotoolbox" : "hevc_videotoolbox";
     }
   } else {
     graphicsEncoder = options.encoder === "h264" ? "libx264" : "libx265";
   }
-  console.log(options, "options");
   const args = [
     "-re",
     "-y",
     "-i",
-    options.videoDir || options.video_dir,
+    options.videoDir,
     "-c:v",
     graphicsEncoder,
     `${options.encodingMode === 2 && "-maxrate"}`,
@@ -163,6 +169,7 @@ async function playVideoFiles(options: LiveOptions, ctx: any): Promise<unknown> 
       formatArgs.push(item);
     }
   });
+  console.log(args, 11111);
   const childProcess = spawn("ffmpeg", formatArgs);
 
   childProcess.stdout.on("data", (data) => {
@@ -171,16 +178,20 @@ async function playVideoFiles(options: LiveOptions, ctx: any): Promise<unknown> 
 
   childProcess.stderr.on("data", async (data) => {
     console.error(`stderr: ${data}`);
-    if (data.includes("auth:remote_auth:not_allowed") || data.includes("auth:remote_auth:auth_failed") || data.includes("RtmpStatusCode2NssError")) {
+    if (
+      data.includes("auth:remote_auth:not_allowed") ||
+      data.includes("auth:remote_auth:auth_failed") ||
+      data.includes("RtmpStatusCode2NssError")
+    ) {
       // 直播间被封禁
       console.log("直播间被封禁");
-      childProcesses.delete(options.uniqueId);
-      await updateLiveStreamStatus(options.uniqueId, 2);
+      childProcesses.delete(options.unique_id);
+      await updateLiveStreamStatus(options.unique_id, 2);
     }
     if (data.indexOf("Failed to update header with correct duration") !== -1) {
       // 推流任务出错
-      await LiveStream.delete(options.uniqueId);
-      childProcesses.delete(options.uniqueId);
+      await LiveStream.delete(options.unique_id);
+      childProcesses.delete(options.unique_id);
       await playVideoFiles(options, ctx);
     }
   });
@@ -192,33 +203,30 @@ async function playVideoFiles(options: LiveOptions, ctx: any): Promise<unknown> 
 
   // 当子进程退出时，将其从映射中移除
   childProcess.on("exit", async () => {
-    childProcesses.delete(options.uniqueId);
+    childProcesses.delete(options.unique_id);
     // 在数据库中删除对应的记录
-    await updateLiveStreamStatus(options.uniqueId, 1);
+    await updateLiveStreamStatus(options.unique_id, 1);
   });
   return new Promise((resolve, reject) => {
     childProcess.on("spawn", async () => {
       // 更新直播状态为 'running'
-      const live = await LiveStream.findById(options.uniqueId || options.unique_id);
+      const live = await LiveStream.findById(options.unique_id);
       if (!live) {
-        await LiveStream.create({ ...options });
+        await LiveStream.create(options);
       } else {
         await updateLiveStreamStatus(options.unique_id, 0);
       }
-      if (!childProcesses.get(options.unique_id)) {
-        childProcesses.set(options.unique_id, childProcess);
-      }
+      childProcesses.set(options.unique_id, childProcess);
       resolve(options);
     });
 
     childProcess.on("error", async (error) => {
       // 直播状态更新为错误
-      await updateLiveStreamStatus(options.uniqueId, 2);
+      await updateLiveStreamStatus(options.unique_id, 2);
       reject(error);
     });
   });
 }
-
 /**
  * 开始推流
  *
@@ -254,7 +262,7 @@ export async function stopStreaming(uniqueId: string) {
  * @description 删除直播间
  * @param {string} uniqueId 直播间唯一标识
  */
-export async function delStreaming(uniqueId: string, ctx:any) {
+export async function delStreaming(uniqueId: string, ctx: any) {
   const childProcess = childProcesses.get(uniqueId);
   const liveStream = await LiveStream.findById(uniqueId);
   if (childProcess) {

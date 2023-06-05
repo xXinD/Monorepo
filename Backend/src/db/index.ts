@@ -18,7 +18,9 @@ export async function initDb(): Promise<Database> {
     streamingAddress TEXT, -- 推流地址
     streamingCode TEXT, -- 推流密钥
     roomAddress TEXT, -- 房间地址
-    video_dir TEXT, -- 视频文件所在目录
+    fileType TEXT, -- 视频文件类型
+    videoDir TEXT, -- 视频文件所在目录
+    fileName TEXT, -- 视频文件名称
     encoder TEXT, -- 编码器
     isItHardware INTEGER, -- 是否开启硬件加速，这里我将其作为整数类型，以便存储布尔值（0表示false，1表示true）
     encodingMode INTEGER, -- 码率模式
@@ -32,7 +34,7 @@ export async function initDb(): Promise<Database> {
     simple_transition INTEGER, -- 选择简单转场效果
     complex_transition INTEGER -- 选择复杂转场效果
     start_time TEXT -- 开始时间
-  )`,
+  )`
   );
   await db.exec(
     `CREATE TABLE IF NOT EXISTS resources (
@@ -42,7 +44,7 @@ export async function initDb(): Promise<Database> {
       video_dir TEXT,
       file_type TEXT,
       update_date TEXT
-    )`,
+    )`
   );
   return db;
 }

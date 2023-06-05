@@ -37,9 +37,7 @@ export class Resources {
    * @throws {Error} 直播不存在
    * @param unique_id
    */
-  static async findById(
-    unique_id: string | number,
-  ): Promise<Resources | null> {
+  static async findById(unique_id: string | number): Promise<Resources | null> {
     const db = getDb();
     const row = await db.get("SELECT * FROM resources WHERE unique_id = ?", [
       unique_id,
@@ -60,14 +58,14 @@ export class Resources {
    */
   static async update(
     unique_id: string | number,
-    data: Partial<Resources>,
+    data: Partial<Resources>
   ): Promise<Resources> {
     const db = getDb();
     // 查询当前直播信息
-    const liveStream = await this.findById(unique_id);
+    const resources = await this.findById(unique_id);
 
-    if (!liveStream) {
-      throw new Error("直播不存在");
+    if (!resources) {
+      throw new Error("资源不存在");
     }
 
     // 更新允许修改的字段
@@ -90,7 +88,6 @@ export class Resources {
    * @param {Object} options 资源配置
    */
   static async create(options: LiveOptions): Promise<Resources> {
-    console.log(options, 11111);
     const db = getDb();
     const fields = Object.keys(options);
     const values = Object.values(options);
@@ -100,7 +97,7 @@ export class Resources {
     try {
       await db.run(
         `INSERT INTO resources (${fieldNames}) VALUES (${placeholders})`,
-        values,
+        values
       );
     } catch (error) {
       console.error("SQLite error: ", error.message);
@@ -110,10 +107,10 @@ export class Resources {
   }
 
   /**
-   * 删除数据库中的直播记录
+   * 删除数据库中的资源
    *
    * @async
-   * @param {string} unique_id 直播间 unique_id
+   * @param {string} unique_id 资源 unique_id
    * @returns {Promise<void>} Promise 对象
    */
   static async delete(uniqueId: string): Promise<void> {
@@ -130,5 +127,32 @@ export class Resources {
   static async clearAll(): Promise<void> {
     const db = getDb();
     await db.run("DELETE FROM resources");
+  }
+
+  /**
+   * 查询所有不同的 file_type 值
+   *
+   * @async
+   * @returns {Array} 返回包含所有不同 file_type 的数组。
+   */
+  static async findAllFileTypes(): Promise<string[]> {
+    const db = getDb();
+    const rows = await db.all("SELECT DISTINCT file_type FROM resources");
+    return rows.map((row) => row.file_type);
+  }
+
+  /**
+   * 根据 file_type 查询资源
+   *
+   * @async
+   * @returns {Array} 返回匹配 file_type 的资源。
+   * @param fileType
+   */
+  static async findByFileType(fileType: string): Promise<Resources[]> {
+    const db = getDb();
+    const rows = await db.all("SELECT * FROM resources WHERE file_type = ?", [
+      fileType,
+    ]);
+    return rows.map((row) => Object.assign(new Resources(), row));
   }
 }

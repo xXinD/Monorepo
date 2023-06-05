@@ -67,7 +67,7 @@ export class LiveStream {
    * @throws {Error} 直播不存在
    */
   static async findById(
-    unique_id: string | number,
+    unique_id: string | number
   ): Promise<LiveStream | null> {
     const db = getDb();
     const row = await db.get("SELECT * FROM live_streams WHERE unique_id = ?", [
@@ -89,7 +89,7 @@ export class LiveStream {
    */
   static async update(
     unique_id: string | number,
-    data: Partial<LiveStream>,
+    data: Partial<LiveStream>
   ): Promise<LiveStream> {
     const db = getDb();
 
@@ -133,13 +133,15 @@ export class LiveStream {
     const VideoResolution = await getVideoResolution(options.videoDir);
     const db = getDb();
     const data = {
-      unique_id: options.uniqueId,
+      unique_id: options.unique_id,
       name: options.name,
       streamingAddress: options.streamingAddress,
       streamingCode: options.streamingCode,
       roomAddress: options.roomAddress,
       status: "0",
-      video_dir: options.videoDir,
+      fileType: options.fileType,
+      fileName: options.fileName,
+      videoDir: options.videoDir,
       isItHardware: !!options.isItHardware,
       encoder: options.encoder ? options.encoder : "h264",
       encodingMode: options.encodingMode,
@@ -164,7 +166,7 @@ export class LiveStream {
 
     await db.run(
       `INSERT INTO live_streams (${fieldNames}) VALUES (${placeholders})`,
-      values,
+      values
     );
 
     return LiveStream.findById(options.uniqueId);

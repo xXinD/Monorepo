@@ -3,7 +3,7 @@ module.exports = {
     browser: true,
     es6: true,
   },
-  extends: "airbnb",
+  extends: ["airbnb", "prettier"],
   parser: "@typescript-eslint/parser",
   globals: {
     Atomics: "readonly",
@@ -16,7 +16,7 @@ module.exports = {
     ecmaVersion: 2018,
     sourceType: "module",
   },
-  plugins: ["react", "@typescript-eslint/eslint-plugin"],
+  plugins: ["prettier", "react", "@typescript-eslint/eslint-plugin"],
   rules: {
     "global-require": 0,
     "import/no-unresolved": 0,
@@ -43,5 +43,8 @@ module.exports = {
     "max-len": "off",
     camelcase: "off",
     "no-return-await": "off",
+    "no-use-before-defined": "off",
+    "prettier/prettier": ["error"],
+    "jsx-a11y/media-has-caption": "off",
   },
 };

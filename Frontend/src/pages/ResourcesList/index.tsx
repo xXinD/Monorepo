@@ -1,15 +1,15 @@
-import React, { useMemo, useState } from "react";
+import { FC, useMemo, useState } from "react";
 import {
   Button,
   Drawer,
   Form,
+  Input,
+  Notification,
   Popconfirm,
+  Select,
   Table,
   TableColumnProps,
-  Input,
-  Select,
   Tag,
-  Notification,
 } from "@arco-design/web-react";
 import {
   IconDelete,
@@ -18,12 +18,12 @@ import {
 } from "@arco-design/web-react/icon";
 import { useAsyncEffect } from "ahooks";
 import styles from "../LiveList/index.module.less";
-import { delLiveStream, getLiveStreamingList } from "../../api/liveApi";
-import { LiveOptions } from "../LiveList";
 import {
-  createLiveStream,
+  createResources,
+  delResources,
   getResourcesList,
   Resources,
+  updateResources,
 } from "../../api/resourcesApi";
 import { timestampToTime } from "../../utils/format";
 
@@ -47,13 +47,26 @@ const fileTypeOptions = [
     label: "视频",
     value: "video",
   },
+  {
+    label: "图片",
+    value: "Picture",
+  },
 ];
-const ResourcesList: React.FC = () => {
-  const [data, setData] = React.useState([]);
-  const [editVisible, setEditVisible] = React.useState(false);
-  const [confirmLoading, setConfirmLoading] = React.useState(false);
-  const [editData, setEditData] = useState<LiveOptions>();
+const ResourcesList: FC = () => {
+  const [data, setData] = useState([]);
+  const [editVisible, setEditVisible] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [editData, setEditData] = useState<Resources>();
   const [form] = Form.useForm();
+  const queryList = async () => {
+    const {
+      data: { data: resourcesList },
+    } = await getResourcesList();
+    setData(resourcesList);
+  };
+  useAsyncEffect(async () => {
+    await queryList();
+  }, []);
   const columns: TableColumnProps[] = [
     {
       title: "名称",
@@ -96,16 +109,20 @@ const ResourcesList: React.FC = () => {
             shape="round"
             type="text"
             icon={<IconSettings />}
-            onClick={() => {}}
+            onClick={() => {
+              form.resetFields();
+              form.setFieldsValue(_item);
+              setEditData(_item);
+              setEditVisible(true);
+            }}
           />
           <Popconfirm
             focusLock
             title="停止&删除"
             content="确认停止&删除当前直播吗？"
             onOk={async () => {
-              await delLiveStream(_item.unique_id);
-              const { data: liveSteams } = await getLiveStreamingList();
-              setData(liveSteams);
+              await delResources(_item.unique_id);
+              await queryList();
             }}
           >
             <Button shape="round" type="text" icon={<IconDelete />} />
@@ -139,17 +156,9 @@ const ResourcesList: React.FC = () => {
         placeholder: "请输入文件类型",
       },
     ],
-    [editVisible],
+    [editVisible]
   );
-  const queryList = async () => {
-    const {
-      data: { data: resourcesList },
-    } = await getResourcesList();
-    setData(resourcesList);
-  };
-  useAsyncEffect(async () => {
-    await queryList();
-  }, []);
+
   const getFormElement = (item: FormItemData) => {
     switch (item.type) {
       case "input":
@@ -171,17 +180,18 @@ const ResourcesList: React.FC = () => {
     }
   };
   const formItemRender = useMemo(
-    () => formItemData.map((item: FormItemData) => (
-      <FormItem
-        key={item.field}
-        field={item.field}
-        label={item.label}
-        rules={item.rules}
-      >
-        {getFormElement(item)}
-      </FormItem>
-    )),
-    [editVisible],
+    () =>
+      formItemData.map((item: FormItemData) => (
+        <FormItem
+          key={item.field}
+          field={item.field}
+          label={item.label}
+          rules={item.rules}
+        >
+          {getFormElement(item)}
+        </FormItem>
+      )),
+    [editVisible]
   );
 
   const addData = () => {
@@ -220,10 +230,18 @@ const ResourcesList: React.FC = () => {
           const values = form.getFieldsValue();
           values.update_date = new Date().getTime().toString();
           try {
-            await createLiveStream(values as Resources);
+            if (!editData) {
+              await createResources(values as Resources);
+            } else {
+              values.unique_id = editData.unique_id;
+              await updateResources(
+                editData.unique_id as string,
+                values as Resources
+              );
+            }
             await queryList();
             setEditVisible(false);
-          } catch (e:any) {
+          } catch (e: any) {
             Notification.error({
               title: "接口错误",
               content: e,

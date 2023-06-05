@@ -5,7 +5,8 @@
  */
 import { v4 as uuidv4 } from "uuid";
 import {
-  clearAllStreams, delStreaming,
+  clearAllStreams,
+  delStreaming,
   LiveOptions,
   startStreaming,
   stopStreaming,
@@ -13,7 +14,10 @@ import {
 import { validateLiveOptions } from "./validateLiveOptions";
 import { LiveStream } from "../models/LiveStream";
 
-type RtmpLiveOptions = Pick<LiveOptions, "streamingAddress" | "streamingCode" | "videoDir">;
+type RtmpLiveOptions = Pick<
+  LiveOptions,
+  "streamingAddress" | "streamingCode" | "videoDir"
+>;
 
 /**
  * 开始推流直播。
@@ -29,16 +33,12 @@ type RtmpLiveOptions = Pick<LiveOptions, "streamingAddress" | "streamingCode" | 
  * @throws {Error} 如果平台参数为空，则抛出异常。
  */
 export async function startLive(ctx: any) {
-  const {
-    name, streamingAddress, streamingCode, videoDir,
-  } = ctx.request.body;
-
+  const { name, streamingAddress, streamingCode } = ctx.request.body;
   // 检查必填参数是否为空
   const invalidOption = validateLiveOptions(<LiveOptions>(<RtmpLiveOptions>{
     name,
     streamingAddress,
     streamingCode,
-    videoDir,
     watermarkEnabled: false,
   }));
   if (invalidOption) {
@@ -49,17 +49,16 @@ export async function startLive(ctx: any) {
     };
     return;
   }
-
   const uniqueId = uuidv4();
 
   try {
     const res = await startStreaming(
       {
-        uniqueId,
+        unique_id: uniqueId,
         ...ctx.request.body,
         watermarkEnabled: false,
       },
-      ctx,
+      ctx
     );
     // 返回创建的直播间信息
     ctx.body = {
@@ -142,10 +141,7 @@ export async function updateLiveInfo(ctx: any) {
   // 根据提供的直播 ID 和新的直播信息更新数据库中的记录
   const afterUpdate = await LiveStream.update(id, data);
   try {
-    const res = await startStreaming(
-      afterUpdate,
-      ctx,
-    );
+    await startStreaming(afterUpdate, ctx);
     // 返回创建的直播间信息
     ctx.body = {
       message: "修改直播信息成功，已重新开始推流",
@@ -158,7 +154,6 @@ export async function updateLiveInfo(ctx: any) {
       error,
     };
   }
-  // 获取更新后的直播信息
 }
 
 /**
@@ -178,7 +173,6 @@ export async function restartLive(ctx: any) {
     ctx.status = 404;
     ctx.body = { error: "未查询找到相关直播信息" };
   } else {
-
   }
 }
 
@@ -191,10 +185,7 @@ export async function startSpecifiedLive(ctx: any) {
     ctx.body = { error: "未查询找到相关直播信息" };
   } else {
     try {
-      const res = await startStreaming(
-        liveStream,
-        ctx,
-      );
+      const res = await startStreaming(liveStream, ctx);
       // 返回创建的直播间信息
       ctx.body = {
         message: "创建直播间成功",

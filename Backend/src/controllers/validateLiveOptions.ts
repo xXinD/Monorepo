@@ -14,7 +14,15 @@ const FIELD_NAME_MAP = {
   complexTransition: "复杂转场效果",
 };
 
-const SUPPORTED_STREAMING_PROTOCOLS = ["rtmp", "rtmps", "rtmpt", "rtmpe", "rtmpte", "srt", "srtt"];
+const SUPPORTED_STREAMING_PROTOCOLS = [
+  "rtmp",
+  "rtmps",
+  "rtmpt",
+  "rtmpe",
+  "rtmpte",
+  "srt",
+  "srtt",
+];
 
 /**
  * 检查必填参数是否为空
@@ -22,7 +30,10 @@ const SUPPORTED_STREAMING_PROTOCOLS = ["rtmp", "rtmps", "rtmpt", "rtmpe", "rtmpt
  * @param {string[]} requiredParams - 必填参数列表
  * @returns {string | null} - 如果参数有空值，则返回第一个空参数的名称，否则返回 null
  */
-export function checkRequiredParams(params: Record<string, any>, requiredParams: string[]): string | null {
+export function checkRequiredParams(
+  params: Record<string, any>,
+  requiredParams: string[]
+): string | null {
   for (const param of requiredParams) {
     if (!params[param] || params[param].trim() === "") {
       // @ts-ignore
@@ -37,7 +48,9 @@ export function checkRequiredParams(params: Record<string, any>, requiredParams:
  * @param {string} streamingAddress - 推流地址
  * @returns {boolean} - 推流地址的协议是否支持
  */
-export function isStreamingProtocolSupported(streamingAddress: string): boolean {
+export function isStreamingProtocolSupported(
+  streamingAddress: string
+): boolean {
   const protocol = streamingAddress.split(":")[0];
   return SUPPORTED_STREAMING_PROTOCOLS.includes(protocol);
 }
@@ -48,7 +61,7 @@ export function isStreamingProtocolSupported(streamingAddress: string): boolean 
  * @returns {string | null} - 如果参数有空值，则返回第一个空参数的名称；如果推流地址的协议不支持，则返回错误信息；否则返回 null
  */
 export function validateLiveOptions(options: LiveOptions): string | null {
-  const requiredParams = ["name", "streamingAddress", "streamingCode", "videoDir"];
+  const requiredParams = ["name", "streamingAddress", "streamingCode"];
 
   const emptyParam = checkRequiredParams(options, requiredParams);
   if (emptyParam) {

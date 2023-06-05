@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { FC, useMemo, useState } from "react";
 import {
   Button,
   Drawer,
@@ -13,7 +13,6 @@ import {
   TableColumnProps,
   Tag,
   TimePicker,
-  Upload,
 } from "@arco-design/web-react";
 import {
   IconCheckCircleFill,
@@ -36,6 +35,10 @@ import {
   stopLiveStream,
   updateLiveStream,
 } from "../../api/liveApi";
+import {
+  getResourcesByFileType,
+  getResourcesFileTypes,
+} from "../../api/resourcesApi";
 
 const FormItem = Form.Item;
 const { Option } = Select;
@@ -58,6 +61,8 @@ export interface LiveOptions {
   // 视频文件所在目录
   videoDir?: string;
   video_dir?: string;
+  fileType?: string;
+  fileName?: string;
   // 编码器
   encoder?: string;
   // 是否开启硬件加速
@@ -118,12 +123,20 @@ interface FormItemData {
   options?: any[];
   defaultValue?: any;
 }
-const LiveList: React.FC = () => {
+const LiveList: FC = () => {
+  const [fileTypes, setFileTypes] = useState<any[]>([]);
+  const [fileList, setFileList] = useState<any[]>([]);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [data, setData] = useState();
   const [editData, setEditData] = useState<LiveOptions>();
   const [form] = Form.useForm();
   const [editVisible, setEditVisible] = useState(false);
+  const getFileList = async (value: string) => {
+    const {
+      data: { data: result },
+    } = await getResourcesByFileType(value);
+    setFileList(result);
+  };
   const columns: TableColumnProps[] = [
     {
       title: "名称",
@@ -169,11 +182,12 @@ const LiveList: React.FC = () => {
     {
       title: "硬件加速",
       dataIndex: "isItHardware",
-      render: (text) => (text ? (
-        <IconCheckCircleFill className={styles.icon_running} />
-      ) : (
-        <IconStop className={styles.icon_stop} />
-      )),
+      render: (text) =>
+        text ? (
+          <IconCheckCircleFill className={styles.icon_running} />
+        ) : (
+          <IconStop className={styles.icon_stop} />
+        ),
     },
     {
       title: "编码器",
@@ -192,11 +206,12 @@ const LiveList: React.FC = () => {
     {
       title: "码率模式",
       dataIndex: "encodingMode",
-      render: (text) => (text === "1" ? (
-        <Tag color="#b71de8">固定码率</Tag>
-      ) : (
-        <Tag color="#7816ff">动态码率范围</Tag>
-      )),
+      render: (text) =>
+        text === "1" ? (
+          <Tag color="#b71de8">固定码率</Tag>
+        ) : (
+          <Tag color="#7816ff">动态码率范围</Tag>
+        ),
     },
     {
       title: "码率值",
@@ -227,10 +242,18 @@ const LiveList: React.FC = () => {
             shape="round"
             type="text"
             icon={<IconSettings />}
-            onClick={() => {
+            onClick={async () => {
               form.resetFields();
               form.setFieldsValue(_item);
               setEditData(_item);
+              await getFileList(_item.fileType);
+              form.setFieldsValue({
+                videoDir: {
+                  type: _item.fileType,
+                  name: _item.fileName,
+                  path: _item.videoDir,
+                },
+              });
               setEditVisible(true);
             }}
           />
@@ -244,7 +267,7 @@ const LiveList: React.FC = () => {
                   await stopLiveStream(_item.unique_id);
                   const { data: liveSteams } = await getLiveStreamingList();
                   setData(liveSteams);
-                } catch (e:any) {
+                } catch (e: any) {
                   Notification.error({
                     title: "接口错误",
                     content: e,
@@ -262,7 +285,7 @@ const LiveList: React.FC = () => {
                   await startLiveStream(_item.unique_id);
                   const { data: liveSteams } = await getLiveStreamingList();
                   setData(liveSteams);
-                } catch (e:any) {
+                } catch (e: any) {
                   Notification.error({
                     title: "接口错误",
                     content: e,
@@ -287,116 +310,123 @@ const LiveList: React.FC = () => {
       ),
     },
   ];
-  const formItemData = useMemo(() => [
-    {
-      label: "名称",
-      field: "name",
-      rules: [{ required: true }],
-      type: "input",
-      placeholder: "请输入名称",
-    },
-    {
-      label: "推流地址",
-      field: "streamingAddress",
-      rules: [{ required: true }],
-      type: "input",
-      placeholder: "请输入推流地址",
-    },
-    {
-      label: "推流码",
-      field: "streamingCode",
-      rules: [{ required: true }],
-      type: "input",
-      placeholder: "请输入推流码",
-    },
-    {
-      label: "推流文件",
-      field: "video_dir",
-      rules: [{ required: true }],
-      type: "chooseFile",
-      placeholder: "请输入推流码",
-      defaultValue: editData?.video_dir,
-    },
-    {
-      label: "房间地址",
-      field: "roomAddress",
-      rules: [{ required: true }],
-      type: "input",
-      placeholder: "请输入房间地址",
-    },
-    {
-      label: "硬件加速",
-      field: "isItHardware",
-      rules: [{ required: true }],
-      type: "switch",
-      defaultValue: editData?.isItHardware,
-    },
-    {
-      label: "编码器",
-      field: "encoder",
-      rules: [{ required: true }],
-      type: "select",
-      options: encoderOptions,
-      placeholder: "请选择编码器",
-    },
-    {
-      label: "码率模式",
-      field: "encodingMode",
-      rules: [{ required: true }],
-      type: "select",
-      options: encodingModeOptions,
-      placeholder: "请选择码率模式",
-    },
-    {
-      label: "码率值",
-      field: "bitRateValue",
-      rules: [{ required: true }],
-      type: "input",
-      placeholder: "请输入码率值",
-    },
-    {
-      label: "音轨",
-      field: "audioTrack",
-      type: "input",
-      placeholder: "请输入音轨（不输入则默认音轨）",
-    },
-    {
-      label: "字幕轨道",
-      field: "subtitleTrack",
-      type: "input",
-      placeholder: "请输入字幕轨道（不输入则默认字幕轨道）",
-    },
-    {
-      label: "开始推流的时间",
-      field: "startStreamingTime",
-      type: "timePicker",
-      placeholder: "请输入开始推流的时间（例如：00:10:00）",
-    },
-  ], [editData, editVisible]);
+  const formItemData = useMemo(
+    () => [
+      {
+        label: "名称",
+        field: "name",
+        rules: [{ required: true }],
+        type: "input",
+        placeholder: "请输入名称",
+      },
+      {
+        label: "推流地址",
+        field: "streamingAddress",
+        rules: [{ required: true }],
+        type: "input",
+        placeholder: "请输入推流地址",
+      },
+      {
+        label: "推流码",
+        field: "streamingCode",
+        rules: [{ required: true }],
+        type: "input",
+        placeholder: "请输入推流码",
+      },
+      {
+        label: "推流文件",
+        field: "videoDir",
+        rules: [{ required: true }],
+        type: "chooseFile",
+        placeholder: "请输入推流码",
+        defaultValue: editData?.videoDir,
+      },
+      {
+        label: "房间地址",
+        field: "roomAddress",
+        rules: [{ required: true }],
+        type: "input",
+        placeholder: "请输入房间地址",
+      },
+      {
+        label: "硬件加速",
+        field: "isItHardware",
+        rules: [{ required: true }],
+        type: "switch",
+        defaultValue: editData?.isItHardware,
+      },
+      {
+        label: "编码器",
+        field: "encoder",
+        rules: [{ required: true }],
+        type: "select",
+        options: encoderOptions,
+        placeholder: "请选择编码器",
+      },
+      {
+        label: "码率模式",
+        field: "encodingMode",
+        rules: [{ required: true }],
+        type: "select",
+        options: encodingModeOptions,
+        placeholder: "请选择码率模式",
+      },
+      {
+        label: "码率值",
+        field: "bitRateValue",
+        rules: [{ required: true }],
+        type: "input",
+        placeholder: "请输入码率值",
+      },
+      {
+        label: "音轨",
+        field: "audioTrack",
+        type: "input",
+        placeholder: "请输入音轨（不输入则默认音轨）",
+      },
+      {
+        label: "字幕轨道",
+        field: "subtitleTrack",
+        type: "input",
+        placeholder: "请输入字幕轨道（不输入则默认字幕轨道）",
+      },
+      {
+        label: "开始推流的时间",
+        field: "startStreamingTime",
+        type: "timePicker",
+        placeholder: "请输入开始推流的时间（例如：00:10:00）",
+      },
+    ],
+    [editData, editVisible]
+  );
   useAsyncEffect(async () => {
     const { data: liveSteams } = await getLiveStreamingList();
+    const {
+      data: { data: fileTypesList },
+    } = await getResourcesFileTypes();
     setData(liveSteams);
+    setFileTypes(fileTypesList);
   }, []);
   const addData = () => {
     form.resetFields();
     setEditData(undefined);
     setEditVisible(true);
   };
+
   const getFormElement = (item: FormItemData) => {
     switch (item.type) {
       case "input":
         return <Input placeholder={item.placeholder} />;
       case "switch":
-        return <Switch defaultChecked={editData ? item.defaultValue === 1 : false} />;
+        return (
+          <Switch defaultChecked={editData ? item.defaultValue === 1 : false} />
+        );
       case "select":
         return (
           item.options && (
             <Select placeholder={item.placeholder} allowClear>
               {item.options.map((option) => (
-                <Option
-                  key={option.label}
-                  value={option.value}
-                >
+                <Option key={option.label} value={option.value}>
                   {option.label}
                 </Option>
               ))}
@@ -412,37 +442,67 @@ const LiveList: React.FC = () => {
         );
       case "chooseFile":
         return (
-          <Upload
-            drag
-            multiple
-            autoUpload={false}
-            accept="video/*"
-            defaultFileList={item.defaultValue ? [{
-              uid: item.defaultValue,
-              url: item.defaultValue,
-              name: item.defaultValue,
-            }] : []}
-            onDrop={(e) => {
-              const uploadFile = e.dataTransfer.files[0];
-            }}
-          />
+          <div className={styles.cascade}>
+            <Select
+              placeholder="请选择文件类型"
+              defaultValue={editData?.fileType}
+              onChange={async (value) => {
+                form.setFieldsValue({
+                  videoDir: {
+                    ...form.getFieldValue("videoDir"),
+                    type: value,
+                  },
+                });
+                await getFileList(value);
+              }}
+            >
+              {fileTypes.map((option) => (
+                <Option key={option} value={option}>
+                  {option}
+                </Option>
+              ))}
+            </Select>
+            <Select
+              placeholder="请选择文件"
+              allowClear
+              defaultValue={editData?.fileName}
+              onChange={async (value: any, option: any) => {
+                form.setFieldsValue({
+                  videoDir: {
+                    ...form.getFieldValue("videoDir"),
+                    path: value,
+                    // eslint-disable-next-line no-underscore-dangle
+                    name: option.children,
+                  },
+                });
+                console.log(form.getFieldsValue());
+              }}
+            >
+              {fileList.map((option) => (
+                <Option key={option.unique_id} value={option.video_dir}>
+                  {option.name}
+                </Option>
+              ))}
+            </Select>
+          </div>
         );
       default:
         return <Input placeholder={item.placeholder} />;
     }
   };
   const formItemRender = useMemo(
-    () => formItemData.map((item: FormItemData) => (
-      <FormItem
-        key={item.field}
-        field={item.field}
-        label={item.label}
-        rules={item.rules}
-      >
-        {getFormElement(item)}
-      </FormItem>
-    )),
-    [editData, editVisible],
+    () =>
+      formItemData.map((item: FormItemData) => (
+        <FormItem
+          key={item.field}
+          field={item.field}
+          label={item.label}
+          rules={item.rules}
+        >
+          {getFormElement(item)}
+        </FormItem>
+      )),
+    [editData, editVisible, fileTypes, fileList]
   );
   return (
     <>
@@ -466,7 +526,7 @@ const LiveList: React.FC = () => {
         unmountOnExit
         className={styles.drawerWrapper}
         width="30%"
-        title={<span>Basic Information </span>}
+        title="新建直播"
         visible={editVisible}
         confirmLoading={confirmLoading}
         onOk={async () => {
@@ -475,6 +535,10 @@ const LiveList: React.FC = () => {
           if (typeof values.isItHardware === "boolean") {
             values.isItHardware = values.isItHardware ? 1 : 2;
           }
+          values.fileType = values.videoDir.type;
+          values.fileName = values.videoDir.name;
+          values.videoDir = values.videoDir.path;
+          console.log(values, "values");
           try {
             if (editData) {
               await updateLiveStream(editData.unique_id as string, values);
@@ -484,7 +548,7 @@ const LiveList: React.FC = () => {
             const { data: liveSteams } = await getLiveStreamingList();
             setData(liveSteams);
             setEditVisible(false);
-          } catch (e:any) {
+          } catch (e: any) {
             Notification.error({
               title: "接口错误",
               content: e,
