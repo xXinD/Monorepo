@@ -7,7 +7,10 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install --legacy-peer-deps
+RUN npm install -g pnpm
+
+# 安装项目依赖
+RUN pnpm install
 
 COPY . .
 

@@ -9,8 +9,10 @@ WORKDIR /usr/src/app
 # 将 package*.json 复制到工作目录
 COPY package*.json ./
 
+RUN npm install -g pnpm
+
 # 安装项目依赖
-RUN npm install
+RUN pnpm install
 
 # 复制所有源代码到工作目录
 COPY . .
