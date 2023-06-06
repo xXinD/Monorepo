@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start-frontend": "cd ../Monorepo/Frontend && npm run start",
-    "start-backend": "cd ../Monorepo/Backend && npm run start-dev"
+    "start-backend": "cd ../Monorepo/Backend && npm run start-dev",
+    "start-backend-prod": "cd ../Monorepo/Backend && npm run build && npm run start:prod",
+    "start-frontend-prod": "cd ../Monorepo/Frontend && npm run build:prod"
   },
   "repository": {
     "type": "git",

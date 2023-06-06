@@ -111,7 +111,6 @@ async function playVideoFiles(
   options: LiveOptions,
   ctx: any
 ): Promise<unknown> {
-  console.log(options, "options");
   if (childProcesses.has(options.unique_id)) {
     childProcesses.delete(options.unique_id);
   }
@@ -169,7 +168,6 @@ async function playVideoFiles(
       formatArgs.push(item);
     }
   });
-  console.log(args, 11111);
   const childProcess = spawn("ffmpeg", formatArgs);
 
   childProcess.stdout.on("data", (data) => {

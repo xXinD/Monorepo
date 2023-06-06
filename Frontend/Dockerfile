@@ -1,18 +1,27 @@
-FROM node:16 as build-stage
+# React Dockerfile
 
-WORKDIR /app
+# 构建 React 应用
+FROM node:16 AS build
 
-COPY package.json pnpm-lock.yaml ./
-RUN npm install -g pnpm
-RUN pnpm install --frozen-lockfile
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+
+RUN npm install --legacy-peer-deps
 
 COPY . .
-RUN pnpm run build:prod
 
-FROM nginx:stable
+RUN npm run start-frontend-prod
 
-COPY --from=build-stage /app/build /usr/share/nginx/html
+# 使用 Nginx 容器
+FROM nginx:stable-alpine
 
-EXPOSE 3000
+# 删除默认的Nginx配置和默认欢迎页面
+RUN rm /etc/nginx/conf.d/default.conf
+RUN rm -rf /usr/share/nginx/html/*
 
-CMD ["nginx", "-g", "daemon off;"]
+# 将React应用复制到nginx容器
+COPY --from=build /usr/src/app/build /usr/share/nginx/html
+
+# 暴露端口
+EXPOSE 80

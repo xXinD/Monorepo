@@ -12,7 +12,7 @@ module.exports = () => {
     },
     output: {
       publicPath: "auto",
-      filename: "bundle.js",
+      filename: "[name].[contenthash].bundle.js",
       path: path.resolve(__dirname, "../build"),
       assetModuleFilename: isProduction
         ? "images/[contenthash][ext]"

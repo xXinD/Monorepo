@@ -17,7 +17,7 @@ module.exports = merge(common(), {
     new HtmlWebpackPlugin({
       title: "随便玩玩",
       description: "瞎搞",
-      template: path.resolve(__dirname, "/public/index.html"),
+      template: path.resolve(__dirname, "../public/index.html"),
       filename: "index.html",
       inject: "body",
       files: {
@@ -53,17 +53,20 @@ module.exports = merge(common(), {
           test: /[\\/]node_modules[\\/]/,
           chunks: "all",
           name: "vendors",
+          filename: "[name].[contenthash].vendors.js",
         },
         "async-vendors": {
           test: /[\\/]node_modules[\\/]/,
           chunks: "async",
           name: "async-vendors",
+          filename: "[name].[contenthash].async-vendors.js",
         },
         common: {
           name: "chunk-common",
           minChunks: 2,
           priority: -20,
           chunks: "initial",
+          filename: "[name].[contenthash].initial.js",
         },
       },
     },
