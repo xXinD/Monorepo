@@ -7,16 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      '@types/axios':
-        specifier: ^0.14.0
-        version: 0.14.0
-      axios:
-        specifier: ^1.3.4
-        version: 1.3.4
-      typescript:
-        specifier: ^5.0.2
-        version: 5.0.2
     devDependencies:
       eslint-config-prettier:
         specifier: ^8.8.0
@@ -45,6 +35,9 @@ importers:
       '@koa/router':
         specifier: ^12.0.0
         version: 12.0.0
+      '@types/axios':
+        specifier: ^0.14.0
+        version: 0.14.0
       axios:
         specifier: ^1.3.4
         version: 1.3.4
@@ -160,6 +153,9 @@ importers:
       '@arco-design/web-react':
         specifier: ^2.48.2
         version: 2.48.2(@types/react@18.0.28)(react-dom@18.2.0)(react@18.2.0)
+      '@types/axios':
+        specifier: ^0.14.0
+        version: 0.14.0
       '@types/react':
         specifier: ^18.0.26
         version: 18.0.28
@@ -205,6 +201,9 @@ importers:
       react-router-dom:
         specifier: ^6.8.1
         version: 6.9.0(react-dom@18.2.0)(react@18.2.0)
+      typescript:
+        specifier: ^5.0.2
+        version: 5.0.2
       webpack:
         specifier: ^5.75.0
         version: 5.76.2(webpack-cli@5.0.1)
@@ -275,278 +274,6 @@ importers:
       prettier:
         specifier: ^2.8.2
         version: 2.8.8
-      source-map-loader:
-        specifier: ^4.0.1
-        version: 4.0.1(webpack@5.76.2)
-      style-loader:
-        specifier: ^3.3.1
-        version: 3.3.2(webpack@5.76.2)
-      stylelint:
-        specifier: ^14.16.1
-        version: 14.16.1
-      stylelint-config-airbnb:
-        specifier: ^0.0.0
-        version: 0.0.0(stylelint-order@6.0.3)(stylelint-scss@1.5.2)(stylelint@14.16.1)
-      stylelint-less:
-        specifier: ^1.0.6
-        version: 1.0.6(stylelint@14.16.1)
-      stylelint-order:
-        specifier: ^6.0.1
-        version: 6.0.3(stylelint@14.16.1)
-      thread-loader:
-        specifier: ^3.0.4
-        version: 3.0.4(webpack@5.76.2)
-      ts-loader:
-        specifier: ^9.4.2
-        version: 9.4.2(typescript@5.0.2)(webpack@5.76.2)
-      webpack-cli:
-        specifier: ^5.0.1
-        version: 5.0.1(webpack-dev-server@4.13.1)(webpack@5.76.2)
-      webpack-dev-server:
-        specifier: ^4.11.1
-        version: 4.13.1(webpack-cli@5.0.1)(webpack@5.76.2)
-
-  backend:
-    dependencies:
-      '@ffmpeg-installer/ffmpeg':
-        specifier: ^1.1.0
-        version: 1.1.0
-      '@ffprobe-installer/ffprobe':
-        specifier: ^2.0.0
-        version: 2.0.0
-      '@google-cloud/speech':
-        specifier: ^5.4.1
-        version: 5.4.1
-      '@google-cloud/storage':
-        specifier: ^6.9.5
-        version: 6.9.5
-      '@koa/router':
-        specifier: ^12.0.0
-        version: 12.0.0
-      bcrypt:
-        specifier: ^5.0.1
-        version: 5.1.0
-      fluent-ffmpeg:
-        specifier: ^2.1.2
-        version: 2.1.2
-      google-auth-library:
-        specifier: ^8.7.0
-        version: 8.7.0
-      https-proxy-agent:
-        specifier: ^5.0.1
-        version: 5.0.1
-      jsonwebtoken:
-        specifier: ^8.5.1
-        version: 8.5.1
-      koa:
-        specifier: ^2.13.0
-        version: 2.14.1
-      koa-bodyparser:
-        specifier: ^4.4.0
-        version: 4.4.0
-      koa-router:
-        specifier: ^10.0.0
-        version: 10.1.1
-      koa2-cors:
-        specifier: ^2.0.6
-        version: 2.0.6
-      nodemon:
-        specifier: ^2.0.21
-        version: 2.0.21
-      openai:
-        specifier: ^3.2.1
-        version: 3.2.1
-      sqlite:
-        specifier: ^4.1.2
-        version: 4.1.2
-      sqlite3:
-        specifier: ^5.1.6
-        version: 5.1.6
-      systeminformation:
-        specifier: ^5.17.16
-        version: 5.17.16
-      tmp:
-        specifier: ^0.2.1
-        version: 0.2.1
-      typescript:
-        specifier: ^5.0.2
-        version: 5.0.2
-      uuid:
-        specifier: ^9.0.0
-        version: 9.0.0
-      winston:
-        specifier: ^3.3.3
-        version: 3.8.2
-    devDependencies:
-      '@types/ffmpeg-static':
-        specifier: ^3.0.1
-        version: 3.0.1
-      '@types/ffprobe-static':
-        specifier: ^2.0.1
-        version: 2.0.1
-      '@types/fluent-ffmpeg':
-        specifier: ^2.1.21
-        version: 2.1.21
-      '@types/koa':
-        specifier: ^2.13.5
-        version: 2.13.5
-      '@types/koa-bodyparser':
-        specifier: ^4.3.10
-        version: 4.3.10
-      '@types/koa2-cors':
-        specifier: ^2.0.2
-        version: 2.0.2
-      '@types/koa__router':
-        specifier: ^12.0.0
-        version: 12.0.0
-      '@types/node':
-        specifier: ^18.15.6
-        version: 18.15.6
-      '@types/sqlite3':
-        specifier: ^3.1.8
-        version: 3.1.8
-      '@types/tmp':
-        specifier: ^0.2.3
-        version: 0.2.3
-      '@types/uuid':
-        specifier: ^9.0.1
-        version: 9.0.1
-      eslint:
-        specifier: ^7.32.0
-        version: 7.32.0
-      eslint-config-airbnb-base:
-        specifier: ^14.2.1
-        version: 14.2.1(eslint-plugin-import@2.27.5)(eslint@7.32.0)
-      eslint-plugin-import:
-        specifier: ^2.24.2
-        version: 2.27.5(@typescript-eslint/parser@5.56.0)(eslint@8.36.0)
-      jest:
-        specifier: ^27.4.5
-        version: 27.5.1(ts-node@10.9.1)
-      supertest:
-        specifier: ^6.1.6
-        version: 6.3.3
-      ts-node:
-        specifier: ^10.9.1
-        version: 10.9.1(@types/node@18.15.6)(typescript@5.0.2)
-
-  frontend:
-    dependencies:
-      '@arco-design/web-react':
-        specifier: ^2.48.2
-        version: 2.48.2(@types/react@18.0.28)(react-dom@18.2.0)(react@18.2.0)
-      '@types/react':
-        specifier: ^18.0.26
-        version: 18.0.28
-      '@types/react-dom':
-        specifier: ^18.0.11
-        version: 18.0.11
-      ahooks:
-        specifier: ^3.7.6
-        version: 3.7.6(react@18.2.0)
-      css-minimizer-webpack-plugin:
-        specifier: ^4.2.2
-        version: 4.2.2(webpack@5.76.2)
-      diff-match-patch:
-        specifier: ^1.0.5
-        version: 1.0.5
-      html-webpack-plugin:
-        specifier: ^5.5.0
-        version: 5.5.0(webpack@5.76.2)
-      lru-cache:
-        specifier: ^8.0.4
-        version: 8.0.4
-      mini-css-extract-plugin:
-        specifier: ^2.7.2
-        version: 2.7.5(webpack@5.76.2)
-      mobx:
-        specifier: ^6.9.0
-        version: 6.9.0
-      mobx-react-lite:
-        specifier: ^4.0.2
-        version: 4.0.2(mobx@6.9.0)(react-dom@18.2.0)(react@18.2.0)
-      pako:
-        specifier: ^2.1.0
-        version: 2.1.0
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-      react-router-dom:
-        specifier: ^6.8.1
-        version: 6.9.0(react-dom@18.2.0)(react@18.2.0)
-      webpack:
-        specifier: ^5.75.0
-        version: 5.76.2(webpack-cli@5.0.1)
-      webpack-merge:
-        specifier: ^5.8.0
-        version: 5.8.0
-      webpack-parallel-uglify-plugin:
-        specifier: ^2.0.0
-        version: 2.0.0(webpack@5.76.2)
-      webpackbar:
-        specifier: ^5.0.2
-        version: 5.0.2(webpack@5.76.2)
-    devDependencies:
-      '@babel/core':
-        specifier: ^7.20.12
-        version: 7.21.3
-      '@babel/preset-env':
-        specifier: ^7.20.2
-        version: 7.20.2(@babel/core@7.21.3)
-      '@types/node':
-        specifier: ^18.11.18
-        version: 18.15.5
-      '@typescript-eslint/eslint-plugin':
-        specifier: ^5.48.1
-        version: 5.56.0(@typescript-eslint/parser@5.56.0)(eslint@8.36.0)(typescript@5.0.2)
-      '@typescript-eslint/parser':
-        specifier: ^5.48.1
-        version: 5.56.0(eslint@8.36.0)(typescript@5.0.2)
-      babel-loader:
-        specifier: ^9.1.2
-        version: 9.1.2(@babel/core@7.21.3)(webpack@5.76.2)
-      cross-env:
-        specifier: ^7.0.3
-        version: 7.0.3
-      css-loader:
-        specifier: ^6.7.3
-        version: 6.7.3(webpack@5.76.2)
-      eslint:
-        specifier: ^8.31.0
-        version: 8.36.0
-      eslint-config-airbnb:
-        specifier: ^19.0.4
-        version: 19.0.4(eslint-plugin-import@2.27.5)(eslint-plugin-jsx-a11y@6.7.1)(eslint-plugin-react-hooks@4.6.0)(eslint-plugin-react@7.32.2)(eslint@8.36.0)
-      eslint-plugin-import:
-        specifier: ^2.26.0
-        version: 2.27.5(@typescript-eslint/parser@5.56.0)(eslint@8.36.0)
-      eslint-plugin-jsx-a11y:
-        specifier: ^6.7.0
-        version: 6.7.1(eslint@8.36.0)
-      eslint-plugin-react:
-        specifier: ^7.32.0
-        version: 7.32.2(eslint@8.36.0)
-      eslint-plugin-react-hooks:
-        specifier: ^4.6.0
-        version: 4.6.0(eslint@8.36.0)
-      less:
-        specifier: ^4.1.3
-        version: 4.1.3
-      less-loader:
-        specifier: ^11.1.0
-        version: 11.1.0(less@4.1.3)(webpack@5.76.2)
-      postcss-loader:
-        specifier: ^7.0.2
-        version: 7.1.0(postcss@8.4.21)(webpack@5.76.2)
-      postcss-preset-env:
-        specifier: ^7.8.3
-        version: 7.8.3(postcss@8.4.21)
-      prettier:
-        specifier: ^2.8.2
-        version: 2.8.6
       source-map-loader:
         specifier: ^4.0.1
         version: 4.0.1(webpack@5.76.2)
@@ -3066,10 +2793,6 @@ packages:
 
   /@types/minimist@1.2.2:
     resolution: {integrity: sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==}
-    dev: true
-
-  /@types/node@18.15.5:
-    resolution: {integrity: sha512-Ark2WDjjZO7GmvsyFFf81MXuGTA/d6oP38anyxWOL6EREyBKAxKoFHwBhaZxCfLRLpO8JgVXwqOwSwa7jRcjew==}
     dev: true
 
   /@types/node@18.15.6:
@@ -5793,6 +5516,7 @@ packages:
     dependencies:
       ms: 2.1.3
       supports-color: 5.5.0
+    dev: false
 
   /debug@4.3.4:
     resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
@@ -6449,7 +6173,7 @@ packages:
   /eslint-import-resolver-node@0.3.7:
     resolution: {integrity: sha512-gozW2blMLJCeFpBwugLTGyvVjNoeo1knonXAcatC6bjPBZitotxdWf7Gimr25N4c0AAOo4eOUfaG82IJPDpqCA==}
     dependencies:
-      debug: 3.2.7(supports-color@5.5.0)
+      debug: 3.2.7(supports-color@4.5.0)
       is-core-module: 2.11.0
       resolve: 1.22.1
     transitivePeerDependencies:
@@ -6478,7 +6202,7 @@ packages:
         optional: true
     dependencies:
       '@typescript-eslint/parser': 5.56.0(eslint@8.36.0)(typescript@5.0.2)
-      debug: 3.2.7(supports-color@5.5.0)
+      debug: 3.2.7(supports-color@4.5.0)
       eslint: 8.36.0
       eslint-import-resolver-node: 0.3.7
     transitivePeerDependencies:
@@ -6499,7 +6223,7 @@ packages:
       array-includes: 3.1.6
       array.prototype.flat: 1.3.1
       array.prototype.flatmap: 1.3.1
-      debug: 3.2.7(supports-color@5.5.0)
+      debug: 3.2.7(supports-color@4.5.0)
       doctrine: 2.1.0
       eslint: 8.36.0
       eslint-import-resolver-node: 0.3.7
@@ -10435,7 +10159,7 @@ packages:
     hasBin: true
     requiresBuild: true
     dependencies:
-      debug: 3.2.7(supports-color@5.5.0)
+      debug: 3.2.7(supports-color@4.5.0)
       iconv-lite: 0.6.3
       sax: 1.2.4
     transitivePeerDependencies:
@@ -11979,12 +11703,6 @@ packages:
     engines: {node: '>=6.0.0'}
     dependencies:
       fast-diff: 1.2.0
-    dev: true
-
-  /prettier@2.8.6:
-    resolution: {integrity: sha512-mtuzdiBbHwPEgl7NxWlqOkithPyp4VN93V7VeHVWBF+ad3I5avc0RVDT4oImXQy9H/AqxA2NSQH8pSxHW6FYbQ==}
-    engines: {node: '>=10.13.0'}
-    hasBin: true
     dev: true
 
   /prettier@2.8.8:

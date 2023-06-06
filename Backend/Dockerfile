@@ -9,16 +9,23 @@ WORKDIR /usr/src/app
 # 将 package*.json 复制到工作目录
 COPY package*.json ./
 
-RUN npm install -g pnpm
+# 全局安装pnpm
+RUN npm install -g cnpm
+
+RUN npm cache clean --force
+RUN cnpm cache clean --force
 
 # 安装项目依赖
-RUN pnpm install
+RUN cnpm install
 
 # 复制所有源代码到工作目录
 COPY . .
 
-# 构建和启动 Node.js 项目
-RUN npm run start-backend-prod
+# 构建 Node.js 项目
+RUN cnpm run build
 
 # 暴露端口
 EXPOSE 4000
+
+# 启动 Node.js 项目
+CMD ["node", "dist/app.js"]
