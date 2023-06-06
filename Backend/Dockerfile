@@ -9,11 +9,12 @@ WORKDIR /usr/src/app
 # 将 package*.json 复制到工作目录
 COPY package*.json ./
 
-# 全局安装pnpm
 RUN npm install -g cnpm
 
 RUN npm cache clean --force
 RUN cnpm cache clean --force
+
+RUN cnpm install -g typescript
 
 # 安装项目依赖
 RUN cnpm install

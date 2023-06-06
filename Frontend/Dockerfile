@@ -7,17 +7,17 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install -g pnpm
-ENV NPM_CONFIG_PREFIX=/home/node/.npm-global
-ENV PATH=$PATH:/home/node/.npm-global/bin
+RUN npm install -g cnpm
+RUN npm cache clean --force
+RUN cnpm cache clean --force
 
-RUN npm install -g webpack
+RUN cnpm install -g webpack
 # 安装项目依赖
-RUN pnpm install
+RUN cnpm install
 
 COPY . .
 
-RUN npm run build:prod
+RUN cnpm run build:prod
 
 # 使用 Nginx 容器
 FROM nginx:stable-alpine
