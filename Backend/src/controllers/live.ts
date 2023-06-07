@@ -45,7 +45,7 @@ export async function startLive(ctx: any) {
   if (invalidOption) {
     ctx.status = 400;
     ctx.body = {
-      error: "请求无效",
+      error: "请求无效，请审查请求参数",
       message: invalidOption,
     };
     return;
