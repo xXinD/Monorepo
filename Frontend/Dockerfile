@@ -7,16 +7,15 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install -g cnpm
+RUN npm install -g npm@latest
 RUN npm cache clean --force
-RUN cnpm cache clean --force
 
 # 安装项目依赖
-RUN cnpm install
+RUN npm install
 
 COPY . .
 
-RUN cnpm run build:prod
+RUN npm run build:prod
 
 # 使用 Nginx 容器
 FROM nginx:stable-alpine

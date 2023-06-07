@@ -9,15 +9,13 @@ WORKDIR /usr/src/app
 # 将 package*.json 复制到工作目录
 COPY package.json ./
 
-RUN npm install -g cnpm
-
+RUN npm install -g npm@latest
 RUN npm cache clean --force
-RUN cnpm cache clean --force
 
-RUN cnpm install -g typescript
+RUN npm install -g typescript
 
 # 安装项目依赖
-RUN cnpm install
+RUN npm install
 
 # 复制所有源代码到工作目录
 COPY . .
@@ -25,7 +23,7 @@ COPY . .
 RUN ls -al
 
 # 构建 Node.js 项目
-RUN cnpm run build
+RUN npm run build
 
 # 暴露端口
 EXPOSE 4000
