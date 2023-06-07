@@ -13,6 +13,7 @@ import {
 } from "../scripts/streaming";
 import { validateLiveOptions } from "./validateLiveOptions";
 import { LiveStream } from "../models/LiveStream";
+import { asyncHandler } from "../utils/handler";
 
 type RtmpLiveOptions = Pick<
   LiveOptions,
@@ -51,7 +52,7 @@ export async function startLive(ctx: any) {
   }
   const uniqueId = uuidv4();
 
-  try {
+  await asyncHandler(async () => {
     const res = await startStreaming(
       {
         unique_id: uniqueId,
@@ -65,13 +66,7 @@ export async function startLive(ctx: any) {
       message: "创建直播间成功",
       res,
     };
-  } catch (error) {
-    ctx.status = 500;
-    ctx.body = {
-      message: "创建直播间失败",
-      error,
-    };
-  }
+  }, "创建直播间失败");
 }
 
 /**
