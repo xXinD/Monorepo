@@ -44,13 +44,13 @@ export default class AxiosService {
 
     this.axiosInstance.interceptors.response.use(
       this.handleResponse,
-      this.handleError,
+      this.handleError
     );
   }
 
   public get<T = any>(
     url: string,
-    options: RequestOptions = {},
+    options: RequestOptions = {}
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.get(url, {
       ...options,
@@ -60,7 +60,7 @@ export default class AxiosService {
   public post<T = any>(
     url: string,
     data: any,
-    options: RequestOptions = {},
+    options: RequestOptions = {}
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.post(url, data, {
       ...options,
@@ -70,7 +70,7 @@ export default class AxiosService {
   public put<T = any>(
     url: string,
     data: any,
-    options: RequestOptions = {},
+    options: RequestOptions = {}
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.put(url, data, {
       ...options,
@@ -80,7 +80,7 @@ export default class AxiosService {
   public patch<T = any>(
     url: string,
     data: any,
-    options: RequestOptions = {},
+    options: RequestOptions = {}
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.patch(url, data, {
       ...options,
@@ -89,7 +89,7 @@ export default class AxiosService {
 
   public delete<T = any>(
     url: string,
-    options: RequestOptions = {},
+    options: RequestOptions = {}
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.delete(url, {
       ...options,
@@ -111,4 +111,4 @@ export default class AxiosService {
     return Promise.reject(error);
   }
 }
-export const axiosInstance = new AxiosService("http://localhost:4000");
+export const axiosInstance = new AxiosService("http://192.168.31.73:4000");

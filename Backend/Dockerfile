@@ -16,6 +16,9 @@ RUN npm install -g typescript
 # 安装项目依赖
 RUN npm install
 
+# 安装 ffmpeg
+RUN apt-get update && apt-get install -y ffmpeg
+
 # 复制所有源代码到工作目录
 COPY . .
 
