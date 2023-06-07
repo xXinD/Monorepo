@@ -11,7 +11,7 @@ RUN npm install -g npm@latest
 RUN npm cache clean --force
 
 # 安装项目依赖
-RUN npm install
+RUN npm install --force
 
 COPY . .
 

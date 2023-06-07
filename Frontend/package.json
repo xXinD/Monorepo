@@ -6,8 +6,8 @@
     "build:dll": "webpack --config config/webpack.dll.js"
   },
   "dependencies": {
-    "@types/axios": "^0.14.0",
     "@arco-design/web-react": "^2.48.2",
+    "@types/axios": "^0.14.0",
     "@types/react": "^18.0.26",
     "@types/react-dom": "^18.0.11",
     "ahooks": "^3.7.6",
@@ -25,10 +25,10 @@
     "react-router-dom": "^6.8.1",
     "typescript": "^5.0.2",
     "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1",
     "webpack-merge": "^5.8.0",
     "webpack-parallel-uglify-plugin": "^2.0.0",
-    "webpackbar": "^5.0.2",
-    "webpack-cli": "^5.0.1"
+    "webpackbar": "^5.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.12",
@@ -53,7 +53,6 @@
     "source-map-loader": "^4.0.1",
     "style-loader": "^3.3.1",
     "stylelint": "^14.16.1",
-    "stylelint-config-airbnb": "^0.0.0",
     "stylelint-less": "^1.0.6",
     "stylelint-order": "^6.0.1",
     "thread-loader": "^3.0.4",
