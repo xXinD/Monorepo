@@ -28,7 +28,7 @@ jobs:
           context: ./Backend
           file: ./Backend/Dockerfile
           push: true
-          tags: xindongG/backend:latest
+          tags: xindongg/backend:latest
 
       - name: Build and push Frontend Docker image
         uses: docker/build-push-action@v2
@@ -36,4 +36,4 @@ jobs:
           context: ./Frontend
           file: ./Frontend/Dockerfile
           push: true
-          tags: xindongG/frontend:latest
+          tags: xindongg/frontend:latest
