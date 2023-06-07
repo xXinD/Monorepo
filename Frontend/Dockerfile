@@ -1,7 +1,7 @@
 # React Dockerfile
 
 # 构建 React 应用
-FROM node:16 AS build
+FROM node:16 as build-stage
 
 WORKDIR /usr/src/app
 
@@ -11,7 +11,6 @@ RUN npm install -g cnpm
 RUN npm cache clean --force
 RUN cnpm cache clean --force
 
-RUN cnpm install -g webpack
 # 安装项目依赖
 RUN cnpm install
 
@@ -27,7 +26,7 @@ RUN rm /etc/nginx/conf.d/default.conf
 RUN rm -rf /usr/share/nginx/html/*
 
 # 将React应用复制到nginx容器
-COPY --from=build /usr/src/app/build /usr/share/nginx/html
+COPY --from=build-stage /usr/src/app/build /usr/share/nginx/html
 
 # 暴露端口
 EXPOSE 80

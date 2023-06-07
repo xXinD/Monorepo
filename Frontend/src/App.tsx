@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import { FC, useMemo, useState } from "react";
 import { BrowserRouter as Router } from "react-router-dom";
 import { Link, Menu, PageHeader } from "@arco-design/web-react";
 import { IconLiveBroadcast } from "@arco-design/web-react/icon";
@@ -8,8 +8,8 @@ import styles from "./index.module.less";
 
 const MenuItem = Menu.Item;
 const { SubMenu } = Menu;
-const App: React.FC = () => {
-  const [menuData, setMenuData] = React.useState([
+const App: FC = () => {
+  const [menuData, setMenuData] = useState([
     {
       key: "1",
       name: "直播管理",
@@ -28,28 +28,31 @@ const App: React.FC = () => {
       ],
     },
   ]) as any[];
-  const menuRender = useMemo(() => menuData.map((item:any) => (
-    <SubMenu
-      key={item.key}
-      title={(
-        <>
-          {item.icon}
-          {item.name}
-        </>
-      )}
-      {
-        ...item.children && {
-          children: item.children.map((child:any) => (
-            <MenuItem
-              key={child.key}
-            >
-              <Link hoverable={false} href={child.path}>{child.name}</Link>
-            </MenuItem>
-          )),
-        }
-      }
-    />
-  )), [menuData]);
+  const menuRender = useMemo(
+    () =>
+      menuData.map((item: any) => (
+        <SubMenu
+          key={item.key}
+          title={
+            <>
+              {item.icon}
+              {item.name}
+            </>
+          }
+        >
+          {item.children
+            ? item.children.map((child: any) => (
+                <MenuItem key={child.key}>
+                  <Link hoverable={false} href={child.path}>
+                    {child.name}
+                  </Link>
+                </MenuItem>
+              ))
+            : null}
+        </SubMenu>
+      )),
+    [menuData]
+  );
   return (
     <Router>
       <div className={styles.main}>
