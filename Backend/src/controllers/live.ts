@@ -128,7 +128,10 @@ export async function updateLiveInfo(ctx: any) {
   const data = ctx.request.body;
   // 验证输入数据
   if (Object.keys(data).length === 0) {
-    ctx.throw(400, "请提供要更新的字段");
+    ctx.status = 500;
+    ctx.body = {
+      message: "请提供要更新的字段",
+    };
   }
 
   // 从数据库中查找直播记录
