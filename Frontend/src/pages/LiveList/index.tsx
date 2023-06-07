@@ -475,7 +475,6 @@ const LiveList: FC = () => {
                     name: option.children,
                   },
                 });
-                console.log(form.getFieldsValue());
               }}
             >
               {fileList.map((option) => (
@@ -538,7 +537,6 @@ const LiveList: FC = () => {
           values.fileType = values.videoDir.type;
           values.fileName = values.videoDir.name;
           values.videoDir = values.videoDir.path;
-          console.log(values, "values");
           try {
             if (editData) {
               await updateLiveStream(editData.unique_id as string, values);
@@ -549,9 +547,10 @@ const LiveList: FC = () => {
             setData(liveSteams);
             setEditVisible(false);
           } catch (e: any) {
+            console.log(e, 11111);
             Notification.error({
               title: "接口错误",
-              content: e,
+              content: e.message,
             });
           }
           setConfirmLoading(false);

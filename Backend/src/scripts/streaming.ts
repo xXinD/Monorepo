@@ -2,6 +2,7 @@
 import si from "systeminformation";
 import { spawn, ChildProcessWithoutNullStreams } from "child_process";
 import { LiveStream } from "../models/LiveStream";
+import { asyncHandler } from "../utils/handler";
 
 // 子进程统一管理
 const childProcesses = new Map<string, ChildProcessWithoutNullStreams>();
@@ -86,15 +87,16 @@ function getWatermarkOptions(options: LiveOptions): string {
 }
 
 async function updateLiveStreamStatus(id: string, status: number) {
-  try {
+  await asyncHandler(async () => {
     const live = await LiveStream.findById(id);
     if (live) {
-      await LiveStream.update(id, { ...live, status });
+      await LiveStream.update(id, {
+        ...live,
+        status,
+      });
       console.log("更新数据库成功");
     }
-  } catch (e) {
-    console.error("更新数据库状态报错：", status, e);
-  }
+  }, "更新数据库状态报错：");
 }
 
 /**
@@ -175,22 +177,27 @@ async function playVideoFiles(
   });
 
   childProcess.stderr.on("data", async (data) => {
-    console.error(`stderr: ${data}`);
     if (
       data.includes("auth:remote_auth:not_allowed") ||
       data.includes("auth:remote_auth:auth_failed") ||
       data.includes("RtmpStatusCode2NssError")
     ) {
-      // 直播间被封禁
-      console.log("直播间被封禁");
-      childProcesses.delete(options.unique_id);
-      await updateLiveStreamStatus(options.unique_id, 2);
-    }
-    if (data.indexOf("Failed to update header with correct duration") !== -1) {
-      // 推流任务出错
-      await LiveStream.delete(options.unique_id);
-      childProcesses.delete(options.unique_id);
-      await playVideoFiles(options, ctx);
+      console.error(`stdout: ${data}`);
+      await asyncHandler(async () => {
+        childProcesses.delete(options.unique_id);
+        await updateLiveStreamStatus(options.unique_id, 2);
+      }, "直播间被封禁");
+    } else if (
+      data.indexOf("Failed to update header with correct duration") !== -1
+    ) {
+      console.error(`stdout: ${data}`);
+      await asyncHandler(async () => {
+        await LiveStream.delete(options.unique_id);
+        childProcesses.delete(options.unique_id);
+        await playVideoFiles(options, ctx);
+      }, "推流任务出错");
+    } else {
+      console.log(`stdout: ${data}`);
     }
   });
 
@@ -207,21 +214,25 @@ async function playVideoFiles(
   });
   return new Promise((resolve, reject) => {
     childProcess.on("spawn", async () => {
-      // 更新直播状态为 'running'
-      const live = await LiveStream.findById(options.unique_id);
-      if (!live) {
-        await LiveStream.create(options);
-      } else {
-        await updateLiveStreamStatus(options.unique_id, 0);
-      }
-      childProcesses.set(options.unique_id, childProcess);
-      resolve(options);
+      await asyncHandler(async () => {
+        // 更新直播状态为 'running'
+        const live = await LiveStream.findById(options.unique_id);
+        if (!live) {
+          await LiveStream.create(options);
+        } else {
+          await updateLiveStreamStatus(options.unique_id, 0);
+        }
+        childProcesses.set(options.unique_id, childProcess);
+        resolve(options);
+      }, "更新直播状态发生错误：");
     });
 
     childProcess.on("error", async (error) => {
-      // 直播状态更新为错误
-      await updateLiveStreamStatus(options.unique_id, 2);
-      reject(error);
+      await asyncHandler(async () => {
+        // 直播状态更新为错误
+        await updateLiveStreamStatus(options.unique_id, 2);
+        reject(error);
+      }, "更新直播状态发生错误：");
     });
   });
 }

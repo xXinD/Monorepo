@@ -47,4 +47,12 @@ module.exports = {
     "prettier/prettier": ["error"],
     "jsx-a11y/media-has-caption": "off",
   },
+  overrides: [
+    {
+      files: ["./Backend/**/*"],
+      rules: {
+        "no-console": "off",
+      },
+    },
+  ],
 };

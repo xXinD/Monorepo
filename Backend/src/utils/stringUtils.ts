@@ -34,13 +34,14 @@ interface Resolution {
   height: number;
 }
 
-export const getVideoResolution = (filePath: string): Promise<Resolution> => new Promise((resolve, reject) => {
-  ffmpeg.ffprobe(filePath, (err, metadata) => {
-    if (err) {
-      reject(err);
-    } else {
-      const { width, height } = metadata.streams[0];
-      resolve({ width, height });
-    }
+export const getVideoResolution = (filePath: string): Promise<Resolution> =>
+  new Promise((resolve, reject) => {
+    ffmpeg.ffprobe(filePath, (err, metadata) => {
+      if (err) {
+        reject(err);
+      } else {
+        const { width, height } = metadata.streams[0];
+        resolve({ width, height });
+      }
+    });
   });
-});
