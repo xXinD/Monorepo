@@ -25,6 +25,9 @@ FROM nginx:stable-alpine
 RUN rm /etc/nginx/conf.d/default.conf
 RUN rm -rf /usr/share/nginx/html/*
 
+# 复制自定义的Nginx配置文件到容器
+COPY nginx/default.conf /etc/nginx/conf.d/
+
 # 将React应用复制到nginx容器
 COPY --from=build-stage /usr/src/app/build /usr/share/nginx/html
 
