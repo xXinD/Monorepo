@@ -117,10 +117,11 @@ async function playVideoFiles(
     childProcesses.delete(options.unique_id);
   }
   const { controllers } = await si.graphics();
+  console.log(controllers, "controllers");
   // eslint-disable-next-line no-nested-ternary
   let graphicsEncoder: string;
   if (options.isItHardware === 1) {
-    if (controllers[0].vendor === "NVIDIA") {
+    if (controllers[0]?.vendor === "NVIDIA") {
       graphicsEncoder =
         options.encoder === "h264" ? "h264_nvenc" : "hevc_nvenc";
     } else {
