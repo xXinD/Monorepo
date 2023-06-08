@@ -13,6 +13,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Build binary file
+        run: cd "${{ github.workspace }}/Backend" && npm install && npm run build:pkg
+
+      - name: Compress binary file
+        run: tar -czvf "${{ github.workspace }}/Backend/binary/arm64_binary.tar.gz" -C "${{ github.workspace }}/Backend/binary/" arm64_binary
+
+      - name: Upload compressed binary file to Releases
+        uses: actions/upload-artifact@v2
+        with:
+          name: arm64_binary.tar.gz
+          path: "${{ github.workspace }}/Backend/binary/arm64_binary.tar.gz"
+          description: This package is for use on arm64 systems
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
@@ -27,7 +40,7 @@ jobs:
         with:
           context: ./Backend
           file: ./Backend/Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           tags: xindongg/backend:latest
 
@@ -36,6 +49,6 @@ jobs:
         with:
           context: ./Frontend
           file: ./Frontend/Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           tags: xindongg/frontend:latest

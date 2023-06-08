@@ -2,12 +2,14 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "node后端服务",
-  "main": "index.js",
+  "main": "./src/app.ts",
+  "bin": "./dist/app.js",
   "author": "",
   "license": "ISC",
   "scripts": {
     "start-dev": "nodemon --watch 'src/**/*.ts' --exec ts-node src/app.ts",
     "build": "npx tsc",
+    "build:pkg": "npm run build && pkg . --targets node16-macos-arm64 --out-path binary && mv binary/backend binary/arm64_binary",
     "start:prod": "npm run build && node dist/app.js"
   },
   "dependencies": {
