@@ -1,55 +1,60 @@
-// src/db/index.ts
-import sqlite3 from "sqlite3";
-import { open, Database } from "sqlite";
+import { createPool, Pool } from "mysql2/promise";
 
-export async function initDb(): Promise<Database> {
-  const db = await open({
-    filename: "./database.sqlite",
-    driver: sqlite3.Database,
+async function initDb(): Promise<Pool> {
+  const pool = createPool({
+    host: "143.110.159.133",
+    user: "xindong",
+    password: "199615xin",
+    database: "database", // 需要填写你的数据库名称
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
   });
 
-  await db.exec(
-    `CREATE TABLE IF NOT EXISTS live_streams (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,  -- 主键ID, 并设置为自增
-    unique_id TEXT UNIQUE, -- 唯一id
-    name TEXT, -- 直播名称
-    platform TEXT, -- 直播平台
-    status INTEGER, -- 直播状态
-    streamingAddress TEXT, -- 推流地址
-    streamingCode TEXT, -- 推流密钥
-    roomAddress TEXT, -- 房间地址
-    fileType TEXT, -- 视频文件类型
-    videoDir TEXT, -- 视频文件所在目录
-    fileName TEXT, -- 视频文件名称
-    encoder TEXT, -- 编码器
-    isItHardware INTEGER, -- 是否开启硬件加速，这里我将其作为整数类型，以便存储布尔值（0表示false，1表示true）
-    encodingMode INTEGER, -- 码率模式
-    bitRateValue INTEGER, -- 码率值
-    resolvingPower TEXT, -- 分辨率
-    watermark_enabled INTEGER, -- 是否启用水印
-    watermark_img TEXT, -- 水印图片路径
-    watermark_width INTEGER, -- 水印图片宽度
-    watermark_position INTEGER, -- 水印位置
-    transition_type INTEGER, -- 转场效果类型
-    simple_transition INTEGER, -- 选择简单转场效果
-    complex_transition INTEGER -- 选择复杂转场效果
-    start_time TEXT -- 开始时间
-  )`
-  );
-  await db.exec(
-    `CREATE TABLE IF NOT EXISTS resources (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      unique_id TEXT UNIQUE, -- 唯一id
-      name TEXT,
-      video_dir TEXT,
-      file_type TEXT,
-      update_date TEXT
-    )`
-  );
-  return db;
+  const conn = await pool.getConnection();
+
+  await conn.query(`CREATE TABLE IF NOT EXISTS live_streams (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    unique_id TEXT UNIQUE,
+    name TEXT,
+    platform TEXT,
+    status INT,
+    streamingAddress TEXT,
+    streamingCode TEXT,
+    roomAddress TEXT,
+    fileType TEXT,
+    videoDir TEXT,
+    fileName TEXT,
+    encoder TEXT,
+    isItHardware INT,
+    encodingMode INT,
+    bitRateValue INT,
+    resolvingPower TEXT,
+    watermark_enabled INT,
+    watermark_img TEXT,
+    watermark_width INT,
+    watermark_position INT,
+    transition_type INT,
+    simple_transition INT,
+    complex_transition INT,
+    start_time TEXT
+  )`);
+
+  await conn.query(`CREATE TABLE IF NOT EXISTS resources (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    unique_id TEXT UNIQUE,
+    name TEXT,
+    video_dir TEXT,
+    file_type TEXT,
+    update_date TEXT
+  )`);
+
+  conn.release();
+
+  return pool;
 }
 
-let dbInstance: Database | undefined;
+let dbInstance: Pool | undefined;
 
 export function getDb() {
   if (!dbInstance) {

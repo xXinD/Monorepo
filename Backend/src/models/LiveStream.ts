@@ -3,6 +3,7 @@
  * @date 2023/4/19
  * @description 直播流模型
  */
+import { RowDataPacket } from "mysql2";
 import { getDb } from "../db";
 import { LiveOptions } from "../scripts/streaming";
 import { getVideoResolution } from "../utils/stringUtils";
@@ -50,12 +51,14 @@ export class LiveStream {
    * 查询所有直播流
    *
    * @async
-   * @returns {Array} db.all() 返回的结果。
+   * @returns {Array} pool.query() 返回的结果。
    */
   static async findAll(): Promise<LiveStream[]> {
     const db = getDb();
-    const rows = await db.all("SELECT * FROM live_streams");
-    return rows.map((row) => Object.assign(new LiveStream(), row));
+    const [rows] = await db.query("SELECT * FROM live_streams");
+    return (rows as RowDataPacket[]).map((row: any) =>
+      Object.assign(new LiveStream(), row)
+    );
   }
 
   /**
@@ -63,16 +66,18 @@ export class LiveStream {
    *
    * @async
    * @param {string | number} id 直播流 ID
-   * @returns {Object | null} db.get() 返回的结果。
+   * @returns {Object | null} pool.query() 返回的结果。
    * @throws {Error} 直播不存在
    */
   static async findById(
     unique_id: string | number
   ): Promise<LiveStream | null> {
     const db = getDb();
-    const row = await db.get("SELECT * FROM live_streams WHERE unique_id = ?", [
-      unique_id,
-    ]);
+    const [rows] = await db.query(
+      "SELECT * FROM live_streams WHERE unique_id = ?",
+      [unique_id]
+    );
+    const row = (rows as RowDataPacket[])[0];
 
     if (row) {
       return Object.assign(new LiveStream(), row);
@@ -84,7 +89,7 @@ export class LiveStream {
    * 更新直播流
    *
    * @async
-   * @param {string | number} id 直播流 ID
+   * @param unique_id
    * @param {Object} data 要更新的数据
    */
   static async update(
@@ -115,10 +120,10 @@ export class LiveStream {
 
     const setClause = fields.map((field) => `${field} = ?`).join(", ");
 
-    await db.run(`UPDATE live_streams SET ${setClause} WHERE unique_id = ?`, [
-      ...values,
-      unique_id,
-    ]);
+    await db.execute(
+      `UPDATE live_streams SET ${setClause} WHERE unique_id = ?`,
+      [...values, unique_id]
+    );
     const afterUpdate = await this.findById(unique_id);
     return afterUpdate;
   }
@@ -164,7 +169,7 @@ export class LiveStream {
     const placeholders = fields.map(() => "?").join(", ");
     const fieldNames = fields.join(", ");
 
-    await db.run(
+    await db.execute(
       `INSERT INTO live_streams (${fieldNames}) VALUES (${placeholders})`,
       values
     );
@@ -181,7 +186,9 @@ export class LiveStream {
    */
   static async delete(uniqueId: string): Promise<void> {
     const db = getDb();
-    await db.run("DELETE FROM live_streams WHERE unique_id = ?", [uniqueId]);
+    await db.execute("DELETE FROM live_streams WHERE unique_id = ?", [
+      uniqueId,
+    ]);
   }
 
   /**
@@ -192,6 +199,6 @@ export class LiveStream {
    */
   static async clearAll(): Promise<void> {
     const db = getDb();
-    await db.run("DELETE FROM live_streams");
+    await db.execute("DELETE FROM live_streams");
   }
 }
