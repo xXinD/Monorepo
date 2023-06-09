@@ -56,14 +56,4 @@ jobs:
           asset_name: arm64_binary.tar.gz
           asset_content_type: application/gzip
 
-      - name: Upload Uncompressed Binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.MY_PAT }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: "${{ github.workspace }}/Backend/binary/arm64_binary"
-          asset_name: arm64_binary
-          asset_content_type: application/octet-stream
-
 
