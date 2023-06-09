@@ -20,9 +20,9 @@ jobs:
         run: |
           docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
           docker run -u 0:0 -v /home/runner/work/Monorepo/Monorepo:/work -w /work node:16-buster chmod -R a+rw /work
-          docker run -u  0:0 -v ${{ github.workspace }}:/work -w /work/Backend node:16-buster npm install
-          docker run -u  0:0 -v ${{ github.workspace }}:/work -w /work/Backend node:16-buster npm i -g pkg
-          docker run -u  0:0 -v ${{ github.workspace }}:/work -w /work/Backend node:16-buster npm run build:pkg
+          docker run -u 0:0 -v ${{ github.workspace }}:/work -w /work/Backend node:16-buster sh -c "chown -R node:node /work && su node -c 'npm install'"
+          docker run -u 0:0 -v ${{ github.workspace }}:/work -w /work/Backend node:16-buster sh -c "chown -R node:node /work && su node -c 'npm i -g pkg'"
+          docker run -u 0:0 -v ${{ github.workspace }}:/work -w /work/Backend node:16-buster sh -c "chown -R node:node /work && su node -c 'npm run build:pkg'"
 
       - name: Give execution permissions
         run: chmod +x "${{ github.workspace }}/Backend/binary/arm64_binary"
