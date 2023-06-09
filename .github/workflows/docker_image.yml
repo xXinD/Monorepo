@@ -23,6 +23,10 @@ jobs:
           docker run -u 0:0 -v ${{ github.workspace }}:/work -w /work/Backend node:16-buster sh -c "chown -R node:node /work && su node -c 'npm install'"
           docker run -u 0:0 -v ${{ github.workspace }}:/work -w /work/Backend node:16-buster sh -c "chown -R node:node /work && su node -c 'npm run build:pkg'"
 
+      - name: Change file owner
+        run: |
+          sudo chown -R runner: "${{ github.workspace }}/Backend"
+
       - name: Give execution permissions
         run: chmod +x "${{ github.workspace }}/Backend/binary/arm64_binary"
 
