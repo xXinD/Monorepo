@@ -12,6 +12,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          repository: XindongG/Monorepo
+          token: ${{ secrets.MY_PAT }}
+          ssh-strict: true
 
       - name: Set npm registry
         run: npm config set registry https://registry.npmmirror.com
