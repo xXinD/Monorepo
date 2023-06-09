@@ -1,15 +1,14 @@
 import { createPool, Pool } from "mysql2/promise";
 import * as process from "process";
 
-console.log(process.env.ENV_VAR, 1111);
 async function initDb(): Promise<Pool> {
   const pool = createPool({
     host: "143.110.159.133",
     user: "xindong",
     password: "199615xin",
     database: `${
-      process.env.ENV_VAR !== "production" ? "test_database" : "prod_database"
-    }`, // 需要填写你的数据库名称
+      process.env.ENV_VAR === "development" ? "test_database" : "prod_database"
+    }`,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
