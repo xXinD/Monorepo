@@ -53,5 +53,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_pre_release.outputs.upload_url }}
           asset_path: "${{ github.workspace }}/Backend/binary/arm64_binary.tar.gz"
-          asset_name: arm64_binary_pre_release.tar.gz
+          asset_name: macos_arm64_binary.tar.gz
           asset_content_type: application/gzip
