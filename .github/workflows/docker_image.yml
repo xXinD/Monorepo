@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
       - name: Checkout code
@@ -19,8 +19,8 @@ jobs:
       - name: Give execution permissions
         run: chmod +x "${{ github.workspace }}/Backend/binary/arm64_binary"
 
-#      - name: Compress binary file
-#        run: tar -czvf "${{ github.workspace }}/Backend/binary/arm64_binary.tar.gz" -C "${{ github.workspace }}/Backend/binary/" arm64_binary
+      - name: Compress binary file
+        run: tar -czvf "${{ github.workspace }}/Backend/binary/arm64_binary.tar.gz" -C "${{ github.workspace }}/Backend/binary/" arm64_binary
 
       - name: Get the date
         id: date
@@ -39,15 +39,15 @@ jobs:
           draft: false
           prerelease: false
 
-#      - name: Upload Release Asset
-#        uses: actions/upload-release-asset@v1
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.MY_PAT }}
-#        with:
-#          upload_url: ${{ steps.create_release.outputs.upload_url }}
-#          asset_path: "${{ github.workspace }}/Backend/binary/arm64_binary.tar.gz"
-#          asset_name: arm64_binary.tar.gz
-#          asset_content_type: application/gzip
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_PAT }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: "${{ github.workspace }}/Backend/binary/arm64_binary.tar.gz"
+          asset_name: arm64_binary.tar.gz
+          asset_content_type: application/gzip
 
       - name: Upload Uncompressed Binary
         uses: actions/upload-release-asset@v1
