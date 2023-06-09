@@ -13,29 +13,35 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+      - name: Build binary file
+        run: cd "${{ github.workspace }}/Backend" && npm install && npm i -g pkg && npm run build:pkg
 
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Compress binary file
+        run: tar -czvf "${{ github.workspace }}/Backend/binary/arm64_binary.tar.gz" -C "${{ github.workspace }}/Backend/binary/" arm64_binary
 
-      - name: Build and push Backend Docker image
-        uses: docker/build-push-action@v2
-        with:
-          context: ./Backend
-          file: ./Backend/Dockerfile
-          platforms: linux/amd64
-          push: true
-          tags: xindongg/backend:latest
+      - name: Get the date
+        id: date
+        run: |
+          echo "::set-output name=date::$(date +'%Y.%m.%d')"
+          echo "::set-output name=tag::release-$(date +'%Y%m%d%H%M%S')"
 
-      - name: Build and push Frontend Docker image
-        uses: docker/build-push-action@v2
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_PAT }}
         with:
-          context: ./Frontend
-          file: ./Frontend/Dockerfile
-          platforms: linux/amd64
-          push: true
-          tags: xindongg/frontend:latest
+          tag_name: ${{ steps.date.outputs.tag }} # use the tag output from the previous step
+          release_name: Release ${{ steps.date.outputs.date }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_PAT }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: "${{ github.workspace }}/Backend/binary/arm64_binary.tar.gz"
+          asset_name: arm64_binary.tar.gz
+          asset_content_type: application/gzip
