@@ -36,6 +36,6 @@ jobs:
         with:
           context: ./Frontend
           file: ./Frontend/Dockerfile
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: xindongg/frontend:latest
