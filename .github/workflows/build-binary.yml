@@ -19,7 +19,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd Backend
-          npm i  --unsafe-perm
+          sudo npm i
 
       - name: Get the date
         id: date
