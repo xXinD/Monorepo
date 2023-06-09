@@ -13,8 +13,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Update NPM
+        run: npm install -g npm@latest
+
+      - name: Update pkg
+        run: npm install -g pkg@latest
+
       - name: Build binary file
-        run: cd "${{ github.workspace }}/Backend" && npm install && npm i -g pkg && npm run build:pkg
+        run: cd "${{ github.workspace }}/Backend" && npm install && npm run build:pkg
 
       - name: Give execution permissions
         run: chmod +x "${{ github.workspace }}/Backend/binary/arm64_binary"
