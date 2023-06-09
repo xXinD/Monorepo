@@ -48,7 +48,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.MY_PAT }}
         with:
-          tag_name: ${{ steps.date.outputs.tag }}
+          tag_name: v${{ steps.date.outputs.tag }}
           release_name: Release ${{ steps.date.outputs.date }}
           draft: false
           prerelease: false
