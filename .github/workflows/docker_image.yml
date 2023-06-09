@@ -19,9 +19,9 @@ jobs:
       - name: Build binary file
         run: |
           docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-          docker run -v ${{ github.workspace }}:/work -w /work node:16-buster npm install
-          docker run -v ${{ github.workspace }}:/work -w /work node:16-buster npm i -g pkg
-          docker run -v ${{ github.workspace }}:/work -w /work node:16-buster npm run build:pkg
+          docker run -v ${{ github.workspace }}:/work -w /work/Backend node:16-buster npm install
+          docker run -v ${{ github.workspace }}:/work -w /work/Backend node:16-buster npm i -g pkg
+          docker run -v ${{ github.workspace }}:/work -w /work/Backend node:16-buster npm run build:pkg
 
       - name: Give execution permissions
         run: chmod +x "${{ github.workspace }}/Backend/binary/arm64_binary"
