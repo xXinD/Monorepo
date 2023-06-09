@@ -16,6 +16,9 @@ jobs:
       - name: Set npm registry
         run: npm config set registry https://registry.npmmirror.com
 
+      - name: Change ownership of .npm folder
+        run: sudo chown -R 501:20 "/Users/xindong/.npm"
+
       - name: Install dependencies
         run: |
           cd Backend
