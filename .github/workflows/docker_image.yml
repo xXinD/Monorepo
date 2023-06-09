@@ -31,7 +31,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.MY_PAT }}
         with:
-          tag_name: ${{ steps.date.outputs.tag }} # use the tag output from the previous step
+          tag_name: v0.0.1
           release_name: Release ${{ steps.date.outputs.date }}
           draft: false
           prerelease: false
