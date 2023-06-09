@@ -9,7 +9,6 @@ const childProcesses = new Map<string, ChildProcessWithoutNullStreams>();
 
 export interface LiveOptions {
   unique_id?: string;
-  uniqueId?: string;
   // 直播间 ID
   id?: string;
   platform?: string;
@@ -23,6 +22,7 @@ export interface LiveOptions {
   streaming_code: string;
   // 房间地址
   room_address?: string;
+  start_time?: string;
   // 视频文件所在目录
   video_dir?: string;
   fileType?: string;
@@ -135,6 +135,8 @@ async function playVideoFiles(
   const args = [
     "-re",
     "-y",
+    "-ss",
+    `${options.start_time ?? "00:00:00"}`,
     "-i",
     options.video_dir,
     "-c:v",

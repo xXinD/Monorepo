@@ -25,6 +25,11 @@ const App: FC = () => {
           name: "影片管理",
           path: "video-list",
         },
+        {
+          key: "1_3",
+          name: "推流地址管理",
+          path: "stream-list",
+        },
       ],
     },
   ]) as any[];

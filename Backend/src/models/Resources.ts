@@ -5,9 +5,10 @@
  */
 import { RowDataPacket } from "mysql2";
 import { getDb } from "../db";
-import { LiveOptions } from "../scripts/streaming";
 
 export class Resources {
+  unique_id: string;
+
   id?: number;
 
   name: string;
@@ -92,7 +93,7 @@ export class Resources {
    * @async
    * @param {Object} options 资源配置
    */
-  static async create(options: LiveOptions): Promise<Resources> {
+  static async create(options: Resources): Promise<Resources> {
     const db = getDb();
     const fields = Object.keys(options);
     const values = Object.values(options);
@@ -108,7 +109,7 @@ export class Resources {
       console.error("SQLite error: ", error.message);
     }
 
-    return Resources.findById(options.uniqueId);
+    return Resources.findById(options.unique_id);
   }
 
   /**

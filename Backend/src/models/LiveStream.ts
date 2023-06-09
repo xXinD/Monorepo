@@ -105,18 +105,20 @@ export class LiveStream {
       throw new Error("直播不存在");
     }
 
+    const updatedData = { ...data }; // 创建data的副本
+
     // 如果直播状态是开启，必填项不可以修改
     if (liveStream.status === 0) {
-      delete data.unique_id;
-      delete data.name;
-      delete data.start_time;
-      delete data.streaming_address;
-      delete data.streaming_code;
+      delete updatedData.unique_id;
+      delete updatedData.name;
+      delete updatedData.start_time;
+      delete updatedData.streaming_address;
+      delete updatedData.streaming_code;
     }
 
     // 更新允许修改的字段
-    const fields = Object.keys(data);
-    const values = Object.values(data);
+    const fields = Object.keys(updatedData);
+    const values = Object.values(updatedData);
 
     const setClause = fields.map((field) => `${field} = ?`).join(", ");
 
@@ -124,8 +126,7 @@ export class LiveStream {
       `UPDATE live_streams SET ${setClause} WHERE unique_id = ?`,
       [...values, unique_id]
     );
-    const afterUpdate = await this.findById(unique_id);
-    return afterUpdate;
+    return await this.findById(unique_id);
   }
 
   /**
@@ -173,7 +174,7 @@ export class LiveStream {
       values
     );
 
-    return LiveStream.findById(options.uniqueId);
+    return LiveStream.findById(options.unique_id);
   }
 
   /**

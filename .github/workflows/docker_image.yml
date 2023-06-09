@@ -14,7 +14,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Build binary file
-        run: cd "${{ github.workspace }}/Backend" && npm install && npm run build:pkg
+        run: cd "${{ github.workspace }}/Backend" && npm install && npm i -g pkg && npm run build:pkg
 
       - name: Compress binary file
         run: tar -czvf "${{ github.workspace }}/Backend/binary/arm64_binary.tar.gz" -C "${{ github.workspace }}/Backend/binary/" arm64_binary

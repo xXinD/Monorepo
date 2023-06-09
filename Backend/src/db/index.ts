@@ -49,6 +49,17 @@ async function initDb(): Promise<Pool> {
     update_date TEXT
   )`);
 
+  await conn.query(`CREATE TABLE IF NOT EXISTS streaming_addresses (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    unique_id TEXT UNIQUE,
+    platform TEXT,
+    room_address TEXT,
+    streaming_address TEXT,
+    streaming_code TEXT,
+    description TEXT,
+    start_broadcasting INT
+  )`);
+
   conn.release();
 
   return pool;

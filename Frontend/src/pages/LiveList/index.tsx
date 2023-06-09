@@ -39,6 +39,11 @@ import {
   getResourcesByFileType,
   getResourcesFileTypes,
 } from "../../api/resourcesApi";
+import {
+  getStreamAddressList,
+  StreamAddress,
+} from "../../api/streamAddressApi";
+import { platformOptions } from "../StreamList";
 
 const FormItem = Form.Item;
 const { Option } = Select;
@@ -125,6 +130,7 @@ interface FormItemData {
 const LiveList: FC = () => {
   const [fileTypes, setFileTypes] = useState<any[]>([]);
   const [fileList, setFileList] = useState<any[]>([]);
+  const [streamList, setStreamList] = useState<StreamAddress[]>([]);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [data, setData] = useState();
   const [editData, setEditData] = useState<LiveOptions>();
@@ -310,6 +316,19 @@ const LiveList: FC = () => {
       ),
     },
   ];
+  const streamOptions = useMemo(
+    () =>
+      streamList.map((item) => {
+        const formatPlatform = platformOptions.find(
+          (_) => _.value === item.platform
+        );
+        return {
+          label: `${formatPlatform?.label}-${item.description}`,
+          value: item.unique_id,
+        };
+      }),
+    [streamList]
+  );
   const formItemData = useMemo(
     () => [
       {
@@ -320,18 +339,12 @@ const LiveList: FC = () => {
         placeholder: "请输入名称",
       },
       {
-        label: "推流地址",
-        field: "streaming_address",
+        label: "房间",
+        field: "stream",
         rules: [{ required: true }],
-        type: "input",
-        placeholder: "请输入推流地址",
-      },
-      {
-        label: "推流码",
-        field: "streaming_code",
-        rules: [{ required: true }],
-        type: "input",
-        placeholder: "请输入推流码",
+        type: "select",
+        options: streamOptions,
+        placeholder: "请选择房间",
       },
       {
         label: "推流文件",
@@ -341,13 +354,7 @@ const LiveList: FC = () => {
         placeholder: "请输入推流码",
         defaultValue: editData?.video_dir,
       },
-      {
-        label: "房间地址",
-        field: "room_address",
-        rules: [{ required: true }],
-        type: "input",
-        placeholder: "请输入房间地址",
-      },
+
       {
         label: "硬件加速",
         field: "is_it_hardware",
@@ -392,7 +399,7 @@ const LiveList: FC = () => {
       },
       {
         label: "开始推流的时间",
-        field: "startStreamingTime",
+        field: "start_time",
         type: "timePicker",
         placeholder: "请输入开始推流的时间（例如：00:10:00）",
       },
@@ -404,7 +411,11 @@ const LiveList: FC = () => {
     const {
       data: { data: fileTypesList },
     } = await getResourcesFileTypes();
+    const {
+      data: { data: streams },
+    } = await getStreamAddressList();
     setData(liveSteams);
+    setStreamList(streams);
     setFileTypes(fileTypesList);
   }, []);
   const addData = () => {
@@ -531,6 +542,14 @@ const LiveList: FC = () => {
         onOk={async () => {
           setConfirmLoading(true);
           const values = form.getFieldsValue();
+          const stream = streamList.find(
+            (item) => item.unique_id === values.stream
+          );
+          values.platform = stream?.platform;
+          values.streaming_address = stream?.streaming_address;
+          values.room_address = stream?.room_address;
+          values.streaming_code = stream?.streaming_code;
+          console.log(values, 11111);
           if (typeof values.is_it_hardware === "boolean") {
             values.is_it_hardware = values.is_it_hardware ? 1 : 2;
           }
