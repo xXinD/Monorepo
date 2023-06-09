@@ -53,26 +53,25 @@ export interface LiveOptions {
   // 直播状态
   state?: string;
   // 推流地址
-  streamingAddress: string;
+  streaming_address: string;
   // 推流密钥
-  streamingCode: string;
+  streaming_code: string;
   // 房间地址
-  roomAddress?: string;
+  room_address?: string;
   // 视频文件所在目录
-  videoDir?: string;
   video_dir?: string;
   fileType?: string;
-  fileName?: string;
+  file_name?: string;
   // 编码器
   encoder?: string;
   // 是否开启硬件加速
-  isItHardware?: boolean | number;
+  is_it_hardware?: boolean | number;
   // 码率模式
-  encodingMode: number;
+  encoding_mode: number;
   // 码率值
-  bitRateValue: number;
+  bit_rate_value: number;
   // 分辨率
-  resolvingPower?: string;
+  resolving_power?: string;
   // 音轨
   audioTrack?: string;
   // 字幕
@@ -144,19 +143,19 @@ const LiveList: FC = () => {
     },
     {
       title: "推流地址",
-      dataIndex: "streamingAddress",
+      dataIndex: "streaming_address",
       width: "10%",
       ellipsis: true,
     },
     {
       title: "推流码",
-      dataIndex: "streamingCode",
+      dataIndex: "streaming_code",
       width: "10%",
       ellipsis: true,
     },
     {
       title: "房间地址",
-      dataIndex: "roomAddress",
+      dataIndex: "room_address",
       render: (text) => (
         <Link href={text} target="_blank">
           {text}
@@ -181,9 +180,9 @@ const LiveList: FC = () => {
     },
     {
       title: "硬件加速",
-      dataIndex: "isItHardware",
+      dataIndex: "is_it_hardware",
       render: (text) =>
-        text ? (
+        text === 1 ? (
           <IconCheckCircleFill className={styles.icon_running} />
         ) : (
           <IconStop className={styles.icon_stop} />
@@ -205,7 +204,7 @@ const LiveList: FC = () => {
     },
     {
       title: "码率模式",
-      dataIndex: "encodingMode",
+      dataIndex: "encoding_mode",
       render: (text) =>
         text === "1" ? (
           <Tag color="#b71de8">固定码率</Tag>
@@ -215,12 +214,12 @@ const LiveList: FC = () => {
     },
     {
       title: "码率值",
-      dataIndex: "bitRateValue",
+      dataIndex: "bit_rate_value",
       render: (text) => `${text}kbps`,
     },
     {
       title: "分辨率",
-      dataIndex: "resolvingPower",
+      dataIndex: "resolving_power",
     },
     {
       title: "音轨",
@@ -248,10 +247,10 @@ const LiveList: FC = () => {
               setEditData(_item);
               await getFileList(_item.fileType);
               form.setFieldsValue({
-                videoDir: {
+                video_dir: {
                   type: _item.fileType,
-                  name: _item.fileName,
-                  path: _item.videoDir,
+                  name: _item.file_name,
+                  path: _item.video_dir,
                 },
               });
               setEditVisible(true);
@@ -299,6 +298,7 @@ const LiveList: FC = () => {
             title="停止&删除"
             content="确认停止&删除当前直播吗？"
             onOk={async () => {
+              console.log(_item, 111);
               await delLiveStream(_item.unique_id);
               const { data: liveSteams } = await getLiveStreamingList();
               setData(liveSteams);
@@ -321,39 +321,39 @@ const LiveList: FC = () => {
       },
       {
         label: "推流地址",
-        field: "streamingAddress",
+        field: "streaming_address",
         rules: [{ required: true }],
         type: "input",
         placeholder: "请输入推流地址",
       },
       {
         label: "推流码",
-        field: "streamingCode",
+        field: "streaming_code",
         rules: [{ required: true }],
         type: "input",
         placeholder: "请输入推流码",
       },
       {
         label: "推流文件",
-        field: "videoDir",
+        field: "video_dir",
         rules: [{ required: true }],
         type: "chooseFile",
         placeholder: "请输入推流码",
-        defaultValue: editData?.videoDir,
+        defaultValue: editData?.video_dir,
       },
       {
         label: "房间地址",
-        field: "roomAddress",
+        field: "room_address",
         rules: [{ required: true }],
         type: "input",
         placeholder: "请输入房间地址",
       },
       {
         label: "硬件加速",
-        field: "isItHardware",
+        field: "is_it_hardware",
         rules: [{ required: true }],
         type: "switch",
-        defaultValue: editData?.isItHardware,
+        defaultValue: editData?.is_it_hardware,
       },
       {
         label: "编码器",
@@ -365,7 +365,7 @@ const LiveList: FC = () => {
       },
       {
         label: "码率模式",
-        field: "encodingMode",
+        field: "encoding_mode",
         rules: [{ required: true }],
         type: "select",
         options: encodingModeOptions,
@@ -373,7 +373,7 @@ const LiveList: FC = () => {
       },
       {
         label: "码率值",
-        field: "bitRateValue",
+        field: "bit_rate_value",
         rules: [{ required: true }],
         type: "input",
         placeholder: "请输入码率值",
@@ -448,8 +448,8 @@ const LiveList: FC = () => {
               defaultValue={editData?.fileType}
               onChange={async (value) => {
                 form.setFieldsValue({
-                  videoDir: {
-                    ...form.getFieldValue("videoDir"),
+                  video_dir: {
+                    ...form.getFieldValue("video_dir"),
                     type: value,
                   },
                 });
@@ -465,11 +465,11 @@ const LiveList: FC = () => {
             <Select
               placeholder="请选择文件"
               allowClear
-              defaultValue={editData?.fileName}
+              defaultValue={editData?.file_name}
               onChange={async (value: any, option: any) => {
                 form.setFieldsValue({
-                  videoDir: {
-                    ...form.getFieldValue("videoDir"),
+                  video_dir: {
+                    ...form.getFieldValue("video_dir"),
                     path: value,
                     // eslint-disable-next-line no-underscore-dangle
                     name: option.children,
@@ -531,12 +531,12 @@ const LiveList: FC = () => {
         onOk={async () => {
           setConfirmLoading(true);
           const values = form.getFieldsValue();
-          if (typeof values.isItHardware === "boolean") {
-            values.isItHardware = values.isItHardware ? 1 : 2;
+          if (typeof values.is_it_hardware === "boolean") {
+            values.is_it_hardware = values.is_it_hardware ? 1 : 2;
           }
-          values.fileType = values.videoDir.type;
-          values.fileName = values.videoDir.name;
-          values.videoDir = values.videoDir.path;
+          values.fileType = values.video_dir.type;
+          values.file_name = values.video_dir.name;
+          values.video_dir = values.video_dir.path;
           try {
             if (editData) {
               await updateLiveStream(editData.unique_id as string, values);
@@ -547,7 +547,6 @@ const LiveList: FC = () => {
             setData(liveSteams);
             setEditVisible(false);
           } catch (e: any) {
-            console.log(e, 11111);
             Notification.error({
               title: "接口错误",
               content: e.message,

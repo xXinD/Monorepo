@@ -11,11 +11,11 @@ import ffmpeg from "fluent-ffmpeg";
  */
 export function escapeParams(ctx: Koa.Context, next: Koa.Next) {
   const params = ctx.request.body as {
-    videoDir: string;
+    video_dir: string;
   };
   // 对需要转义的参数进行处理
-  if (params && params.videoDir) {
-    params.videoDir = params.videoDir.replace(/\\/g, "\\\\");
+  if (params && params.video_dir) {
+    params.video_dir = params.video_dir.replace(/\\/g, "\\\\");
   }
 
   // 传递给下一个中间件

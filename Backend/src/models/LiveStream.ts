@@ -19,17 +19,17 @@ export class LiveStream {
 
   start_time: string;
 
-  streamingAddress: string;
+  streaming_address: string;
 
-  streamingCode: string;
+  streaming_code: string;
 
-  bitRateValue: number;
+  bit_rate_value: number;
 
-  encodingMode: number;
+  encoding_mode: number;
 
-  roomAddress?: string;
+  room_address?: string;
 
-  videoDir: string;
+  video_dir: string;
 
   watermark_enabled: number;
 
@@ -65,7 +65,7 @@ export class LiveStream {
    * 根据 ID 查询直播流
    *
    * @async
-   * @param {string | number} id 直播流 ID
+   * @param {string | number} unique_id 直播流 ID
    * @returns {Object | null} pool.query() 返回的结果。
    * @throws {Error} 直播不存在
    */
@@ -110,8 +110,8 @@ export class LiveStream {
       delete data.unique_id;
       delete data.name;
       delete data.start_time;
-      delete data.streamingAddress;
-      delete data.streamingCode;
+      delete data.streaming_address;
+      delete data.streaming_code;
     }
 
     // 更新允许修改的字段
@@ -135,32 +135,32 @@ export class LiveStream {
    * @param {Object} options 直播流配置
    */
   static async create(options: LiveOptions): Promise<LiveStream> {
-    const VideoResolution = await getVideoResolution(options.videoDir);
+    const VideoResolution = await getVideoResolution(options.video_dir);
     const db = getDb();
     const data = {
-      unique_id: options.unique_id,
-      name: options.name,
-      streamingAddress: options.streamingAddress,
-      streamingCode: options.streamingCode,
-      roomAddress: options.roomAddress,
+      unique_id: options.unique_id || null,
+      name: options.name || null,
+      streaming_address: options.streaming_address || null,
+      streaming_code: options.streaming_code || null,
+      room_address: options.room_address || null,
       status: "0",
-      fileType: options.fileType,
-      fileName: options.fileName,
-      videoDir: options.videoDir,
-      isItHardware: !!options.isItHardware,
+      fileType: options.fileType || null,
+      file_name: options.file_name || null,
+      video_dir: options.video_dir || null,
+      is_it_hardware: !!options.is_it_hardware,
       encoder: options.encoder ? options.encoder : "h264",
-      encodingMode: options.encodingMode,
-      bitRateValue: options.bitRateValue,
-      resolvingPower: options.resolvingPower
-        ? options.resolvingPower
+      encoding_mode: options.encoding_mode || null,
+      bit_rate_value: options.bit_rate_value || null,
+      resolving_power: options.resolving_power
+        ? options.resolving_power
         : `${VideoResolution.width}x${VideoResolution.height}`,
       watermark_enabled: options.watermarkEnabled ? 1 : 0,
-      watermark_img: options.watermarkImg,
-      watermark_width: options.watermarkWidth,
-      watermark_position: options.watermarkPosition,
-      transition_type: options.transitionType,
-      simple_transition: options.simpleTransition,
-      complex_transition: options.complexTransition,
+      watermark_img: options.watermarkImg || null,
+      watermark_width: options.watermarkWidth || null,
+      watermark_position: options.watermarkPosition || null,
+      transition_type: options.transitionType || null,
+      simple_transition: options.simpleTransition || null,
+      complex_transition: options.complexTransition || null,
     };
 
     const fields = Object.keys(data);
@@ -168,7 +168,6 @@ export class LiveStream {
 
     const placeholders = fields.map(() => "?").join(", ");
     const fieldNames = fields.join(", ");
-
     await db.execute(
       `INSERT INTO live_streams (${fieldNames}) VALUES (${placeholders})`,
       values

@@ -18,25 +18,25 @@ export interface LiveOptions {
   // 直播状态
   state?: string;
   // 推流地址
-  streamingAddress: string;
+  streaming_address: string;
   // 推流密钥
-  streamingCode: string;
+  streaming_code: string;
   // 房间地址
-  roomAddress?: string;
+  room_address?: string;
   // 视频文件所在目录
-  videoDir?: string;
+  video_dir?: string;
   fileType?: string;
-  fileName?: string;
+  file_name?: string;
   // 编码器
   encoder?: string;
   // 是否开启硬件加速
-  isItHardware?: number;
+  is_it_hardware?: number;
   // 码率模式
-  encodingMode: number;
+  encoding_mode: number;
   // 码率值
-  bitRateValue: number;
+  bit_rate_value: number;
   // 分辨率
-  resolvingPower?: string;
+  resolving_power?: string;
   // 是否启用水印，默认不启用
   watermarkEnabled?: boolean;
   // 水印图片路径
@@ -114,13 +114,14 @@ async function playVideoFiles(
   ctx: any
 ): Promise<unknown> {
   if (childProcesses.has(options.unique_id)) {
+    childProcesses.get(options.unique_id)?.kill("SIGKILL");
     childProcesses.delete(options.unique_id);
   }
   const { controllers } = await si.graphics();
   console.log(controllers, "controllers");
   // eslint-disable-next-line no-nested-ternary
   let graphicsEncoder: string;
-  if (options.isItHardware === 1) {
+  if (options.is_it_hardware === 1) {
     if (controllers[0]?.vendor === "NVIDIA") {
       graphicsEncoder =
         options.encoder === "h264" ? "h264_nvenc" : "hevc_nvenc";
@@ -135,15 +136,15 @@ async function playVideoFiles(
     "-re",
     "-y",
     "-i",
-    options.videoDir,
+    options.video_dir,
     "-c:v",
     graphicsEncoder,
-    `${options.encodingMode === 2 && "-maxrate"}`,
-    `${options.encodingMode === 2 && `${options.bitRateValue}k`}`,
-    `${options.encodingMode === 2 && "-bufsize"}`,
-    `${options.encodingMode === 2 && `${options.bitRateValue}k`}`,
-    `${options.encodingMode === 1 && "-b:v"}`,
-    `${options.encodingMode === 1 && `${options.bitRateValue}k`}`,
+    `${options.encoding_mode === 2 && "-maxrate"}`,
+    `${options.encoding_mode === 2 && `${options.bit_rate_value}k`}`,
+    `${options.encoding_mode === 2 && "-bufsize"}`,
+    `${options.encoding_mode === 2 && `${options.bit_rate_value}k`}`,
+    `${options.encoding_mode === 1 && "-b:v"}`,
+    `${options.encoding_mode === 1 && `${options.bit_rate_value}k`}`,
     "-c:a",
     "copy",
     "-map",
@@ -162,7 +163,7 @@ async function playVideoFiles(
     "flv",
     "-qp",
     "20",
-    `tee:[f=flv]${options.streamingAddress}/${options.streamingCode}`,
+    `tee:[f=flv]${options.streaming_address}/${options.streaming_code}`,
   ];
   const formatArgs: any[] = [];
   // 删除args内的false值
@@ -257,12 +258,12 @@ export async function startStreaming(options: LiveOptions, ctx: any) {
  * @returns {Object}
  * @throws {Error}
  */
-export async function stopStreaming(uniqueId: string) {
-  const childProcess = childProcesses.get(uniqueId);
+export async function stopStreaming(unique_id: string) {
+  const childProcess = childProcesses.get(unique_id);
   if (childProcess) {
     childProcess.kill("SIGKILL");
-    childProcesses.delete(uniqueId);
-    await updateLiveStreamStatus(uniqueId, 1);
+    childProcesses.delete(unique_id);
+    await updateLiveStreamStatus(unique_id, 1);
   }
 }
 
@@ -272,15 +273,15 @@ export async function stopStreaming(uniqueId: string) {
  * @description 删除直播间
  * @param {string} uniqueId 直播间唯一标识
  */
-export async function delStreaming(uniqueId: string, ctx: any) {
-  const childProcess = childProcesses.get(uniqueId);
-  const liveStream = await LiveStream.findById(uniqueId);
+export async function delStreaming(unique_id: string, ctx: any) {
+  const childProcess = childProcesses.get(unique_id);
+  const liveStream = await LiveStream.findById(unique_id);
   if (childProcess) {
     childProcess.kill("SIGKILL");
-    childProcesses.delete(uniqueId);
+    childProcesses.delete(unique_id);
   }
   if (liveStream) {
-    await LiveStream.delete(uniqueId);
+    await LiveStream.delete(unique_id);
   } else {
     ctx.status = 500;
     ctx.body = { message: "直播间不存在" };

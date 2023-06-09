@@ -17,7 +17,7 @@ import { asyncHandler } from "../utils/handler";
 
 type RtmpLiveOptions = Pick<
   LiveOptions,
-  "streamingAddress" | "streamingCode" | "videoDir"
+  "streaming_address" | "streaming_code" | "video_dir"
 >;
 
 /**
@@ -25,21 +25,21 @@ type RtmpLiveOptions = Pick<
  *
  * @async
  * @param {string} ctx.request.body.name 直播间名称。
- * @param {string} ctx.request.body.streamingAddress RTMP 服务器地址。
- * @param {string} ctx.request.body.streamingCode 推流码。
- * @param {string} ctx.request.body.videoDir 视频文件目录。
+ * @param {string} ctx.request.body.streaming_address RTMP 服务器地址。
+ * @param {string} ctx.request.body.streaming_code 推流码。
+ * @param {string} ctx.request.body.video_dir 视频文件目录。
  * @param {boolean} ctx.request.body.watermarkEnabled 是否添加水印。
  * @param {string} ctx.request.body.watermarkImg 水印图片路径。
  * @returns {Object} 直播间信息对象。
  * @throws {Error} 如果平台参数为空，则抛出异常。
  */
 export async function startLive(ctx: any) {
-  const { name, streamingAddress, streamingCode } = ctx.request.body;
+  const { name, streaming_address, streaming_code } = ctx.request.body;
   // 检查必填参数是否为空
   const invalidOption = validateLiveOptions(<LiveOptions>(<RtmpLiveOptions>{
     name,
-    streamingAddress,
-    streamingCode,
+    streaming_address,
+    streaming_code,
     watermarkEnabled: false,
   }));
   if (invalidOption) {

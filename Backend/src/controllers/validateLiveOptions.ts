@@ -2,9 +2,9 @@ import { LiveOptions } from "../scripts/streaming";
 
 const FIELD_NAME_MAP = {
   platform: "平台",
-  streamingAddress: "推流地址",
-  streamingCode: "推流密钥",
-  videoDir: "视频文件目录",
+  streaming_address: "推流地址",
+  streaming_code: "推流密钥",
+  video_dir: "视频文件目录",
   watermarkEnabled: "水印开关",
   watermarkImg: "水印图片路径",
   watermarkWidth: "水印图片宽度",
@@ -45,13 +45,13 @@ export function checkRequiredParams(
 
 /**
  * 校验推流地址的协议是否支持
- * @param {string} streamingAddress - 推流地址
+ * @param {string} streaming_address - 推流地址
  * @returns {boolean} - 推流地址的协议是否支持
  */
 export function isStreamingProtocolSupported(
-  streamingAddress: string
+  streaming_address: string
 ): boolean {
-  const protocol = streamingAddress.split(":")[0];
+  const protocol = streaming_address.split(":")[0];
   return SUPPORTED_STREAMING_PROTOCOLS.includes(protocol);
 }
 
@@ -61,14 +61,14 @@ export function isStreamingProtocolSupported(
  * @returns {string | null} - 如果参数有空值，则返回第一个空参数的名称；如果推流地址的协议不支持，则返回错误信息；否则返回 null
  */
 export function validateLiveOptions(options: LiveOptions): string | null {
-  const requiredParams = ["name", "streamingAddress", "streamingCode"];
+  const requiredParams = ["name", "streaming_address", "streaming_code"];
 
   const emptyParam = checkRequiredParams(options, requiredParams);
   if (emptyParam) {
     return `${emptyParam}不能为空`;
   }
 
-  if (!isStreamingProtocolSupported(options.streamingAddress)) {
+  if (!isStreamingProtocolSupported(options.streaming_address)) {
     return "不支持该推流地址的协议";
   }
 

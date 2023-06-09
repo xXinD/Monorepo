@@ -1,8 +1,9 @@
 /**
  * @author XinD
- * @date 2023/4/19
- * @description 直播流模型
+ * @date 2023/6/9
+ * @description 资源管理
  */
+import { RowDataPacket } from "mysql2";
 import { getDb } from "../db";
 import { LiveOptions } from "../scripts/streaming";
 
@@ -21,27 +22,31 @@ export class Resources {
    * 查询所有资源
    *
    * @async
-   * @returns {Array} db.all() 返回的结果。
+   * @returns {Array} db.query() 返回的结果。
    */
   static async findAll(): Promise<Resources[]> {
     const db = getDb();
-    const rows = await db.all("SELECT * FROM resources");
-    return rows.map((row) => Object.assign(new Resources(), row));
+    const [rows] = await db.query("SELECT * FROM resources");
+    return (rows as RowDataPacket[]).map((row) =>
+      Object.assign(new Resources(), row)
+    );
   }
 
   /**
    * 根据 ID 查询资源
    *
    * @async
-   * @returns {Object | null} db.get() 返回的结果。
+   * @returns {Object | null} db.query() 返回的结果。
    * @throws {Error} 直播不存在
    * @param unique_id
    */
   static async findById(unique_id: string | number): Promise<Resources | null> {
     const db = getDb();
-    const row = await db.get("SELECT * FROM resources WHERE unique_id = ?", [
-      unique_id,
-    ]);
+    const [rows] = await db.query(
+      "SELECT * FROM resources WHERE unique_id = ?",
+      [unique_id]
+    );
+    const row = (rows as RowDataPacket[])[0];
 
     if (row) {
       return Object.assign(new Resources(), row);
@@ -74,7 +79,7 @@ export class Resources {
 
     const setClause = fields.map((field) => `${field} = ?`).join(", ");
 
-    await db.run(`UPDATE resources SET ${setClause} WHERE unique_id = ?`, [
+    await db.query(`UPDATE resources SET ${setClause} WHERE unique_id = ?`, [
       ...values,
       unique_id,
     ]);
@@ -95,7 +100,7 @@ export class Resources {
     const placeholders = fields.map(() => "?").join(", ");
     const fieldNames = fields.join(", ");
     try {
-      await db.run(
+      await db.query(
         `INSERT INTO resources (${fieldNames}) VALUES (${placeholders})`,
         values
       );
@@ -115,7 +120,7 @@ export class Resources {
    */
   static async delete(uniqueId: string): Promise<void> {
     const db = getDb();
-    await db.run("DELETE FROM resources WHERE unique_id = ?", [uniqueId]);
+    await db.query("DELETE FROM resources WHERE unique_id = ?", [uniqueId]);
   }
 
   /**
@@ -126,7 +131,7 @@ export class Resources {
    */
   static async clearAll(): Promise<void> {
     const db = getDb();
-    await db.run("DELETE FROM resources");
+    await db.query("DELETE FROM resources");
   }
 
   /**
@@ -137,8 +142,8 @@ export class Resources {
    */
   static async findAllFileTypes(): Promise<string[]> {
     const db = getDb();
-    const rows = await db.all("SELECT DISTINCT file_type FROM resources");
-    return rows.map((row) => row.file_type);
+    const [rows] = await db.query("SELECT DISTINCT file_type FROM resources");
+    return (rows as RowDataPacket[]).map((row) => row.file_type);
   }
 
   /**
@@ -150,9 +155,12 @@ export class Resources {
    */
   static async findByFileType(fileType: string): Promise<Resources[]> {
     const db = getDb();
-    const rows = await db.all("SELECT * FROM resources WHERE file_type = ?", [
-      fileType,
-    ]);
-    return rows.map((row) => Object.assign(new Resources(), row));
+    const [rows] = await db.query(
+      "SELECT * FROM resources WHERE file_type = ?",
+      [fileType]
+    );
+    return (rows as RowDataPacket[]).map((row) =>
+      Object.assign(new Resources(), row)
+    );
   }
 }
