@@ -10,15 +10,8 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '18'
-
       - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
 
       - name: Set npm registry
         run: npm config set registry https://registry.npmmirror.com
@@ -26,7 +19,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd Backend
-          sudo npm i
+          npm i
 
       - name: Get the date
         id: date
