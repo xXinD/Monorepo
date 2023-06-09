@@ -16,10 +16,13 @@ jobs:
       - name: Set npm registry
         run: npm config set registry https://registry.npmmirror.com
 
+      - name: Install pnpm
+        run: npm install -g pnpm
+
       - name: Install dependencies
         run: |
           cd Backend
-          npm i
+          pnpm install
 
       - name: Get the date
         id: date
@@ -29,7 +32,7 @@ jobs:
       - name: Build binary
         run: |
           cd Backend
-          npm run build:pkg
+          pnpm run build:pkg
 
       - name: Compress binary file
         run: tar -czvf binary.tar.gz ./Backend/binary/arm64_binary
