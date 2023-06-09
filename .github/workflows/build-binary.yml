@@ -12,11 +12,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        env:
-          ACTIONS_STEP_DEBUG: true
-          ACTIONS_RUNNER_DEBUG: true
-          ACTIONS_RUNNER_DEBUG_TRACE: 1
-          ACTIONS_STEP_STDERR_BUFFER: 16MB
 
       - name: Set npm registry
         run: npm config set registry https://registry.npmmirror.com
