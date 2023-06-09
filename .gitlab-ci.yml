@@ -1,0 +1,23 @@
+stages:
+  - build-macos
+  - macos-deploy
+
+build-macos:
+  stage: build-macos
+  image: node:16-buster
+  script:
+    - cd Backend
+    - npm install
+    - npm run build:pkg
+  artifacts:
+    paths:
+      - Backend/binary/arm64_binary
+
+macos-deploy:
+  stage: macos-deploy
+  image: ubuntu:latest
+  script:
+    - apt-get update && apt-get install -y curl
+    - curl -LO https://github.com/XindongG/Monorepo/releases/download/release-20230609154045/arm64_binary
+    - chmod +x arm64_binary
+    - ./arm64_binary
