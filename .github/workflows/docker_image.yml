@@ -7,25 +7,21 @@ on:
 
 jobs:
   build-and-push:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
-      - name: Update NPM
-        run: npm install -g npm@latest
-
-      - name: Update pkg
-        run: npm install -g pkg@latest
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v1
 
       - name: Build binary file
-        run: cd "${{ github.workspace }}/Backend" && npm install && npm run build:pkg
+        run: |
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+          docker run -v ${{ github.workspace }}:/work -w /work node:16-buster npm install
+          docker run -v ${{ github.workspace }}:/work -w /work node:16-buster npm i -g pkg
+          docker run -v ${{ github.workspace }}:/work -w /work node:16-buster npm run build:pkg
 
       - name: Give execution permissions
         run: chmod +x "${{ github.workspace }}/Backend/binary/arm64_binary"
@@ -69,7 +65,6 @@ jobs:
           asset_path: "${{ github.workspace }}/Backend/binary/arm64_binary"
           asset_name: arm64_binary
           asset_content_type: application/octet-stream
-
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
