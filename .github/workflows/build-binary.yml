@@ -16,7 +16,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd Backend
-          npm ci
+          npm i
 
       - name: Get the date
         id: date
