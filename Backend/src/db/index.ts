@@ -60,7 +60,7 @@ async function initDb(): Promise<Pool> {
     streaming_address TEXT,
     streaming_code TEXT,
     description TEXT,
-    start_broadcasting INT
+    update_date INT
   )`);
 
   conn.release();
