@@ -1,11 +1,19 @@
 import { FC, useMemo, useState } from "react";
 import { BrowserRouter as Router } from "react-router-dom";
-import { Link, Menu, PageHeader } from "@arco-design/web-react";
+import {
+  Link,
+  Menu,
+  PageHeader,
+  Form,
+  Input,
+  Button,
+} from "@arco-design/web-react";
 import { IconLiveBroadcast } from "@arco-design/web-react/icon";
 import routes from "./router";
 import RenderRoutes from "./router/RenderRoutes";
 import styles from "./index.module.less";
 
+const FormItem = Form.Item;
 const MenuItem = Menu.Item;
 const { SubMenu } = Menu;
 const App: FC = () => {
@@ -85,5 +93,18 @@ const App: FC = () => {
     </Router>
   );
 };
-
+// Todo：新增初次进入站点，提示录入数据库、redis、后端服务地址等信息。
+const PreMade: FC = () => (
+  <Form style={{ width: 600 }} autoComplete="off">
+    <FormItem label="Username">
+      <Input placeholder="please enter your username..." />
+    </FormItem>
+    <FormItem label="Post">
+      <Input placeholder="please enter your post..." />
+    </FormItem>
+    <FormItem wrapperCol={{ offset: 5 }}>
+      <Button type="primary">Submit</Button>
+    </FormItem>
+  </Form>
+);
 export default App;

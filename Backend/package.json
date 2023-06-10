@@ -32,6 +32,7 @@
     "mysql2": "^3.3.3",
     "nodemon": "^2.0.21",
     "openai": "^3.2.1",
+    "redis": "^4.6.7",
     "sqlite": "^4.1.2",
     "sqlite3": "^5.1.6",
     "systeminformation": "^5.17.16",
