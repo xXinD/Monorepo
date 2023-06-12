@@ -51,6 +51,10 @@ const fileTypeOptions = [
     label: "图片",
     value: "Picture",
   },
+  {
+    label: "拉流地址",
+    value: "pull_address",
+  },
 ];
 const ResourcesList: FC = () => {
   const [data, setData] = useState([]);
@@ -84,11 +88,13 @@ const ResourcesList: FC = () => {
       render: (text) => {
         switch (text) {
           case "audio":
-            return <Tag color="#ff7d00">Audio</Tag>;
+            return <Tag color="#ff7d00">音频</Tag>;
           case "video":
-            return <Tag color="#ff5722">Video</Tag>;
+            return <Tag color="#ff5722">视频</Tag>;
           case "Picture":
-            return <Tag color="#b71de8">Picture</Tag>;
+            return <Tag color="#b71de8">图片</Tag>;
+          case "pull_address":
+            return <Tag color="#168cff">转发流</Tag>;
           default:
             return <Tag color="#7816ff">Unknown</Tag>;
         }

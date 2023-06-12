@@ -9,10 +9,14 @@ class RedisClientSingleton {
   private constructor(host: string = "123.249.124.132", port: number = 6379) {
     this.client = createClient({
       url: `redis://${host}:${port}`,
+      password: "199615xin",
     });
-
+    this.client.connect();
     this.client.on("error", (err: any) => {
       console.error(`Error ${err}`);
+    });
+    this.client.on("connect", () => {
+      console.log("Redis connected");
     });
   }
 
@@ -23,44 +27,25 @@ class RedisClientSingleton {
     return RedisClientSingleton.instance;
   }
 
-  public set(
-    key: string,
-    value: string,
-    callback?: (err: Error | null, reply: string) => void
-  ): void {
-    this.client.set(key, value, callback);
+  public async set(key: string, value: string): Promise<void> {
+    return await this.client.set(key, value);
   }
 
-  public get(
-    key: string,
-    callback?: (err: Error | null, reply: string) => void
-  ): void {
-    this.client.get(key, callback);
+  public async get(key: string): Promise<any> {
+    return await this.client.get(key);
   }
 
-  public del(
-    key: string,
-    callback?: (err: Error | null, reply: number) => void
-  ): void {
-    this.client.del(key, callback);
+  public async del(key: string): Promise<void> {
+    return await this.client.del(key);
   }
 
-  public exists(
-    key: string,
-    callback?: (err: Error | null, reply: number) => void
-  ): void {
-    this.client.exists(key, callback);
+  public async keys(pattern: string): Promise<void> {
+    return await this.client.keys(pattern);
   }
 
-  public keys(
-    pattern: string,
-    callback?: (err: Error | null, reply: string[]) => void
-  ): void {
-    this.client.keys(pattern, callback);
-  }
-
-  public quit(): void {
-    this.client.quit();
+  public async quit(): Promise<void> {
+    await this.client.quit();
+    RedisClientSingleton.instance = null;
   }
 }
 
