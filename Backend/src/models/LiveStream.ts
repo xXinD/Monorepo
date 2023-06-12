@@ -110,8 +110,6 @@ export class LiveStream {
     // 如果直播状态是开启，必填项不可以修改
     if (liveStream.status === 0) {
       delete updatedData.unique_id;
-      delete updatedData.name;
-      delete updatedData.start_time;
       delete updatedData.streaming_address;
       delete updatedData.streaming_code;
     }
@@ -121,7 +119,6 @@ export class LiveStream {
     const values = Object.values(updatedData);
 
     const setClause = fields.map((field) => `${field} = ?`).join(", ");
-
     await db.execute(
       `UPDATE live_streams SET ${setClause} WHERE unique_id = ?`,
       [...values, unique_id]
@@ -155,6 +152,7 @@ export class LiveStream {
       resolving_power: options.resolving_power
         ? options.resolving_power
         : `${VideoResolution.width}x${VideoResolution.height}`,
+      retweet: options.retweet ?? 2,
       watermark_enabled: options.watermarkEnabled ? 1 : 0,
       watermark_img: options.watermarkImg || null,
       watermark_width: options.watermarkWidth || null,

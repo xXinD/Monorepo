@@ -1,6 +1,8 @@
 import { createPool, Pool } from "mysql2/promise";
 import * as process from "process";
+import * as os from "os";
 
+console.log(os.arch());
 async function initDb(): Promise<Pool> {
   const pool = createPool({
     host: "143.110.159.133",
@@ -20,6 +22,7 @@ async function initDb(): Promise<Pool> {
     id INT PRIMARY KEY AUTO_INCREMENT,
     unique_id TEXT UNIQUE,
     name TEXT,
+    retweet INT,
     platform TEXT,
     status INT,
     streaming_address TEXT,
@@ -60,11 +63,14 @@ async function initDb(): Promise<Pool> {
     streaming_address TEXT,
     streaming_code TEXT,
     description TEXT,
-    start_broadcasting INT
+    update_date INT
   )`);
 
   conn.release();
-
+  await conn.query(`
+    ALTER TABLE live_streams
+    ADD COLUMN IF NOT EXISTS retweet INT
+  `);
   return pool;
 }
 
