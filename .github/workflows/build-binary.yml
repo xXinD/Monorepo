@@ -30,7 +30,7 @@ jobs:
         run: ls -l "${{ github.workspace }}/Backend/dist/executables/"
 
       - name: Set executable permissions
-        run: chmod +x "${{ github.workspace }}/Backend/dist/executables/*"
+        run: find "${{ github.workspace }}/Backend/dist/executables/" -type f -exec chmod +x {} \;
 
       - name: Package binary file
         run: cd "${{ github.workspace }}/Backend" && npm run build:pkg
