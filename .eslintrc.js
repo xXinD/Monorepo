@@ -50,8 +50,16 @@ module.exports = {
   overrides: [
     {
       files: ["./Backend/**/*"],
+      env: {
+        node: true,
+      },
       rules: {
         "no-console": "off",
+        "import/no-extraneous-dependencies": [
+          "error",
+          { devDependencies: true },
+        ],
+        "no-param-reassign": "off",
       },
     },
   ],

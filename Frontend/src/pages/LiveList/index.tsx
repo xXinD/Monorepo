@@ -24,6 +24,7 @@ import {
   IconRecordStop,
   IconSettings,
   IconStop,
+  IconMinus,
 } from "@arco-design/web-react/icon";
 import { useAsyncEffect } from "ahooks";
 import styles from "./index.module.less";
@@ -136,6 +137,7 @@ const LiveList: FC = () => {
   const [editData, setEditData] = useState<LiveOptions>();
   const [form] = Form.useForm();
   const [editVisible, setEditVisible] = useState(false);
+  const [retweet, setRetweet] = useState(2);
   const getFileList = async (value: string) => {
     const {
       data: { data: result },
@@ -169,6 +171,16 @@ const LiveList: FC = () => {
       ),
     },
     {
+      title: "转发推流",
+      dataIndex: "retweet",
+      render: (text) =>
+        text === "1" ? (
+          <IconCheckCircleFill className={styles.icon_running} />
+        ) : (
+          <IconStop className={styles.icon_stop} />
+        ),
+    },
+    {
       title: "状态",
       dataIndex: "status",
       render: (text) => {
@@ -187,17 +199,24 @@ const LiveList: FC = () => {
     {
       title: "硬件加速",
       dataIndex: "is_it_hardware",
-      render: (text) =>
-        text === 1 ? (
+      render: (text, _item) => {
+        if (_item.retweet === "1") {
+          return <IconMinus />;
+        }
+        return text === 1 ? (
           <IconCheckCircleFill className={styles.icon_running} />
         ) : (
           <IconStop className={styles.icon_stop} />
-        ),
+        );
+      },
     },
     {
       title: "编码器",
       dataIndex: "encoder",
-      render: (text) => {
+      render: (text, _item) => {
+        if (_item.retweet === "1") {
+          return <IconMinus />;
+        }
         switch (text) {
           case "H.264":
             return <Tag color="#ff7d00">H.264</Tag>;
@@ -211,31 +230,39 @@ const LiveList: FC = () => {
     {
       title: "码率模式",
       dataIndex: "encoding_mode",
-      render: (text) =>
-        text === "1" ? (
+      render: (text, _item) => {
+        if (_item.retweet === "1") {
+          return <IconMinus />;
+        }
+        return text === "1" ? (
           <Tag color="#b71de8">固定码率</Tag>
         ) : (
           <Tag color="#7816ff">动态码率范围</Tag>
-        ),
+        );
+      },
     },
     {
       title: "码率值",
       dataIndex: "bit_rate_value",
-      render: (text) => `${text}kbps`,
+      render: (text, _item) =>
+        _item.retweet === "1" ? <IconMinus /> : `${text}kbps`,
     },
     {
       title: "分辨率",
       dataIndex: "resolving_power",
+      render: (text, _item) => (_item.retweet === "1" ? <IconMinus /> : text),
     },
     {
       title: "音轨",
       dataIndex: "audioTrack",
-      render: (text) => text || "默认",
+      render: (text, _item) =>
+        _item.retweet === "1" ? <IconMinus /> : text || "默认",
     },
     {
       title: "字幕轨道",
       dataIndex: "subtitleTrack",
-      render: (text) => text || "默认",
+      render: (text, _item) =>
+        _item.retweet === "1" ? <IconMinus /> : text || "默认",
     },
     {
       title: "操作",
@@ -304,7 +331,6 @@ const LiveList: FC = () => {
             title="停止&删除"
             content="确认停止&删除当前直播吗？"
             onOk={async () => {
-              console.log(_item, 111);
               await delLiveStream(_item.unique_id);
               const { data: liveSteams } = await getLiveStreamingList();
               setData(liveSteams);
@@ -329,8 +355,8 @@ const LiveList: FC = () => {
       }),
     [streamList]
   );
-  const formItemData = useMemo(
-    () => [
+  const formItemData = useMemo(() => {
+    const result: FormItemData[] = [
       {
         label: "名称",
         field: "name",
@@ -347,65 +373,89 @@ const LiveList: FC = () => {
         placeholder: "请选择房间",
       },
       {
-        label: "推流文件",
-        field: "video_dir",
-        rules: [{ required: true }],
-        type: "chooseFile",
-        placeholder: "请输入推流码",
-        defaultValue: editData?.video_dir,
-      },
-
-      {
-        label: "硬件加速",
-        field: "is_it_hardware",
+        label: "转发推流",
+        field: "retweet",
         rules: [{ required: true }],
         type: "switch",
-        defaultValue: editData?.is_it_hardware,
+        defaultValue: retweet,
       },
-      {
-        label: "编码器",
-        field: "encoder",
+    ];
+    if (retweet === 2) {
+      // @ts-ignore
+      result.push(
+        {
+          label: "推流文件",
+          field: "video_dir",
+          rules: [{ required: true }],
+          type: "chooseFile",
+          placeholder: "请输入推流码",
+          defaultValue: editData?.video_dir,
+        },
+
+        {
+          label: "硬件加速",
+          field: "is_it_hardware",
+          rules: [{ required: true }],
+          type: "switch",
+          defaultValue: editData?.is_it_hardware,
+        },
+        {
+          label: "编码器",
+          field: "encoder",
+          rules: [{ required: true }],
+          type: "select",
+          options: encoderOptions,
+          placeholder: "请选择编码器",
+        },
+        {
+          label: "码率模式",
+          field: "encoding_mode",
+          rules: [{ required: true }],
+          type: "select",
+          options: encodingModeOptions,
+          placeholder: "请选择码率模式",
+        },
+        {
+          label: "码率值",
+          field: "bit_rate_value",
+          rules: [{ required: true }],
+          type: "input",
+          placeholder: "请输入码率值",
+        },
+        {
+          label: "音轨",
+          field: "audioTrack",
+          type: "input",
+          placeholder: "请输入音轨（不输入则默认音轨）",
+        },
+        {
+          label: "字幕轨道",
+          field: "subtitleTrack",
+          type: "input",
+          placeholder: "请输入字幕轨道（不输入则默认字幕轨道）",
+        },
+        {
+          label: "开始推流的时间",
+          field: "start_time",
+          type: "timePicker",
+          placeholder: "请输入开始推流的时间（例如：00:10:00）",
+        }
+      );
+    } else {
+      result.push({
+        label: "拉流地址",
+        field: "pull_address",
         rules: [{ required: true }],
         type: "select",
-        options: encoderOptions,
-        placeholder: "请选择编码器",
-      },
-      {
-        label: "码率模式",
-        field: "encoding_mode",
-        rules: [{ required: true }],
-        type: "select",
-        options: encodingModeOptions,
-        placeholder: "请选择码率模式",
-      },
-      {
-        label: "码率值",
-        field: "bit_rate_value",
-        rules: [{ required: true }],
-        type: "input",
-        placeholder: "请输入码率值",
-      },
-      {
-        label: "音轨",
-        field: "audioTrack",
-        type: "input",
-        placeholder: "请输入音轨（不输入则默认音轨）",
-      },
-      {
-        label: "字幕轨道",
-        field: "subtitleTrack",
-        type: "input",
-        placeholder: "请输入字幕轨道（不输入则默认字幕轨道）",
-      },
-      {
-        label: "开始推流的时间",
-        field: "start_time",
-        type: "timePicker",
-        placeholder: "请输入开始推流的时间（例如：00:10:00）",
-      },
-    ],
-    [editData, editVisible]
-  );
+        options: fileList.map((item) => ({
+          label: item.name,
+          value: item.video_dir,
+        })),
+        placeholder: "请选择拉流地址",
+      });
+    }
+    return result;
+  }, [editData, editVisible, retweet, fileList]);
   useAsyncEffect(async () => {
     const { data: liveSteams } = await getLiveStreamingList();
     const {
@@ -429,9 +479,21 @@ const LiveList: FC = () => {
       case "input":
         return <Input placeholder={item.placeholder} />;
       case "switch":
+        if (item.field === "retweet") {
+          return (
+            <Switch
+              defaultChecked={retweet !== 2}
+              onChange={async (value) => {
+                setRetweet(value ? 1 : 2);
+                await getFileList("pull_address");
+              }}
+            />
+          );
+        }
         return (
           <Switch defaultChecked={editData ? item.defaultValue === 1 : false} />
         );
+
       case "select":
         return (
           item.options && (
@@ -467,11 +529,15 @@ const LiveList: FC = () => {
                 await getFileList(value);
               }}
             >
-              {fileTypes.map((option) => (
-                <Option key={option} value={option}>
-                  {option}
-                </Option>
-              ))}
+              {fileTypes.map((option) => {
+                if (option !== "pull_address") {
+                  return (
+                    <Option key={option} value={option}>
+                      {option}
+                    </Option>
+                  );
+                }
+              })}
             </Select>
             <Select
               placeholder="请选择文件"
@@ -502,6 +568,7 @@ const LiveList: FC = () => {
   };
   const formItemRender = useMemo(
     () =>
+      formItemData &&
       formItemData.map((item: FormItemData) => (
         <FormItem
           key={item.field}
@@ -512,7 +579,7 @@ const LiveList: FC = () => {
           {getFormElement(item)}
         </FormItem>
       )),
-    [editData, editVisible, fileTypes, fileList]
+    [editData, editVisible, fileTypes, fileList, retweet]
   );
   return (
     <>
@@ -549,13 +616,19 @@ const LiveList: FC = () => {
           values.streaming_address = stream?.streaming_address;
           values.room_address = stream?.room_address;
           values.streaming_code = stream?.streaming_code;
-          console.log(values, 11111);
-          if (typeof values.is_it_hardware === "boolean") {
-            values.is_it_hardware = values.is_it_hardware ? 1 : 2;
+          if (retweet === 2) {
+            if (typeof values.is_it_hardware === "boolean") {
+              values.is_it_hardware = values.is_it_hardware ? 1 : 2;
+            }
+            values.fileType = values.video_dir.type;
+            values.file_name = values.video_dir.name;
+            values.video_dir = values.video_dir.path;
+          } else {
+            values.retweet = retweet;
+            values.video_dir = values.pull_address;
+            delete values.pull_address;
           }
-          values.fileType = values.video_dir.type;
-          values.file_name = values.video_dir.name;
-          values.video_dir = values.video_dir.path;
+          delete values.stream;
           try {
             if (editData) {
               await updateLiveStream(editData.unique_id as string, values);

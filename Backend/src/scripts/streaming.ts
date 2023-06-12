@@ -3,6 +3,8 @@ import si from "systeminformation";
 import { spawn, ChildProcessWithoutNullStreams } from "child_process";
 import { LiveStream } from "../models/LiveStream";
 import { asyncHandler } from "../utils/handler";
+import redisClient from "../utils/redisClient";
+import { buildFFmpegCommand } from "./buildFFmpegCommand";
 
 // 子进程统一管理
 const childProcesses = new Map<string, ChildProcessWithoutNullStreams>();
@@ -12,6 +14,7 @@ export interface LiveOptions {
   // 直播间 ID
   id?: string;
   platform?: string;
+  retweet?: boolean;
   // 直播名称
   name: string;
   // 直播状态
@@ -51,6 +54,8 @@ export interface LiveOptions {
   simpleTransition?: number;
   // 选择复杂转场效果：1.旋转circleopen 2.缩放radial 3.翻转flip 4.溶解dissolve"
   complexTransition?: number;
+  // 是否主动停止推流
+  isStopped?: boolean;
 }
 
 /**
@@ -114,67 +119,19 @@ async function playVideoFiles(
   ctx: any
 ): Promise<unknown> {
   if (childProcesses.has(options.unique_id)) {
+    await redisClient.set(options.unique_id, "true");
     childProcesses.get(options.unique_id)?.kill("SIGKILL");
     childProcesses.delete(options.unique_id);
+    const redisFlag = await redisClient.get(options.unique_id);
+    if (redisFlag) {
+      await redisClient.del(options.unique_id);
+    }
   }
+  await redisClient.del(options.unique_id);
   const { controllers } = await si.graphics();
-  console.log(controllers, "controllers");
-  // eslint-disable-next-line no-nested-ternary
-  let graphicsEncoder: string;
-  if (options.is_it_hardware === 1) {
-    if (controllers[0]?.vendor === "NVIDIA") {
-      graphicsEncoder =
-        options.encoder === "h264" ? "h264_nvenc" : "hevc_nvenc";
-    } else {
-      graphicsEncoder =
-        options.encoder === "h264" ? "h264_videotoolbox" : "hevc_videotoolbox";
-    }
-  } else {
-    graphicsEncoder = options.encoder === "h264" ? "libx264" : "libx265";
-  }
-  const args = [
-    "-re",
-    "-y",
-    "-ss",
-    `${options.start_time ?? "00:00:00"}`,
-    "-i",
-    options.video_dir,
-    "-c:v",
-    graphicsEncoder,
-    `${options.encoding_mode === 2 && "-maxrate"}`,
-    `${options.encoding_mode === 2 && `${options.bit_rate_value}k`}`,
-    `${options.encoding_mode === 2 && "-bufsize"}`,
-    `${options.encoding_mode === 2 && `${options.bit_rate_value}k`}`,
-    `${options.encoding_mode === 1 && "-b:v"}`,
-    `${options.encoding_mode === 1 && `${options.bit_rate_value}k`}`,
-    "-c:a",
-    "copy",
-    "-map",
-    "0:v:0",
-    "-map",
-    "0:a:0",
-    "-metadata:s:v:0",
-    "language=chi",
-    "-metadata:s:a:0",
-    "language=chi",
-    "-scodec",
-    "mov_text",
-    "-map",
-    "0:s:0?",
-    "-f",
-    "flv",
-    "-qp",
-    "20",
-    `tee:[f=flv]${options.streaming_address}/${options.streaming_code}`,
-  ];
-  const formatArgs: any[] = [];
-  // 删除args内的false值
-  args.map((item) => {
-    if (item !== "false") {
-      formatArgs.push(item);
-    }
-  });
-  const childProcess = spawn("ffmpeg", formatArgs);
+  const args = await buildFFmpegCommand(options);
+  console.log(args, "args");
+  const childProcess = spawn("ffmpeg", args);
 
   childProcess.stdout.on("data", (data) => {
     console.log(`stdout: ${data}`);
@@ -191,15 +148,6 @@ async function playVideoFiles(
         childProcesses.delete(options.unique_id);
         await updateLiveStreamStatus(options.unique_id, 2);
       }, "直播间被封禁");
-    } else if (
-      data.indexOf("Failed to update header with correct duration") !== -1
-    ) {
-      console.error(`stdout: ${data}`);
-      await asyncHandler(async () => {
-        await LiveStream.delete(options.unique_id);
-        childProcesses.delete(options.unique_id);
-        await playVideoFiles(options, ctx);
-      }, "推流任务出错");
     } else {
       console.log(`stdout: ${data}`);
     }
@@ -212,9 +160,25 @@ async function playVideoFiles(
 
   // 当子进程退出时，将其从映射中移除
   childProcess.on("exit", async () => {
-    childProcesses.delete(options.unique_id);
-    // 在数据库中删除对应的记录
-    await updateLiveStreamStatus(options.unique_id, 1);
+    const isStopped = await redisClient.get(options.unique_id);
+    // @ts-ignore
+    if (isStopped !== "true") {
+      // 如果没有被停止，就重新开始推流
+      await redisClient.del(options.unique_id);
+      await playVideoFiles(
+        {
+          ...options,
+          start_time: "00:00:00",
+        },
+        ctx
+      );
+    } else {
+      if (childProcesses.has(options.unique_id)) {
+        childProcesses.delete(options.unique_id);
+      }
+      // 在数据库中删除对应的记录
+      await updateLiveStreamStatus(options.unique_id, 1);
+    }
   });
   return new Promise((resolve, reject) => {
     childProcess.on("spawn", async () => {
@@ -256,41 +220,66 @@ export async function startStreaming(options: LiveOptions, ctx: any) {
  *
  *
  * @async
- * @param {Object}
  * @returns {Object}
  * @throws {Error}
+ * @param unique_id
  */
 export async function stopStreaming(unique_id: string) {
-  const childProcess = childProcesses.get(unique_id);
-  if (childProcess) {
-    childProcess.kill("SIGKILL");
-    childProcesses.delete(unique_id);
-    await updateLiveStreamStatus(unique_id, 1);
-  }
+  await asyncHandler(async () => {
+    await redisClient.set(unique_id, "true");
+    const childProcess = childProcesses.get(unique_id);
+    if (childProcess) {
+      childProcess.kill("SIGKILL");
+      childProcesses.delete(unique_id);
+      await updateLiveStreamStatus(unique_id, 1);
+    }
+  }, "停止直播发生错误：");
 }
 
 /**
  * @author XinD
  * @date 2023/6/4
  * @description 删除直播间
- * @param {string} uniqueId 直播间唯一标识
+ * @param unique_id
+ * @param ctx
  */
 export async function delStreaming(unique_id: string, ctx: any) {
-  const childProcess = childProcesses.get(unique_id);
-  const liveStream = await LiveStream.findById(unique_id);
-  if (childProcess) {
-    childProcess.kill("SIGKILL");
-    childProcesses.delete(unique_id);
-  }
-  if (liveStream) {
-    await LiveStream.delete(unique_id);
-  } else {
-    ctx.status = 500;
-    ctx.body = { message: "直播间不存在" };
-  }
+  await asyncHandler(async () => {
+    await redisClient.set(unique_id, "true");
+    const childProcess = childProcesses.get(unique_id);
+    const liveStream = await LiveStream.findById(unique_id);
+    if (childProcess) {
+      childProcess.kill("SIGKILL");
+      childProcesses.delete(unique_id);
+    }
+    if (liveStream) {
+      await LiveStream.delete(unique_id);
+    } else {
+      ctx.status = 500;
+      ctx.body = { message: "直播间不存在" };
+    }
+  }, "删除直播间发生错误：");
 }
+/**
+ * 清除所有的直播流
+ *
+ * @async
+ * @returns {Object}
+ * @throws {Error}
+ */
 export async function clearAllStreams(): Promise<void> {
-  await LiveStream.clearAll();
-  // 清空 childProcesses 对象
+  const tasks = Array.from(childProcesses.entries()).map(
+    ([unique_id, childProcess]) =>
+      // eslint-disable-next-line no-async-promise-executor
+      new Promise(async (resolve) => {
+        await redisClient.set(unique_id, "true");
+        childProcess.kill("SIGKILL");
+        resolve(null);
+      })
+  );
+
+  await Promise.all(tasks);
+
   childProcesses.clear();
+  await LiveStream.clearAll();
 }

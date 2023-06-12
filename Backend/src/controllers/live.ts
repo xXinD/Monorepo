@@ -139,6 +139,7 @@ export async function updateLiveInfo(ctx: any) {
   // 根据提供的直播 ID 和新的直播信息更新数据库中的记录
   const afterUpdate = await LiveStream.update(id, data);
   try {
+    await stopStreaming(liveStream.unique_id);
     await startStreaming(afterUpdate, ctx);
     // 返回创建的直播间信息
     ctx.body = {
@@ -183,7 +184,13 @@ export async function startSpecifiedLive(ctx: any) {
     ctx.body = { error: "未查询找到相关直播信息" };
   } else {
     try {
-      const res = await startStreaming(liveStream, ctx);
+      const res = await startStreaming(
+        {
+          ...liveStream,
+          start_time: "00:00:00",
+        },
+        ctx
+      );
       // 返回创建的直播间信息
       ctx.body = {
         message: "创建直播间成功",
