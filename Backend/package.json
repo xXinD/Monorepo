@@ -12,6 +12,11 @@
     "build:pkg": "npm run build && npx pkg . --targets node16-macos-arm64 --out-path binary && mv binary/backend binary/arm64_binary",
     "start:prod": "npm run build && cross-env ENV_VAR=production node dist/app.js"
   },
+  "pkg": {
+    "assets": [
+      "dist/executables/*"
+    ]
+  },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@ffprobe-installer/ffprobe": "^2.0.0",
