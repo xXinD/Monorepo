@@ -4,6 +4,7 @@
  * @description 直播推流相关接口
  */
 import { v4 as uuidv4 } from "uuid";
+import { DefaultState, ParameterizedContext } from "koa";
 import {
   clearAllStreams,
   delStreaming,
@@ -77,14 +78,10 @@ export async function startLive(ctx: any) {
  */
 
 export const getLiveStreamList = async (ctx: any): Promise<void> => {
-  try {
+  await asyncHandler(async () => {
     // 查询数据库并获取直播列表
     ctx.body = await LiveStream.findAll();
-    // 返回直播列表
-  } catch (error) {
-    ctx.statu = 500;
-    ctx.body = { message: "获取直播列表失败", error };
-  }
+  }, "查询直播列表失败：");
 };
 
 /**
@@ -98,15 +95,17 @@ export const getLiveStreamList = async (ctx: any): Promise<void> => {
 export async function getLiveStream(ctx: any) {
   const { id } = ctx.params;
 
-  // 使用 LiveStream 类的 findById 方法查询直播详情
-  const liveStream = await LiveStream.findById(id);
+  await asyncHandler(async () => {
+    // 使用 LiveStream 类的 findById 方法查询直播详情
+    const liveStream = await LiveStream.findById(id);
 
-  if (liveStream) {
-    ctx.body = liveStream;
-  } else {
-    ctx.status = 404;
-    ctx.body = { error: "未找到直播" };
-  }
+    if (liveStream) {
+      ctx.body = liveStream;
+    } else {
+      ctx.status = 404;
+      ctx.body = { error: "未找到直播" };
+    }
+  }, "数据库操作失败：");
 }
 
 /**
@@ -118,7 +117,7 @@ export async function getLiveStream(ctx: any) {
  * @returns {Object} 直播间信息对象。
  * @throws {Error} 如果直播间不存在，则抛出异常。
  */
-export async function updateLiveInfo(ctx: any) {
+export async function updateLiveInfo(ctx: ParameterizedContext<DefaultState>) {
   const { id } = ctx.params;
   const data = ctx.request.body;
   // 验证输入数据
@@ -128,17 +127,15 @@ export async function updateLiveInfo(ctx: any) {
       message: "请提供要更新的字段",
     };
   }
+  await asyncHandler(async () => {
+    // 从数据库中查找直播记录
+    const liveStream = await LiveStream.findById(id);
 
-  // 从数据库中查找直播记录
-  const liveStream = await LiveStream.findById(id);
-
-  if (!liveStream) {
-    ctx.throw(404, "直播不存在");
-  }
-
-  // 根据提供的直播 ID 和新的直播信息更新数据库中的记录
-  const afterUpdate = await LiveStream.update(id, data);
-  try {
+    if (!liveStream) {
+      ctx.throw(404, "直播不存在");
+    }
+    // 根据提供的直播 ID 和新的直播信息更新数据库中的记录
+    const afterUpdate = await LiveStream.update(id, data);
     await stopStreaming(liveStream.unique_id);
     await startStreaming(afterUpdate, ctx);
     // 返回创建的直播间信息
@@ -146,44 +143,20 @@ export async function updateLiveInfo(ctx: any) {
       message: "修改直播信息成功，已重新开始推流",
       data: afterUpdate,
     };
-  } catch (error) {
-    ctx.status = 500;
-    ctx.body = {
-      message: "创建直播间失败",
-      error,
-    };
-  }
+  }, "修改直播间信息失败");
 }
 
-/**
- * 重启直播
- *
- * @async
- * @param {number} ctx.request.body.id 直播间 ID。
- * @returns {Object} 直播间信息对象。
- * @throws {Error} 如果直播间不存在，则抛出异常。
- */
-export async function restartLive(ctx: any) {
-  const { id } = ctx.request.body;
-
-  // 从数据库中查找直播记录
-  const liveStream = await LiveStream.findById(id);
-  if (!liveStream) {
-    ctx.status = 404;
-    ctx.body = { error: "未查询找到相关直播信息" };
-  } else {
-  }
-}
-
-export async function startSpecifiedLive(ctx: any) {
+export async function startSpecifiedLive(
+  ctx: ParameterizedContext<DefaultState>
+) {
   const { id } = ctx.params;
-  // 从数据库中查找直播记录
-  const liveStream = await LiveStream.findById(id);
-  if (!liveStream) {
-    ctx.status = 404;
-    ctx.body = { error: "未查询找到相关直播信息" };
-  } else {
-    try {
+  await asyncHandler(async () => {
+    // 从数据库中查找直播记录
+    const liveStream = await LiveStream.findById(id);
+    if (!liveStream) {
+      ctx.status = 404;
+      ctx.body = { error: "未查询找到相关直播信息" };
+    } else {
       const res = await startStreaming(
         {
           ...liveStream,
@@ -196,14 +169,8 @@ export async function startSpecifiedLive(ctx: any) {
         message: "创建直播间成功",
         res,
       };
-    } catch (error) {
-      ctx.status = 500;
-      ctx.body = {
-        message: "创建直播间失败",
-        error,
-      };
     }
-  }
+  }, "启动直播间失败：");
 }
 
 /**
@@ -214,16 +181,18 @@ export async function startSpecifiedLive(ctx: any) {
  * @returns {Object} 关闭直播推流任务的结果。
  * @throws {Error} 如果直播间不存在/已关闭，则抛出异常。
  */
-export async function stopLive(ctx: any) {
+export async function stopLive(ctx: ParameterizedContext<DefaultState>) {
   const { id } = ctx.params;
-  const liveStream = await LiveStream.findById(id);
-  if (liveStream && liveStream.status === 0) {
-    await stopStreaming(id);
-    ctx.body = { message: "直播已停止" };
-  } else {
-    ctx.status = 404;
-    ctx.body = { error: "未找到直播或已停止" };
-  }
+  await asyncHandler(async () => {
+    const liveStream = await LiveStream.findById(id);
+    if (liveStream && liveStream.status === 0) {
+      await stopStreaming(id);
+      ctx.body = { message: "直播已停止" };
+    } else {
+      ctx.status = 404;
+      ctx.body = { error: "未找到直播或已停止" };
+    }
+  }, "关闭指定直播失败：");
 }
 
 /**
@@ -234,15 +203,12 @@ export async function stopLive(ctx: any) {
  * @returns {Object} 关闭直播推流任务的结果。
  * @throws {Error} 如果直播间不存在/已关闭，则抛出异常。
  */
-export async function delLiveStream(ctx: any) {
+export async function delLiveStream(ctx: ParameterizedContext<DefaultState>) {
   const { id } = ctx.params;
-  try {
+  await asyncHandler(async () => {
     await delStreaming(id, ctx);
     ctx.body = { message: "直播已停止并删除" };
-  } catch (e) {
-    ctx.status = 500;
-    ctx.body = { message: "数据库操作失败", e };
-  }
+  }, "关闭&清除指定直播失败：");
 }
 
 /**
@@ -253,12 +219,9 @@ export async function delLiveStream(ctx: any) {
  * @returns {Object} 关闭直播推流任务的结果。
  * @throws {Error} 如果直播间不存在/已关闭，则抛出异常。
  */
-export async function stopLiveALl(ctx: any) {
-  try {
+export async function stopLiveALl(ctx: ParameterizedContext<DefaultState>) {
+  await asyncHandler(async () => {
     await clearAllStreams();
     ctx.body = { message: "直播已清空" };
-  } catch (e) {
-    ctx.status = 404;
-    ctx.body = { error: e };
-  }
+  }, "关闭&清除所有直播失败：");
 }

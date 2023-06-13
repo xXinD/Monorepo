@@ -17,22 +17,17 @@ app.use(errorHandler);
 app.use(routes.routes()).use(routes.allowedMethods());
 
 // start http server
-let server;
 (async () => {
   await connectDb();
-  server = app.listen(config.port, async () => {
+  app.listen(config.port, async () => {
     console.log(`Server running on port ${config.port}`);
   });
 })();
 
-// handle uncaught exceptions
-process.addListener("uncaughtException", (err) => {
-  console.error("Uncaught exception:", err);
-  process.exit(1);
+process.on("uncaughtException", (err) => {
+  console.error("There was an uncaught error", err);
 });
 
-// handle unhandled promise rejections
-process.addListener("unhandledRejection", (err) => {
-  console.error("Unhandled rejection:", err);
-  process.exit(1);
+process.on("unhandledRejection", (reason, promise) => {
+  console.log("Unhandled Rejection at:", promise, "reason:", reason);
 });

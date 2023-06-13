@@ -5,7 +5,6 @@ import {
   getLiveStreamList,
   getLiveStream,
   updateLiveInfo,
-  restartLive,
   stopLive,
   stopLiveALl,
   delLiveStream,
@@ -19,7 +18,6 @@ liveRoutes.get("/", getLiveStreamList);
 liveRoutes.get("/:id", getLiveStream);
 liveRoutes.put("/:id", updateLiveInfo);
 liveRoutes.delete("/:id", delLiveStream);
-liveRoutes.post("/:id/restart", restartLive);
 liveRoutes.post("/:id/start", startSpecifiedLive);
 liveRoutes.post("/:id/stop", stopLive);
 liveRoutes.delete("/all", stopLiveALl);

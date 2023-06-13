@@ -128,9 +128,7 @@ async function playVideoFiles(
     }
   }
   await redisClient.del(options.unique_id);
-  const { controllers } = await si.graphics();
   const args = await buildFFmpegCommand(options);
-  console.log(args, "args");
   const childProcess = spawn("ffmpeg", args);
 
   childProcess.stdout.on("data", (data) => {
@@ -192,7 +190,7 @@ async function playVideoFiles(
         }
         childProcesses.set(options.unique_id, childProcess);
         resolve(options);
-      }, "更新直播状态发生错误：");
+      }, "启动/重启推流失败：").catch(reject);
     });
 
     childProcess.on("error", async (error) => {
@@ -200,7 +198,7 @@ async function playVideoFiles(
         // 直播状态更新为错误
         await updateLiveStreamStatus(options.unique_id, 2);
         reject(error);
-      }, "更新直播状态发生错误：");
+      }, "推流进程报错：").catch(reject);
     });
   });
 }
