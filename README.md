@@ -8,6 +8,7 @@
       backend:
         image: xindongg/backend:latest
         restart: unless-stopped
+        privileged: true
         ports:
           - "4000:4000"
         volumes:
@@ -18,7 +19,7 @@
         ports:
           - "8080:80"
       allinone:
-        image: youshandefeiyang/allinone
+        image: xindongg/allinone:latest
         restart: unless-stopped
         privileged: true
         ports:
@@ -32,6 +33,7 @@
     ```
 
    这个命令会在后台启动所有定义在 `docker-compose.yml` 文件中的服务。
+
 
 3. 如果你不在 `docker-compose.yml` 文件所在的目录中，你可以指定文件的完整路径来运行 Docker Compose 文件：
 

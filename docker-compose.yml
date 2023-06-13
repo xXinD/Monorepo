@@ -13,7 +13,7 @@ services:
     ports:
       - "8080:80"
   allinone:
-    image: xindongg/allinone
+    image: xindongg/allinone:latest
     restart: unless-stopped
     privileged: true
     ports:
