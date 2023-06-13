@@ -27,8 +27,6 @@ RUN ls -al
 # 构建 Node.js 项目
 RUN npm run build
 
-RUN chmod +x /usr/src/app/dist/executables/*
-
 # 暴露端口
 EXPOSE 4000
 
