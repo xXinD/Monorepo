@@ -26,12 +26,6 @@ jobs:
       - name: Build binary file
         run: cd "${{ github.workspace }}/Backend" && npm install && npm run build
 
-      - name: List files in executables directory
-        run: ls -l "${{ github.workspace }}/Backend/dist/executables/"
-
-      - name: Set executable permissions
-        run: find "${{ github.workspace }}/Backend/dist/executables/" -type f -exec chmod +x {} \;
-
       - name: Package binary file
         run: cd "${{ github.workspace }}/Backend" && npm run build:pkg
 

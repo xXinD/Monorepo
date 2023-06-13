@@ -5,8 +5,6 @@ import config from "./config/default";
 import { errorHandler } from "./middleware/error";
 import routes from "./routes";
 import { connectDb } from "./db";
-import BinaryManager from "./utils/binaryManager";
-import redisClient from "./utils/redisClient";
 
 const app = new Koa();
 app.use(koa2Cors());
@@ -23,7 +21,6 @@ let server;
 (async () => {
   await connectDb();
   server = app.listen(config.port, async () => {
-    BinaryManager.startService();
     console.log(`Server running on port ${config.port}`);
   });
 })();
