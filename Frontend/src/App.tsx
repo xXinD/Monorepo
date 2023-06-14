@@ -129,4 +129,4 @@ const PreMade: FC = () => {
     </div>
   );
 };
-export default PreMade;
+export default App;
