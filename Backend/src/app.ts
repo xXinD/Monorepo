@@ -5,6 +5,7 @@ import config from "./config/default";
 import { errorHandler } from "./middleware/error";
 import routes from "./routes";
 import { connectDb } from "./db";
+import binaryManager from "./utils/binaryManager";
 
 const app = new Koa();
 app.use(koa2Cors());
@@ -20,6 +21,7 @@ app.use(routes.routes()).use(routes.allowedMethods());
 (async () => {
   await connectDb();
   app.listen(config.port, async () => {
+    binaryManager();
     console.log(`Server running on port ${config.port}`);
   });
 })();

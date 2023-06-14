@@ -1,6 +1,4 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
-import si from "systeminformation";
-import { spawn, ChildProcessWithoutNullStreams } from "child_process";
+import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { LiveStream } from "../models/LiveStream";
 import { asyncHandler } from "../utils/handler";
 import redisClient from "../utils/redisClient";
@@ -56,39 +54,6 @@ export interface LiveOptions {
   complexTransition?: number;
   // 是否主动停止推流
   isStopped?: boolean;
-}
-
-/**
- * 获取水印选项
- *
- * @param {Object} options 推流选项
- * @returns {string} 水印选项
- */
-function getWatermarkOptions(options: LiveOptions): string {
-  if (!options.watermarkEnabled) {
-    return "";
-  }
-
-  let overlay = "";
-  switch (options.watermarkPosition) {
-    case 1:
-      overlay = "10:10";
-      break;
-    case 2:
-      overlay = "10:H-h-10";
-      break;
-    case 3:
-      overlay = "W-w-10:10";
-      break;
-    case 4:
-      overlay = "W-w-10:H-h-10";
-      break;
-    default:
-      overlay = "W-w-10:H-h-10";
-      break;
-  }
-
-  return `-i "${options.watermarkImg}" -filter_complex "[1:v]scale=${options.watermarkWidth}:-1[wm];[0:v][wm]overlay=${overlay}"`;
 }
 
 async function updateLiveStreamStatus(id: string, status: number) {
