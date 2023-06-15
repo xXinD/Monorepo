@@ -36,3 +36,4 @@ Thumbs.db
 /Backend/database.sqlite
 /Backend/dist/
 /test/
+/Backend/src/config/config.json

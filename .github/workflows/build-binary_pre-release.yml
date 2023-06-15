@@ -7,13 +7,13 @@ on:
 
 jobs:
   build-and-publish:
-    runs-on: self-hosted
+    runs-on: macos-latest
 
     steps:
-#      - name: Set up Node.js
-#        uses: actions/setup-node@v2
-#        with:
-#          node-version: 16
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18.16.0
 
       - name: Checkout code
         uses: actions/checkout@v3

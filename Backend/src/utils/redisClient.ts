@@ -1,23 +1,17 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { createClient } from "redis";
+import path from "path";
+import fs from "fs";
 
 class RedisClientSingleton {
   private static instance: RedisClientSingleton;
 
   private client: any;
 
-  private constructor(host: string = "123.249.124.132", port: number = 6379) {
-    this.client = createClient({
-      url: `redis://${host}:${port}`,
-      password: "199615xin",
-    });
-    this.client.connect();
-    this.client.on("error", (err: any) => {
-      console.error(`Error ${err}`);
-    });
-    this.client.on("connect", () => {
-      console.log("Redis connected");
-    });
+  private isConnected: boolean;
+
+  private constructor() {
+    this.client = null;
+    this.isConnected = false;
   }
 
   public static getInstance(): RedisClientSingleton {
@@ -28,24 +22,57 @@ class RedisClientSingleton {
   }
 
   public async set(key: string, value: string): Promise<void> {
+    await this.ensureConnected();
     return await this.client.set(key, value);
   }
 
   public async get(key: string): Promise<any> {
+    await this.ensureConnected();
     return await this.client.get(key);
   }
 
   public async del(key: string): Promise<void> {
+    await this.ensureConnected();
     return await this.client.del(key);
   }
 
   public async keys(pattern: string): Promise<void> {
+    await this.ensureConnected();
     return await this.client.keys(pattern);
   }
 
   public async quit(): Promise<void> {
-    await this.client.quit();
-    RedisClientSingleton.instance = null;
+    if (this.client) {
+      await this.client.quit();
+      this.client = null;
+      this.isConnected = false;
+      RedisClientSingleton.instance = null;
+    }
+  }
+
+  public async reloadConfigAndReconnect(): Promise<void> {
+    await this.quit(); // 先断开连接
+    // 读取新的 config.json 文件内容
+    const configPath = path.resolve(__dirname, "../config/config.json");
+    if (!fs.existsSync(configPath)) {
+      return; // 如果 config.json 不存在，直接返回
+    }
+
+    const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+
+    // 根据新的内容重新建立 Redis 连接
+    this.client = createClient({
+      url: `redis://${config.redis_address}:${config.redis_port ?? 6379}`,
+      password: "199615xin",
+    });
+    this.client.connect();
+    this.isConnected = true;
+  }
+
+  private async ensureConnected(): Promise<void> {
+    if (!this.isConnected) {
+      await this.reloadConfigAndReconnect();
+    }
   }
 }
 

@@ -2,6 +2,7 @@ import React from "react";
 import LiveList from "../pages/LiveList";
 import VideoList from "../pages/ResourcesList";
 import StreamList from "../pages/StreamList";
+import Setting from "../pages/Setting";
 
 export interface RouteConfig {
   path: string;
@@ -25,6 +26,12 @@ const routes = [
   {
     path: "/stream-list",
     component: StreamList,
+    exact: true,
+    isProtected: false,
+  },
+  {
+    path: "/setting",
+    component: Setting,
     exact: true,
     isProtected: false,
   },

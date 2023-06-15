@@ -68,7 +68,24 @@ async function updateLiveStreamStatus(id: string, status: number) {
     }
   }, "更新数据库状态报错：");
 }
-
+export async function closeAllStreams(): Promise<void> {
+  const tasks = Array.from(childProcesses.entries()).map(
+    ([unique_id, childProcess]) =>
+      // eslint-disable-next-line no-async-promise-executor
+      new Promise(async (resolve, reject) => {
+        try {
+          await redisClient.set(unique_id, "true");
+          childProcess.kill("SIGKILL");
+          await updateLiveStreamStatus(unique_id, 2);
+          resolve(null);
+        } catch (e) {
+          reject(e);
+        }
+      })
+  );
+  await Promise.all(tasks);
+  childProcesses.clear();
+}
 /**
  * 推流视频文件
  *
@@ -141,6 +158,26 @@ async function playVideoFiles(
       }
       // 在数据库中删除对应的记录
       await updateLiveStreamStatus(options.unique_id, 1);
+    }
+  });
+  process.on("SIGINT", async () => {
+    console.log("Caught interrupt signal. Cleaning up...");
+    if (childProcesses.size > 0) {
+      await closeAllStreams();
+    }
+    process.exit(1);
+  });
+
+  process.on("SIGTERM", async () => {
+    console.log("Caught termination signal. Cleaning up...");
+    if (childProcesses.size > 0) {
+      await closeAllStreams();
+    }
+    process.exit(1);
+  });
+  process.on("beforeExit", async () => {
+    if (childProcesses.size > 0) {
+      await closeAllStreams();
     }
   });
   return new Promise((resolve, reject) => {

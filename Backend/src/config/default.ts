@@ -1,5 +1,5 @@
 export default {
-  port: 4000,
+  port: 12345,
   jwt: {
     secret: "mysecret",
     expiresIn: "1h",

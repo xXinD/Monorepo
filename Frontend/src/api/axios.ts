@@ -29,12 +29,26 @@ const ERROR_MESSAGE_MAP: Record<number, string> = {
   504: "请求超时，请检查您的网络连接",
 };
 
+const serviceAddressProxy = new Proxy(
+  {
+    address: localStorage.getItem("service_address") || "http://localhost:4000",
+  },
+  {
+    set(target, property, value) {
+      if (property === "address") {
+        localStorage.setItem("service_address", value);
+      }
+      return Reflect.set(target, property, value);
+    },
+  }
+);
+
 export default class AxiosService {
   private axiosInstance: AxiosInstance;
 
-  constructor(baseURL: string) {
+  constructor() {
     this.axiosInstance = axios.create({
-      baseURL,
+      baseURL: serviceAddressProxy.address,
       timeout: 10000,
       headers: {
         "Content-Type": "application/json",
@@ -95,6 +109,11 @@ export default class AxiosService {
     });
   }
 
+  public updateBaseURL(newURL: string) {
+    this.axiosInstance.defaults.baseURL = newURL;
+    serviceAddressProxy.address = newURL;
+  }
+
   private handleResponse<T>(response: AxiosResponse<T>): AxiosResponse<T> {
     return response;
   }
@@ -111,4 +130,5 @@ export default class AxiosService {
     return Promise.reject(error);
   }
 }
-export const axiosInstance = new AxiosService("http://localhost:4000");
+
+export const axiosInstance = new AxiosService();
