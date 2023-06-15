@@ -22,12 +22,6 @@ jobs:
           token: ${{ secrets.MY_PAT }}
           ssh-strict: true
 
-      - name: Set npm registry
-        run: npm config set registry https://registry.npmmirror.com
-
-      - name: Change ownership of .npm folder
-        run: sudo chown -R 501:20 "/Users/xindong/.npm"
-
       - name: Build binary file
         run: cd "${{ github.workspace }}/Backend" && npm install && npm run build:pkg
 
