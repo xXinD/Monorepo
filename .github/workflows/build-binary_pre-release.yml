@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-publish:
-    runs-on: macos-latest
+    runs-on: self-hosted
 
     steps:
       - name: Set up Node.js
@@ -21,6 +21,9 @@ jobs:
           repository: XindongG/Monorepo
           token: ${{ secrets.MY_PAT }}
           ssh-strict: true
+
+      - name: Change ownership of .npm folder
+        run: sudo chown -R 501:20 "/Users/xindong/.npm"
 
       - name: Build binary file
         run: cd "${{ github.workspace }}/Backend" && npm install && npm run build:pkg
