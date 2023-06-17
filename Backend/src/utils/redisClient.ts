@@ -53,7 +53,7 @@ class RedisClientSingleton {
   public async reloadConfigAndReconnect(): Promise<void> {
     await this.quit(); // 先断开连接
     // 读取新的 config.json 文件内容
-    const configPath = path.resolve(__dirname, "../config/config.json");
+    const configPath = path.resolve(process.cwd(), "./config/config.json");
     if (!fs.existsSync(configPath)) {
       return; // 如果 config.json 不存在，直接返回
     }
