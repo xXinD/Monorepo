@@ -15,7 +15,14 @@ function errorHandler(ctx: Koa.Context, next: () => Promise<any>) {
 }
 function globalErrorHandler(errorMessage: string, error: Error) {
   const currentTime = moment().format("YYYY-MM-DD HH:mm:ss");
-  const errorLogPath = path.resolve(__dirname, "../logs/", "error.log");
+
+  // 检查并创建 logs 目录
+  const logsDirPath = path.resolve(__dirname, "../logs/");
+  if (!fs.existsSync(logsDirPath)) {
+    fs.mkdirSync(logsDirPath);
+  }
+
+  const errorLogPath = path.resolve(logsDirPath, "error.log");
 
   const errorLog = `当前时间：${currentTime}\n${errorMessage} ${error.stack} \n`;
 
@@ -32,4 +39,5 @@ function globalErrorHandler(errorMessage: string, error: Error) {
   // 将错误日志写入文件
   fs.appendFileSync(errorLogPath, errorLog);
 }
+
 export { errorHandler, globalErrorHandler };
