@@ -6,9 +6,14 @@ import { EmailService } from "../utils/sendEmail";
 
 export async function getServerConfig(ctx: any) {
   await asyncHandler(async () => {
-    const configPath = path.resolve(__dirname, "../config/config.json");
+    // 使用当前工作目录而不是 __dirname
+    const configPath = path.resolve(process.cwd(), "./config/");
+    if (!fs.existsSync(configPath)) {
+      fs.mkdirSync(configPath);
+    }
+    const configFilePath = path.resolve(configPath, "config.json");
     let flag: number = 0;
-    if (fs.existsSync(configPath)) {
+    if (fs.existsSync(configFilePath)) {
       flag = 1; // 如果 config.json 不存在，直接返回
     }
     ctx.body = {
@@ -30,11 +35,13 @@ export async function updateServerConfig(ctx: any) {
   const data = ctx.request.body;
 
   await asyncHandler(async () => {
+    const configPath = path.resolve(process.cwd(), "./config/");
+    if (!fs.existsSync(configPath)) {
+      fs.mkdirSync(configPath);
+    }
+    const configFilePath = path.resolve(configPath, "config.json");
     // 写入文件
-    fs.writeFileSync(
-      path.resolve(__dirname, "../config/", "config.json"),
-      JSON.stringify(data)
-    );
+    fs.writeFileSync(configFilePath, JSON.stringify(data));
     await reloadDb();
     await EmailService.reloadInstance();
     ctx.body = {

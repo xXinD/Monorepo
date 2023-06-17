@@ -4,7 +4,10 @@ import path from "path";
 
 async function initDb(): Promise<Pool> {
   const config = JSON.parse(
-    fs.readFileSync(path.resolve(__dirname, "../config/config.json"), "utf-8")
+    fs.readFileSync(
+      path.resolve(process.cwd(), "./config/config.json"),
+      "utf-8"
+    )
   );
   const pool = createPool({
     host: config.sql_address,
@@ -82,7 +85,7 @@ export function getDb() {
 }
 
 export async function connectDb() {
-  const configPath = path.resolve(__dirname, "../config/config.json");
+  const configPath = path.resolve(process.cwd(), "./config/config.json");
   if (!fs.existsSync(configPath)) {
     return;
   }

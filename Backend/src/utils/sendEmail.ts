@@ -10,7 +10,7 @@ class EmailService {
   private readonly configPath: string;
 
   private constructor(config: any) {
-    this.configPath = path.resolve(__dirname, "../config/config.json");
+    this.configPath = path.resolve(process.cwd(), "./config/config.json");
 
     this.transporter = nodemailer.createTransport({
       host: config.email_server_address,
@@ -25,14 +25,15 @@ class EmailService {
 
   public static async getInstance(): Promise<EmailService> {
     if (!EmailService.instance) {
-      const configPath = path.resolve(__dirname, "../config/config.json");
-
+      const configFilePath = path.resolve(
+        process.cwd(),
+        "./config/config.json"
+      );
       // 检查config.json文件是否存在
-      if (!fs.existsSync(configPath)) {
+      if (!fs.existsSync(configFilePath)) {
         throw new Error("config.json file does not exist.");
       }
-
-      const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+      const config = JSON.parse(fs.readFileSync(configFilePath, "utf-8"));
 
       // 检查是否需要发送邮件
       if (!config.is_email) {
