@@ -147,7 +147,7 @@ const ResourcesList: FC = () => {
         placeholder: "请输入名称",
       },
       {
-        label: "文件路径",
+        label: "文件路径 / 拉流地址",
         field: "video_dir",
         rules: [{ required: true }],
         type: "input",
@@ -228,7 +228,7 @@ const ResourcesList: FC = () => {
         unmountOnExit
         className={styles.drawerWrapper}
         width="30%"
-        title={<span>Basic Information </span>}
+        title="新建直播源"
         visible={editVisible}
         confirmLoading={confirmLoading}
         onOk={async () => {

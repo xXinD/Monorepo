@@ -1,5 +1,5 @@
 {
-  "name": "Monorepo",
+  "name": "monorepo",
   "version": "0.0.1",
   "description": "Monorepo",
   "main": "index.js",

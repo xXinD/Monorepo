@@ -1,16 +1,17 @@
 import { createPool, Pool } from "mysql2/promise";
-import * as process from "process";
-import * as os from "os";
+import fs from "fs";
+import path from "path";
 
-console.log(os.arch());
 async function initDb(): Promise<Pool> {
+  const config = JSON.parse(
+    fs.readFileSync(path.resolve(__dirname, "../config/config.json"), "utf-8")
+  );
   const pool = createPool({
-    host: "143.110.159.133",
-    user: "xindong",
-    password: "199615xin",
-    database: `${
-      process.env.ENV_VAR === "development" ? "test_database" : "prod_database"
-    }`,
+    host: config.sql_address,
+    port: config.sql_port ?? 3306,
+    user: config.sql_user,
+    password: config.sql_password,
+    database: config.sql_database,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
@@ -67,10 +68,6 @@ async function initDb(): Promise<Pool> {
   )`);
 
   conn.release();
-  await conn.query(`
-    ALTER TABLE live_streams
-    ADD COLUMN IF NOT EXISTS retweet INT
-  `);
   return pool;
 }
 
@@ -85,7 +82,20 @@ export function getDb() {
 }
 
 export async function connectDb() {
+  const configPath = path.resolve(__dirname, "../config/config.json");
+  if (!fs.existsSync(configPath)) {
+    return;
+  }
   if (!dbInstance) {
     dbInstance = await initDb();
   }
+}
+export async function reloadDb() {
+  if (dbInstance) {
+    await dbInstance.end();
+    dbInstance = undefined;
+  }
+
+  // 重新连接数据库
+  await connectDb();
 }

@@ -1,20 +1,15 @@
 import { FC, useMemo, useState } from "react";
 import { BrowserRouter as Router } from "react-router-dom";
-import {
-  Link,
-  Menu,
-  PageHeader,
-  Form,
-  Input,
-  Button,
-  InputNumber,
-} from "@arco-design/web-react";
+import { Link, Menu, PageHeader } from "@arco-design/web-react";
 import { IconLiveBroadcast } from "@arco-design/web-react/icon";
+import { useAsyncEffect } from "ahooks";
 import routes from "./router";
 import RenderRoutes from "./router/RenderRoutes";
 import styles from "./index.module.less";
+import { getServerConfig } from "./api/generalApi";
+import Setting from "./pages/Setting";
+import "./reset.less";
 
-const FormItem = Form.Item;
 const MenuItem = Menu.Item;
 const { SubMenu } = Menu;
 const App: FC = () => {
@@ -31,13 +26,18 @@ const App: FC = () => {
         },
         {
           key: "1_2",
-          name: "影片管理",
+          name: "直播源管理",
           path: "video-list",
         },
         {
           key: "1_3",
           name: "推流地址管理",
           path: "stream-list",
+        },
+        {
+          key: "1_4",
+          name: "设置",
+          path: "setting",
         },
       ],
     },
@@ -94,39 +94,17 @@ const App: FC = () => {
     </Router>
   );
 };
-// Todo：新增初次进入站点，提示录入数据库、redis、后端服务地址等信息。
-const PreMade: FC = () => {
-  const [form] = Form.useForm();
-  return (
-    <div className={styles.preMadeWrapper}>
-      <Form style={{ width: 600 }} autoComplete="off" form={form}>
-        <FormItem label="服务地址：" field="service_address">
-          <Input placeholder="请输入服务地址，例：https://www.backend.com" />
-        </FormItem>
-        <FormItem label="数据库地址：" field="sql_address">
-          <Input placeholder="请输入数据库地址，例：128.80.31.12" />
-        </FormItem>
-        <FormItem label="数据库端口：" field="sql_port">
-          <InputNumber placeholder="请输入数据库端口" min={0} />
-        </FormItem>
-        <FormItem label="redis地址：" field="redis_address">
-          <Input placeholder="请输入redis地址，例：123.249.12.71" />
-        </FormItem>
-        <FormItem label="redis端口：" field="redis_port">
-          <InputNumber placeholder="请输入redis端口" min={0} />
-        </FormItem>
-        <FormItem wrapperCol={{ offset: 5 }}>
-          <Button
-            type="primary"
-            onClick={() => {
-              console.log(form.getFieldsValue(), "form.getFieldsValue()");
-            }}
-          >
-            提交
-          </Button>
-        </FormItem>
-      </Form>
-    </div>
-  );
+
+const Page: FC = () => {
+  const [pageState, setPageState] = useState(localStorage.pageState);
+  useAsyncEffect(async () => {
+    const {
+      data: {
+        data: { config },
+      },
+    } = await getServerConfig();
+    setPageState(config);
+  }, []);
+  return pageState === 1 ? <App /> : <Setting />;
 };
-export default PreMade;
+export default Page;

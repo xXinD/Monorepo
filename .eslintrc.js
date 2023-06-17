@@ -46,6 +46,7 @@ module.exports = {
     "no-use-before-defined": "off",
     "prettier/prettier": ["error"],
     "jsx-a11y/media-has-caption": "off",
+    eqeqeq: "off",
   },
   overrides: [
     {
