@@ -3,8 +3,8 @@ import { LiveStream } from "../models/LiveStream";
 import { asyncHandler } from "../utils/handler";
 import redisClient from "../utils/redisClient";
 import { buildFFmpegCommand } from "./buildFFmpegCommand";
-import emailService from "../utils/sendEmail";
 import { platformFormat } from "../utils/dataFormat";
+import { EmailService } from "../utils/sendEmail";
 
 // 子进程统一管理
 const childProcesses = new Map<string, ChildProcessWithoutNullStreams>();
@@ -128,16 +128,21 @@ async function playVideoFiles(
       console.error(`stdout: ${data}`);
       await asyncHandler(async () => {
         await redisClient.set(options.unique_id, "true");
-        await emailService.sendMail(
-          "1550955285@qq.com",
-          "直播管理平台-报错警告",
-          `直播间【${options.name}】已被关闭`,
-          `<div><h1>【${
-            options.name
-          }】直播被终止</h1><h3>直播平台：</h3><p>${platformFormat(
-            options.platform
-          )}</p<h3>疑似原因：</h3><p>直播间被关闭/推流地址已被关闭</p><h3>日志：</h3><p>${data}</p></div>`
-        );
+        try {
+          const emailService = await EmailService.getInstance();
+          await emailService.sendMail(
+            "1550955285@qq.com",
+            "直播管理平台-报错警告",
+            `直播间【${options.name}】已被关闭`,
+            `<div><h1>【${
+              options.name
+            }】直播被终止</h1><h3>直播平台：</h3><p>${platformFormat(
+              options.platform
+            )}</p<h3>疑似原因：</h3><p>直播间被关闭/推流地址已被关闭</p><h3>日志：</h3><p>${data}</p></div>`
+          );
+        } catch (error) {
+          console.error("Failed to send email:", error);
+        }
         await updateLiveStreamStatus(options.unique_id, 2);
         childProcesses.delete(options.unique_id);
       }, "直播间被封禁");
