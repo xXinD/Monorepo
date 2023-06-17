@@ -39,3 +39,9 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: xindongg/frontend:latest
+
+      - name: Pull, retag and push allinone Docker image
+        run: |
+          docker pull youshandefeiyang/allinone:latest
+          docker tag youshandefeiyang/allinone:latest xindongg/allinone:latest
+          docker push xindongg/allinone:latest
