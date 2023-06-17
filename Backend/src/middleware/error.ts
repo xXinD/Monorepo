@@ -16,8 +16,8 @@ function errorHandler(ctx: Koa.Context, next: () => Promise<any>) {
 function globalErrorHandler(errorMessage: string, error: Error) {
   const currentTime = moment().format("YYYY-MM-DD HH:mm:ss");
 
-  // 检查并创建 logs 目录
-  const logsDirPath = path.resolve(__dirname, "../logs/");
+  // 使用当前工作目录而不是 __dirname
+  const logsDirPath = path.resolve(process.cwd(), "./logs/");
   if (!fs.existsSync(logsDirPath)) {
     fs.mkdirSync(logsDirPath);
   }
