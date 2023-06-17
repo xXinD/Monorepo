@@ -37,3 +37,4 @@ Thumbs.db
 /Backend/dist/
 /test/
 /Backend/src/config/config.json
+/Backend/src/logs/
