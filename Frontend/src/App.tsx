@@ -8,6 +8,7 @@ import RenderRoutes from "./router/RenderRoutes";
 import styles from "./index.module.less";
 import { getServerConfig } from "./api/generalApi";
 import Setting from "./pages/Setting";
+import "./reset.less";
 
 const MenuItem = Menu.Item;
 const { SubMenu } = Menu;
@@ -25,7 +26,7 @@ const App: FC = () => {
         },
         {
           key: "1_2",
-          name: "影片管理",
+          name: "直播源管理",
           path: "video-list",
         },
         {

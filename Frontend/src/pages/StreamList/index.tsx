@@ -57,6 +57,14 @@ export const platformOptions = [
     value: "douyu",
   },
   {
+    label: "快手",
+    value: "kuaishou",
+  },
+  {
+    label: "抖音",
+    value: "douyin",
+  },
+  {
     label: "YouTube",
     value: "youtube",
   },
@@ -273,9 +281,9 @@ const ResourcesList: FC = () => {
       </div>
       <Drawer
         unmountOnExit
+        title="新建推流"
         className={styles.drawerWrapper}
         width="30%"
-        title={<span>Basic Information </span>}
         visible={editVisible}
         confirmLoading={confirmLoading}
         onOk={async () => {

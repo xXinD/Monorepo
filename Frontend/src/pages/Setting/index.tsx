@@ -1,16 +1,22 @@
-import { FC } from "react";
-import { Button, Form, Input, InputNumber } from "@arco-design/web-react";
-import styles from "../../index.module.less";
+import { FC, useState } from "react";
+import {
+  Button,
+  Form,
+  Input,
+  InputNumber,
+  Switch,
+} from "@arco-design/web-react";
+import styles from "./index.module.less";
 import { ServerConfig, updateServerConfig } from "../../api/generalApi";
 import { axiosInstance } from "../../api/axios";
 
 const FormItem = Form.Item;
 const Setting: FC = () => {
   const [form] = Form.useForm();
+  const [is_email, setIsEmail] = useState<boolean>(false);
   return (
     <div className={styles.preMadeWrapper}>
       <Form
-        style={{ width: 600 }}
         autoComplete="off"
         form={form}
         validateMessages={{
@@ -66,6 +72,35 @@ const Setting: FC = () => {
         <FormItem label="redis端口：" field="redis_port">
           <InputNumber placeholder="请输入redis端口，默认6379" min={0} />
         </FormItem>
+        <FormItem
+          label="邮件通知："
+          field="is_email"
+          tooltip={<div>建议打开，直播异常时，可通过邮件提醒。</div>}
+        >
+          <Switch onChange={(e) => setIsEmail(e)} />
+        </FormItem>
+        {is_email && (
+          <>
+            <FormItem label="发件服务器地址：" field="email_server_address">
+              <Input placeholder="请输入发件服务器地址，例：smtp.exmail.qq.com" />
+            </FormItem>
+            <FormItem label="发件服务器端口：" field="email_port">
+              <InputNumber
+                placeholder="请输入发件服务器端口，例：465"
+                min={0}
+              />
+            </FormItem>
+            <FormItem label="发件邮箱地址：" field="form_email_address">
+              <Input placeholder="请输入邮箱地址，例：xxx.qq.com" />
+            </FormItem>
+            <FormItem label="发件邮箱密码：" field="form_email_password">
+              <Input.Password placeholder="请输入邮箱密码，如使用QQ、Gamil等常用邮箱，需输入对应授权码" />
+            </FormItem>
+            <FormItem label="收件邮箱地址：" field="to_email_address">
+              <Input placeholder="请输入收件邮箱地址" />
+            </FormItem>
+          </>
+        )}
         <FormItem wrapperCol={{ offset: 5 }}>
           <Button
             type="primary"
@@ -73,6 +108,7 @@ const Setting: FC = () => {
               try {
                 await form.validate();
                 const values = form.getFieldsValue() as ServerConfig;
+                console.log(values, 1111);
                 axiosInstance.updateBaseURL(values.service_address);
                 await updateServerConfig(values);
                 window.location.reload();

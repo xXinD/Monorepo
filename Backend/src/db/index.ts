@@ -68,10 +68,6 @@ async function initDb(): Promise<Pool> {
   )`);
 
   conn.release();
-  await conn.query(`
-    ALTER TABLE live_streams
-    ADD COLUMN IF NOT EXISTS retweet INT
-  `);
   return pool;
 }
 

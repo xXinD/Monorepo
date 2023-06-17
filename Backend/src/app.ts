@@ -1,6 +1,7 @@
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import koa2Cors from "koa2-cors";
+import portfinder from "portfinder";
 import config from "./config/default";
 import { errorHandler } from "./middleware/error";
 import routes from "./routes";
@@ -19,9 +20,17 @@ app.use(routes.routes()).use(routes.allowedMethods());
 // start http server
 (async () => {
   await connectDb();
-  app.listen(config.port, async () => {
-    console.log(`Server running on port ${config.port}`);
-  });
+
+  portfinder.basePort = config.port;
+
+  try {
+    const port = await portfinder.getPortPromise();
+    app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+    });
+  } catch (err) {
+    console.error("Failed to find an available port:", err);
+  }
 })();
 
 process.on("uncaughtException", (err) => {

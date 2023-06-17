@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { asyncHandler } from "../utils/handler";
 import { reloadDb } from "../db";
+import { EmailService } from "../utils/sendEmail";
 
 export async function getServerConfig(ctx: any) {
   await asyncHandler(async () => {
@@ -35,8 +36,9 @@ export async function updateServerConfig(ctx: any) {
       JSON.stringify(data)
     );
     await reloadDb();
+    await EmailService.reloadInstance();
     ctx.body = {
       message: "更新配置信息成功",
     };
-  }, "修改配置信息失败");
+  }, "更新配置信息失败");
 }

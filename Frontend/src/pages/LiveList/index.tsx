@@ -4,6 +4,7 @@ import {
   Drawer,
   Form,
   Input,
+  InputNumber,
   Link,
   Notification,
   Popconfirm,
@@ -150,16 +151,11 @@ const LiveList: FC = () => {
       dataIndex: "name",
     },
     {
-      title: "推流地址",
-      dataIndex: "streaming_address",
+      title: "平台",
+      dataIndex: "platform",
       width: "10%",
-      ellipsis: true,
-    },
-    {
-      title: "推流码",
-      dataIndex: "streaming_code",
-      width: "10%",
-      ellipsis: true,
+      render: (text) =>
+        platformOptions.find((item) => item.value == text)?.label,
     },
     {
       title: "房间地址",
@@ -174,7 +170,7 @@ const LiveList: FC = () => {
       title: "转发推流",
       dataIndex: "retweet",
       render: (text) =>
-        text === "1" ? (
+        text == "1" ? (
           <IconCheckCircleFill className={styles.icon_running} />
         ) : (
           <IconStop className={styles.icon_stop} />
@@ -200,7 +196,7 @@ const LiveList: FC = () => {
       title: "硬件加速",
       dataIndex: "is_it_hardware",
       render: (text, _item) => {
-        if (_item.retweet === "1") {
+        if (_item.retweet == "1") {
           return <IconMinus />;
         }
         return text === 1 ? (
@@ -214,7 +210,7 @@ const LiveList: FC = () => {
       title: "编码器",
       dataIndex: "encoder",
       render: (text, _item) => {
-        if (_item.retweet === "1") {
+        if (_item.retweet == "1") {
           return <IconMinus />;
         }
         switch (text) {
@@ -245,7 +241,7 @@ const LiveList: FC = () => {
       title: "码率值",
       dataIndex: "bit_rate_value",
       render: (text, _item) =>
-        _item.retweet === "1" ? <IconMinus /> : `${text}kbps`,
+        _item.retweet == "1" ? <IconMinus /> : `${text}kbps`,
     },
     {
       title: "分辨率",
@@ -256,13 +252,13 @@ const LiveList: FC = () => {
       title: "音轨",
       dataIndex: "audioTrack",
       render: (text, _item) =>
-        _item.retweet === "1" ? <IconMinus /> : text || "默认",
+        _item.retweet == "1" ? <IconMinus /> : text || "默认",
     },
     {
       title: "字幕轨道",
       dataIndex: "subtitleTrack",
       render: (text, _item) =>
-        _item.retweet === "1" ? <IconMinus /> : text || "默认",
+        _item.retweet == "1" ? <IconMinus /> : text || "默认",
     },
     {
       title: "操作",
@@ -380,7 +376,7 @@ const LiveList: FC = () => {
         defaultValue: retweet,
       },
     ];
-    if (retweet === 2) {
+    if (retweet == 2) {
       // @ts-ignore
       result.push(
         {
@@ -419,7 +415,7 @@ const LiveList: FC = () => {
           label: "码率值",
           field: "bit_rate_value",
           rules: [{ required: true }],
-          type: "input",
+          type: "numberInput",
           placeholder: "请输入码率值",
         },
         {
@@ -478,6 +474,8 @@ const LiveList: FC = () => {
     switch (item.type) {
       case "input":
         return <Input placeholder={item.placeholder} />;
+      case "numberInput":
+        return <InputNumber placeholder={item.placeholder} />;
       case "switch":
         if (item.field === "retweet") {
           return (
@@ -616,7 +614,7 @@ const LiveList: FC = () => {
           values.streaming_address = stream?.streaming_address;
           values.room_address = stream?.room_address;
           values.streaming_code = stream?.streaming_code;
-          if (retweet === 2) {
+          if (retweet == 2) {
             if (typeof values.is_it_hardware === "boolean") {
               values.is_it_hardware = values.is_it_hardware ? 1 : 2;
             }
@@ -624,10 +622,10 @@ const LiveList: FC = () => {
             values.file_name = values.video_dir.name;
             values.video_dir = values.video_dir.path;
           } else {
-            values.retweet = retweet;
             values.video_dir = values.pull_address;
             delete values.pull_address;
           }
+          values.retweet = retweet;
           delete values.stream;
           try {
             if (editData) {
