@@ -16,6 +16,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
+      - name: Enable Docker Experimental Features
+        run: |
+          mkdir -p ~/.docker
+          echo '{"experimental":true}' | tee ~/.docker/config.json
+
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
@@ -40,8 +45,20 @@ jobs:
           push: true
           tags: xindongg/frontend:latest
 
-      - name: Pull, retag and push allinone Docker image
+      - name: Pull, retag and push allinone Docker image for linux/amd64
         run: |
-          docker pull youshandefeiyang/allinone:latest
-          docker tag youshandefeiyang/allinone:latest xindongg/allinone:latest
-          docker push xindongg/allinone:latest
+          docker pull --platform linux/amd64 youshandefeiyang/allinone:latest
+          docker tag youshandefeiyang/allinone:latest xindongg/allinone:latest-amd64
+          docker push xindongg/allinone:latest-amd64
+
+      - name: Pull, retag and push allinone Docker image for linux/arm/v7
+        run: |
+          docker pull --platform linux/arm/v7 youshandefeiyang/allinone:latest
+          docker tag youshandefeiyang/allinone:latest xindongg/allinone:latest-armv7
+          docker push xindongg/allinone:latest-armv7
+
+      - name: Pull, retag and push allinone Docker image for linux/arm64
+        run: |
+          docker pull --platform linux/arm64 youshandefeiyang/allinone:latest
+          docker tag youshandefeiyang/allinone:latest xindongg/allinone:latest-arm64
+          docker push xindongg/allinone:latest-arm64
