@@ -2,6 +2,8 @@ import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import koa2Cors from "koa2-cors";
 import portfinder from "portfinder";
+import * as Sentry from "@sentry/node";
+import { CaptureConsole, Dedupe } from "@sentry/integrations";
 import config from "./config/default";
 import { errorHandler } from "./middleware/error";
 import routes from "./routes";
@@ -16,13 +18,31 @@ app.use(errorHandler);
 
 // register routes
 app.use(routes.routes()).use(routes.allowedMethods());
+if (process.env.ENV_VAR !== "development") {
+  Sentry.init({
+    dsn: "https://d0091206cb7e47aba576f453777c576e@o4505381409456128.ingest.sentry.io/4505381426102272",
+    integrations: [
+      new CaptureConsole({
+        levels: ["error"],
+      }),
+      new Dedupe(),
+    ],
+  });
+}
+
+app.on("error", (err, ctx) => {
+  Sentry.withScope((scope) => {
+    scope.addEventProcessor((event) =>
+      Sentry.addRequestDataToEvent(event, ctx.request)
+    );
+    Sentry.captureException(err);
+  });
+});
 
 // start http server
 (async () => {
   await connectDb();
-
   portfinder.basePort = config.port;
-
   try {
     const port = await portfinder.getPortPromise();
     app.listen(port, () => {
@@ -38,5 +58,5 @@ process.on("uncaughtException", (err) => {
 });
 
 process.on("unhandledRejection", (reason, promise) => {
-  console.log("Unhandled Rejection at:", promise, "reason:", reason);
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
 });

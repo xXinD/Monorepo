@@ -3,11 +3,16 @@ import { LiveStream } from "../models/LiveStream";
 import { asyncHandler } from "../utils/handler";
 import redisClient from "../utils/redisClient";
 import { buildFFmpegCommand } from "./buildFFmpegCommand";
-import { platformFormat } from "../utils/dataFormat";
-import { EmailService } from "../utils/sendEmail";
+import {
+  onClose,
+  onData,
+  onExit,
+  onSignal,
+  onSpawn,
+} from "./stream/streamEventHandlers";
 
 // 子进程统一管理
-const childProcesses = new Map<string, ChildProcessWithoutNullStreams>();
+export const childProcesses = new Map<string, ChildProcessWithoutNullStreams>();
 
 export interface LiveOptions {
   unique_id?: string;
@@ -58,7 +63,7 @@ export interface LiveOptions {
   isStopped?: boolean;
 }
 
-async function updateLiveStreamStatus(id: string, status: number) {
+export async function updateLiveStreamStatus(id: string, status: number) {
   await asyncHandler(async () => {
     const live = await LiveStream.findById(id);
     if (live) {
@@ -97,10 +102,7 @@ export async function closeAllStreams(): Promise<void> {
  * @param {Object} ctx Koa 上下文
  * @returns {Promise<void>} Promise 对象
  */
-async function playVideoFiles(
-  options: LiveOptions,
-  ctx: any
-): Promise<unknown> {
+export async function playVideoFiles(options: LiveOptions, ctx: any) {
   if (childProcesses.has(options.unique_id)) {
     await redisClient.set(options.unique_id, "true");
     childProcesses.get(options.unique_id)?.kill("SIGKILL");
@@ -114,109 +116,11 @@ async function playVideoFiles(
   const args = await buildFFmpegCommand(options);
   const childProcess = spawn("ffmpeg", args);
 
-  childProcess.stdout.on("data", (data) => {
-    console.log(`stdout: ${data}`);
-  });
-
-  childProcess.stderr.on("data", async (data) => {
-    if (
-      data.includes("auth:remote_auth:not_allowed") ||
-      data.includes("auth:remote_auth:auth_failed") ||
-      data.includes("RtmpStatusCode2NssError") ||
-      data.includes("Operation not permitted")
-    ) {
-      console.error(`stdout: ${data}`);
-      await asyncHandler(async () => {
-        await redisClient.set(options.unique_id, "true");
-        try {
-          const emailService = await EmailService.getInstance();
-          await emailService.sendMail(
-            "1550955285@qq.com",
-            "直播管理平台-报错警告",
-            `直播间【${options.name}】已被关闭`,
-            `<div><h1>【${
-              options.name
-            }】直播被终止</h1><h3>直播平台：</h3><p>${platformFormat(
-              options.platform
-            )}</p<h3>疑似原因：</h3><p>直播间被关闭/推流地址已被关闭</p><h3>日志：</h3><p>${data}</p></div>`
-          );
-        } catch (error) {
-          console.error("Failed to send email:", error);
-        }
-        await updateLiveStreamStatus(options.unique_id, 2);
-        childProcesses.delete(options.unique_id);
-      }, "直播间被封禁");
-    } else {
-      console.log(`stdout: ${data}`);
-    }
-  });
-
-  childProcess.on("close", (code) => {
-    console.log(`child process exited with code ${code}`);
-    updateLiveStreamStatus(options.id, 1);
-  });
-
-  // 当子进程退出时，将其从映射中移除
-  childProcess.on("exit", async () => {
-    const isStopped = await redisClient.get(options.unique_id);
-    // @ts-ignore
-    if (isStopped !== "true") {
-      // 如果没有被停止，就重新开始推流
-      await redisClient.del(options.unique_id);
-      await playVideoFiles(
-        {
-          ...options,
-          start_time: "00:00:00",
-        },
-        ctx
-      );
-    } else {
-      if (childProcesses.has(options.unique_id)) {
-        childProcesses.delete(options.unique_id);
-      }
-      // 在数据库中删除对应的记录
-      await updateLiveStreamStatus(options.unique_id, 1);
-    }
-  });
-  process.on("SIGINT", async () => {
-    console.log("Caught interrupt signal. Cleaning up...");
-    if (childProcesses.size > 0) {
-      await closeAllStreams();
-    }
-    process.exit(1);
-  });
-
-  process.on("SIGTERM", async () => {
-    console.log("Caught termination signal. Cleaning up...");
-    if (childProcesses.size > 0) {
-      await closeAllStreams();
-    }
-    process.exit(1);
-  });
-  return new Promise((resolve, reject) => {
-    childProcess.on("spawn", async () => {
-      await asyncHandler(async () => {
-        // 更新直播状态为 'running'
-        const live = await LiveStream.findById(options.unique_id);
-        if (!live) {
-          await LiveStream.create(options);
-        } else {
-          await updateLiveStreamStatus(options.unique_id, 0);
-        }
-        childProcesses.set(options.unique_id, childProcess);
-        resolve(options);
-      }, "启动/重启推流失败：").catch(reject);
-    });
-
-    childProcess.on("error", async (error) => {
-      await asyncHandler(async () => {
-        console.error(error);
-        // 直播状态更新为错误
-        await updateLiveStreamStatus(options.unique_id, 2);
-        reject(error);
-      }, "推流进程报错：").catch(reject);
-    });
-  });
+  onData(childProcess, options);
+  onClose(childProcess);
+  onExit(childProcess, options, ctx);
+  onSignal();
+  await onSpawn(childProcess, options);
 }
 /**
  * 开始推流
