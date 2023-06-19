@@ -1,28 +1,31 @@
 import { createPool, Pool } from "mysql2/promise";
 import fs from "fs";
 import path from "path";
+import { asyncHandler } from "../utils/handler";
+import errorJson from "../config/errorMessages.json";
 
 async function initDb(): Promise<Pool> {
-  const config = JSON.parse(
-    fs.readFileSync(
-      path.resolve(process.cwd(), "./config/config.json"),
-      "utf-8"
-    )
-  );
-  const pool = createPool({
-    host: config.sql_address,
-    port: config.sql_port ?? 3306,
-    user: config.sql_user,
-    password: config.sql_password,
-    database: config.sql_database,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
-  });
+  return await asyncHandler(async () => {
+    const config = JSON.parse(
+      fs.readFileSync(
+        path.resolve(process.cwd(), "./config/config.json"),
+        "utf-8"
+      )
+    );
+    const pool = createPool({
+      host: config.sql_address,
+      port: config.sql_port ?? 3306,
+      user: config.sql_user,
+      password: config.sql_password,
+      database: config.sql_database,
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0,
+    });
 
-  const conn = await pool.getConnection();
+    const conn = await pool.getConnection();
 
-  await conn.query(`CREATE TABLE IF NOT EXISTS live_streams (
+    await conn.query(`CREATE TABLE IF NOT EXISTS live_streams (
     id INT PRIMARY KEY AUTO_INCREMENT,
     unique_id TEXT UNIQUE,
     name TEXT,
@@ -50,7 +53,7 @@ async function initDb(): Promise<Pool> {
     start_time TEXT
   )`);
 
-  await conn.query(`CREATE TABLE IF NOT EXISTS resources (
+    await conn.query(`CREATE TABLE IF NOT EXISTS resources (
     id INT PRIMARY KEY AUTO_INCREMENT,
     unique_id TEXT UNIQUE,
     name TEXT,
@@ -59,7 +62,7 @@ async function initDb(): Promise<Pool> {
     update_date TEXT
   )`);
 
-  await conn.query(`CREATE TABLE IF NOT EXISTS streaming_addresses (
+    await conn.query(`CREATE TABLE IF NOT EXISTS streaming_addresses (
     id INT PRIMARY KEY AUTO_INCREMENT,
     unique_id TEXT UNIQUE,
     platform TEXT,
@@ -70,8 +73,9 @@ async function initDb(): Promise<Pool> {
     update_date INT
   )`);
 
-  conn.release();
-  return pool;
+    conn.release();
+    return pool;
+  }, errorJson.SQL_TABLE_CREATION_FAILED);
 }
 
 let dbInstance: Pool | undefined;
@@ -85,20 +89,25 @@ export function getDb() {
 }
 
 export async function connectDb() {
-  const configPath = path.resolve(process.cwd(), "./config/config.json");
-  if (!fs.existsSync(configPath)) {
-    return;
-  }
-  if (!dbInstance) {
-    dbInstance = await initDb();
-  }
+  return await asyncHandler(async () => {
+    const configPath = path.resolve(process.cwd(), "./config/config.json");
+    if (!fs.existsSync(configPath)) {
+      return;
+    }
+    if (!dbInstance) {
+      dbInstance = await initDb();
+    }
+  }, errorJson.SQL_CONNECTION_FAILED);
 }
-export async function reloadDb() {
-  if (dbInstance) {
-    await dbInstance.end();
-    dbInstance = undefined;
-  }
 
-  // 重新连接数据库
-  await connectDb();
+export async function reloadDb() {
+  return await asyncHandler(async () => {
+    if (dbInstance) {
+      await dbInstance.end();
+      dbInstance = undefined;
+    }
+
+    // 重新连接数据库
+    await connectDb();
+  }, errorJson.DB_RELOAD_FAILED);
 }

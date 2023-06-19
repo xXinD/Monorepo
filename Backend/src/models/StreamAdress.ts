@@ -5,6 +5,8 @@
  */
 import { RowDataPacket } from "mysql2";
 import { getDb } from "../db";
+import { asyncHandler } from "../utils/handler";
+import errorJson from "../config/errorMessages.json";
 
 export class StreamAddress {
   unique_id: string;
@@ -26,12 +28,13 @@ export class StreamAddress {
    * @returns {Array} db.query() 返回的结果。
    */
   static async findAll(): Promise<StreamAddress[]> {
-    const db = getDb();
-
-    const [rows] = await db.query("SELECT * FROM streaming_addresses");
-    return (rows as RowDataPacket[]).map((row) =>
-      Object.assign(new StreamAddress(), row)
-    );
+    return await asyncHandler(async () => {
+      const db = getDb();
+      const [rows] = await db.query("SELECT * FROM streaming_addresses");
+      return (rows as RowDataPacket[]).map((row) =>
+        Object.assign(new StreamAddress(), row)
+      );
+    }, errorJson.SQL_QUERY_ERROR);
   }
 
   /**
@@ -45,17 +48,19 @@ export class StreamAddress {
   static async findById(
     unique_id: string | number
   ): Promise<StreamAddress | null> {
-    const db = getDb();
-    const [rows] = await db.query(
-      "SELECT * FROM streaming_addresses WHERE unique_id = ?",
-      [unique_id]
-    );
-    const row = (rows as RowDataPacket[])[0];
+    return await asyncHandler(async () => {
+      const db = getDb();
+      const [rows] = await db.query(
+        "SELECT * FROM streaming_addresses WHERE unique_id = ?",
+        [unique_id]
+      );
+      const row = (rows as RowDataPacket[])[0];
 
-    if (row) {
-      return Object.assign(new StreamAddress(), row);
-    }
-    return null;
+      if (row) {
+        return Object.assign(new StreamAddress(), row);
+      }
+      return null;
+    }, errorJson.SQL_QUERY_ERROR);
   }
 
   /**
@@ -69,25 +74,27 @@ export class StreamAddress {
     unique_id: string | number,
     data: Partial<StreamAddress>
   ): Promise<StreamAddress> {
-    const db = getDb();
-    // 查询当前直播信息
-    const streaming_addresses = await this.findById(unique_id);
+    return await asyncHandler(async () => {
+      const db = getDb();
+      // 查询当前直播信息
+      const streaming_addresses = await this.findById(unique_id);
 
-    if (!streaming_addresses) {
-      throw new Error("资源不存在");
-    }
+      if (!streaming_addresses) {
+        throw new Error("资源不存在");
+      }
 
-    // 更新允许修改的字段
-    const fields = Object.keys(data);
-    const values = Object.values(data);
+      // 更新允许修改的字段
+      const fields = Object.keys(data);
+      const values = Object.values(data);
 
-    const setClause = fields.map((field) => `${field} = ?`).join(", ");
+      const setClause = fields.map((field) => `${field} = ?`).join(", ");
 
-    await db.query(
-      `UPDATE streaming_addresses SET ${setClause} WHERE unique_id = ?`,
-      [...values, unique_id]
-    );
-    return await this.findById(unique_id);
+      await db.query(
+        `UPDATE streaming_addresses SET ${setClause} WHERE unique_id = ?`,
+        [...values, unique_id]
+      );
+      return await this.findById(unique_id);
+    }, errorJson.SQL_UPDATE_ERROR);
   }
 
   /**
@@ -97,22 +104,24 @@ export class StreamAddress {
    * @param {Object} options 资源配置
    */
   static async create(options: StreamAddress): Promise<StreamAddress> {
-    const db = getDb();
-    const fields = Object.keys(options);
-    const values = Object.values(options);
+    return await asyncHandler(async () => {
+      const db = getDb();
+      const fields = Object.keys(options);
+      const values = Object.values(options);
 
-    const placeholders = fields.map(() => "?").join(", ");
-    const fieldNames = fields.join(", ");
-    try {
-      await db.query(
-        `INSERT INTO streaming_addresses (${fieldNames}) VALUES (${placeholders})`,
-        values
-      );
-    } catch (error) {
-      console.error("SQ error: ", error.message);
-    }
+      const placeholders = fields.map(() => "?").join(", ");
+      const fieldNames = fields.join(", ");
+      try {
+        await db.query(
+          `INSERT INTO streaming_addresses (${fieldNames}) VALUES (${placeholders})`,
+          values
+        );
+      } catch (error) {
+        console.error("SQ error: ", error.message);
+      }
 
-    return StreamAddress.findById(options.unique_id);
+      return StreamAddress.findById(options.unique_id);
+    }, errorJson.SQL_CREATE_ERROR);
   }
 
   /**
@@ -123,10 +132,12 @@ export class StreamAddress {
    * @param uniqueId
    */
   static async delete(uniqueId: string): Promise<void> {
-    const db = getDb();
-    await db.query("DELETE FROM streaming_addresses WHERE unique_id = ?", [
-      uniqueId,
-    ]);
+    await asyncHandler(async () => {
+      const db = getDb();
+      await db.query("DELETE FROM streaming_addresses WHERE unique_id = ?", [
+        uniqueId,
+      ]);
+    }, errorJson.SQL_DELETE_ERROR);
   }
 
   /**
@@ -136,7 +147,9 @@ export class StreamAddress {
    * @returns {Promise<void>} Promise 对象
    */
   static async clearAll(): Promise<void> {
-    const db = getDb();
-    await db.query("DELETE FROM streaming_addresses");
+    await asyncHandler(async () => {
+      const db = getDb();
+      await db.query("DELETE FROM streaming_addresses");
+    }, errorJson.SQL_DELETE_ERROR);
   }
 }

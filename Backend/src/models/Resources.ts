@@ -5,6 +5,8 @@
  */
 import { RowDataPacket } from "mysql2";
 import { getDb } from "../db";
+import { asyncHandler } from "../utils/handler";
+import errorJson from "../config/errorMessages.json";
 
 export class Resources {
   unique_id: string;
@@ -26,11 +28,13 @@ export class Resources {
    * @returns {Array} db.query() 返回的结果。
    */
   static async findAll(): Promise<Resources[]> {
-    const db = getDb();
-    const [rows] = await db.query("SELECT * FROM resources");
-    return (rows as RowDataPacket[]).map((row) =>
-      Object.assign(new Resources(), row)
-    );
+    return asyncHandler(async () => {
+      const db = getDb();
+      const [rows] = await db.query("SELECT * FROM resources");
+      return (rows as RowDataPacket[]).map((row) =>
+        Object.assign(new Resources(), row)
+      );
+    }, errorJson.SQL_QUERY_ERROR);
   }
 
   /**
@@ -42,17 +46,19 @@ export class Resources {
    * @param unique_id
    */
   static async findById(unique_id: string | number): Promise<Resources | null> {
-    const db = getDb();
-    const [rows] = await db.query(
-      "SELECT * FROM resources WHERE unique_id = ?",
-      [unique_id]
-    );
-    const row = (rows as RowDataPacket[])[0];
+    return asyncHandler(async () => {
+      const db = getDb();
+      const [rows] = await db.query(
+        "SELECT * FROM resources WHERE unique_id = ?",
+        [unique_id]
+      );
+      const row = (rows as RowDataPacket[])[0];
 
-    if (row) {
-      return Object.assign(new Resources(), row);
-    }
-    return null;
+      if (row) {
+        return Object.assign(new Resources(), row);
+      }
+      return null;
+    }, errorJson.SQL_QUERY_ERROR);
   }
 
   /**
@@ -66,25 +72,27 @@ export class Resources {
     unique_id: string | number,
     data: Partial<Resources>
   ): Promise<Resources> {
-    const db = getDb();
-    // 查询当前直播信息
-    const resources = await this.findById(unique_id);
+    return asyncHandler(async () => {
+      const db = getDb();
+      // 查询当前直播信息
+      const resources = await this.findById(unique_id);
 
-    if (!resources) {
-      throw new Error("资源不存在");
-    }
+      if (!resources) {
+        throw new Error("资源不存在");
+      }
 
-    // 更新允许修改的字段
-    const fields = Object.keys(data);
-    const values = Object.values(data);
+      // 更新允许修改的字段
+      const fields = Object.keys(data);
+      const values = Object.values(data);
 
-    const setClause = fields.map((field) => `${field} = ?`).join(", ");
+      const setClause = fields.map((field) => `${field} = ?`).join(", ");
 
-    await db.query(`UPDATE resources SET ${setClause} WHERE unique_id = ?`, [
-      ...values,
-      unique_id,
-    ]);
-    return await this.findById(unique_id);
+      await db.query(`UPDATE resources SET ${setClause} WHERE unique_id = ?`, [
+        ...values,
+        unique_id,
+      ]);
+      return await this.findById(unique_id);
+    }, errorJson.SQL_UPDATE_ERROR);
   }
 
   /**
@@ -94,22 +102,24 @@ export class Resources {
    * @param {Object} options 资源配置
    */
   static async create(options: Resources): Promise<Resources> {
-    const db = getDb();
-    const fields = Object.keys(options);
-    const values = Object.values(options);
+    return asyncHandler(async () => {
+      const db = getDb();
+      const fields = Object.keys(options);
+      const values = Object.values(options);
 
-    const placeholders = fields.map(() => "?").join(", ");
-    const fieldNames = fields.join(", ");
-    try {
-      await db.query(
-        `INSERT INTO resources (${fieldNames}) VALUES (${placeholders})`,
-        values
-      );
-    } catch (error) {
-      console.error("SQLite error: ", error.message);
-    }
+      const placeholders = fields.map(() => "?").join(", ");
+      const fieldNames = fields.join(", ");
+      try {
+        await db.query(
+          `INSERT INTO resources (${fieldNames}) VALUES (${placeholders})`,
+          values
+        );
+      } catch (error) {
+        console.error("SQLite error: ", error.message);
+      }
 
-    return Resources.findById(options.unique_id);
+      return Resources.findById(options.unique_id);
+    }, errorJson.SQL_CREATE_ERROR);
   }
 
   /**
@@ -119,9 +129,11 @@ export class Resources {
    * @param {string} unique_id 资源 unique_id
    * @returns {Promise<void>} Promise 对象
    */
-  static async delete(uniqueId: string): Promise<void> {
-    const db = getDb();
-    await db.query("DELETE FROM resources WHERE unique_id = ?", [uniqueId]);
+  static async delete(unique_id: string): Promise<void> {
+    await asyncHandler(async () => {
+      const db = getDb();
+      await db.query("DELETE FROM resources WHERE unique_id = ?", [unique_id]);
+    }, errorJson.SQL_DELETE_ERROR);
   }
 
   /**
@@ -131,8 +143,10 @@ export class Resources {
    * @returns {Promise<void>} Promise 对象
    */
   static async clearAll(): Promise<void> {
-    const db = getDb();
-    await db.query("DELETE FROM resources");
+    await asyncHandler(async () => {
+      const db = getDb();
+      await db.query("DELETE FROM resources");
+    }, errorJson.SQL_DELETE_ERROR);
   }
 
   /**
@@ -142,9 +156,11 @@ export class Resources {
    * @returns {Array} 返回包含所有不同 file_type 的数组。
    */
   static async findAllFileTypes(): Promise<string[]> {
-    const db = getDb();
-    const [rows] = await db.query("SELECT DISTINCT file_type FROM resources");
-    return (rows as RowDataPacket[]).map((row) => row.file_type);
+    return await asyncHandler(async () => {
+      const db = getDb();
+      const [rows] = await db.query("SELECT DISTINCT file_type FROM resources");
+      return (rows as RowDataPacket[]).map((row) => row.file_type);
+    }, errorJson.SQL_QUERY_ERROR);
   }
 
   /**
@@ -155,13 +171,15 @@ export class Resources {
    * @param fileType
    */
   static async findByFileType(fileType: string): Promise<Resources[]> {
-    const db = getDb();
-    const [rows] = await db.query(
-      "SELECT * FROM resources WHERE file_type = ?",
-      [fileType]
-    );
-    return (rows as RowDataPacket[]).map((row) =>
-      Object.assign(new Resources(), row)
-    );
+    return await asyncHandler(async () => {
+      const db = getDb();
+      const [rows] = await db.query(
+        "SELECT * FROM resources WHERE file_type = ?",
+        [fileType]
+      );
+      return (rows as RowDataPacket[]).map((row) =>
+        Object.assign(new Resources(), row)
+      );
+    }, errorJson.SQL_QUERY_ERROR);
   }
 }
