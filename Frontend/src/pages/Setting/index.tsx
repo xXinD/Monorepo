@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import {
   Button,
   Form,
@@ -6,14 +6,22 @@ import {
   InputNumber,
   Switch,
 } from "@arco-design/web-react";
+import { observer } from "mobx-react-lite";
 import styles from "./index.module.less";
 import { ServerConfig, updateServerConfig } from "../../api/generalApi";
 import { axiosInstance } from "../../api/axios";
+import { useStore } from "../../store";
 
 const FormItem = Form.Item;
-const Setting: FC = () => {
+const Setting: FC = observer(() => {
+  const { streamStore } = useStore();
   const [form] = Form.useForm();
   const [is_email, setIsEmail] = useState<boolean>(false);
+  useEffect(() => {
+    if (streamStore?.userSettings) {
+      form.setFieldsValue(streamStore?.userSettings);
+    }
+  }, [streamStore?.userSettings]);
   return (
     <div className={styles.preMadeWrapper}>
       <Form
@@ -111,7 +119,7 @@ const Setting: FC = () => {
                 console.log(values, 1111);
                 axiosInstance.updateBaseURL(values.service_address);
                 await updateServerConfig(values);
-                window.location.reload();
+                // window.location.reload();
               } catch (e) {
                 console.log(e);
               }
@@ -123,5 +131,5 @@ const Setting: FC = () => {
       </Form>
     </div>
   );
-};
+});
 export default Setting;
