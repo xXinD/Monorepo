@@ -6,57 +6,6 @@ on:
       - pre-release
 
 jobs:
-  build-and-publish-arm64:
-    runs-on: self-hosted
-    steps:
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: 18.16.0
-
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          repository: XindongG/Monorepo
-          token: ${{ secrets.MY_PAT }}
-          ssh-strict: true
-
-      - name: Change ownership of .npm folder
-        run: sudo chown -R 501:20 "/Users/xindong/.npm"
-
-      - name: Build binary file
-        run: cd "${{ github.workspace }}/Backend" && npm install && npm run build:pkg
-
-      - name: Compress binary file
-        run: tar -czvf "${{ github.workspace }}/Backend/binary/arm64_binary.tar.gz" -C "${{ github.workspace }}/Backend/binary/" arm64_binary
-
-      - name: Get the date
-        id: date
-        run: |
-          echo "::set-output name=date::$(date +'%Y.%m.%d')"
-          echo "::set-output name=tag::pre-release-$(date +'%Y%m%d%H%M%S')"
-
-      - name: Create Pre-Release
-        id: create_pre_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.MY_PAT }}
-        with:
-          tag_name: ${{ steps.date.outputs.tag }}
-          release_name: Pre-Release ${{ steps.date.outputs.date }}
-          draft: false
-          prerelease: true
-
-      - name: Upload Pre-Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.MY_PAT }}
-        with:
-          upload_url: ${{ steps.create_pre_release.outputs.upload_url }}
-          asset_path: "${{ github.workspace }}/Backend/binary/arm64_binary.tar.gz"
-          asset_name: macos_arm64_binary.tar.gz
-          asset_content_type: application/gzip
-
   build-and-publish-amd64:
     runs-on: ubuntu-latest
     steps:
@@ -104,3 +53,73 @@ jobs:
           asset_path: "${{ github.workspace }}/Backend/binary/amd64_binary.tar.gz"
           asset_name: ubuntu_amd64_binary.tar.gz
           asset_content_type: application/gzip
+
+    outputs:
+      upload_url: ${{ steps.create_pre_release.outputs.upload_url }}
+
+  build-and-publish-arm64:
+    needs: build-and-publish-amd64
+    runs-on: self-hosted
+    steps:
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18.16.0
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          repository: XindongG/Monorepo
+          token: ${{ secrets.MY_PAT }}
+          ssh-strict: true
+
+      - name: Change ownership of .npm folder
+        run: sudo chown -R 501:20 "/Users/xindong/.npm"
+
+      - name: Build binary file
+        run: cd "${{ github.workspace }}/Backend" && npm install && npm run build:pkg
+
+      - name: Compress binary file
+        run: tar -czvf "${{ github.workspace }}/Backend/binary/arm64_binary.tar.gz" -C "${{ github.workspace }}/Backend/binary/" arm64_binary
+
+      - name: Upload Pre-Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_PAT }}
+        with:
+          upload_url: ${{ needs.build-and-publish-amd64.outputs.upload_url }}
+          asset_path: "${{ github.workspace }}/Backend/binary/arm64_binary.tar.gz"
+          asset_name: macos_arm64_binary.tar.gz
+          asset_content_type: application/gzip
+
+  build-and-publish-win:
+    needs: build-and-publish-amd64
+    runs-on: windows-latest
+    steps:
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 18.16.0
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          repository: XindongG/Monorepo
+          token: ${{ secrets.MY_PAT }}
+          ssh-strict: true
+
+      - name: Build binary file
+        run: cd "${{ github.workspace }}/Backend" && npm install && npm run build:pkg:win
+
+      - name: Compress binary file
+        run: Compress-Archive -Path "${{ github.workspace }}/Backend/binary/win_binary" -DestinationPath "${{ github.workspace }}/Backend/binary/win_binary.zip"
+
+      - name: Upload Pre-Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_PAT }}
+        with:
+          upload_url: ${{ needs.build-and-publish-amd64.outputs.upload_url }}
+          asset_path: "${{ github.workspace }}/Backend/binary/win_binary.zip"
+          asset_name: windows_amd64_binary.zip
+          asset_content_type: application/zip
