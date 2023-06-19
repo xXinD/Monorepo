@@ -38,3 +38,4 @@ Thumbs.db
 /test/
 /Backend/src/config/config.json
 /Backend/src/logs/
+/Backend/config/
