@@ -1,44 +1,88 @@
-## 运行方法
+## 项目简介
 
-1. 新建 `docker-compose.yml` 文件，内容如下：
+本项目是一个24小时无人推流直播系统，包含以下三个子项目：
 
-    ```yaml
-    version: '3.8'
-    services:
-      backend:
-        image: xindongg/backend:latest
-        restart: unless-stopped
-        privileged: true
-        ports:
-          - "4000:4000"
-        volumes:
-          - /Volumes:/Volumes
-      frontend:
-        image: xindongg/frontend:latest
-        restart: unless-stopped
-        ports:
-          - "8080:80"
-      allinone:
-        image: xindongg/allinone:latest
-        restart: unless-stopped
-        privileged: true
-        ports:
-          - "35455:35455"
-    ```
+1.  前端管理平台：使用 React 和 Acro Design 构建。
+1.  后端 Node 服务：使用 Node.js、Koa2 和 FFmpeg 构建。
+1.  转发推流服务：使用 Golang 实现，用于转发其他直播流。
 
-2. 在含有 `docker-compose.yml` 文件的目录中打开一个终端，然后运行以下命令：
+## 部署方式
 
-    ```bash
-    docker-compose up -d
-    ```
+### 前端管理平台
 
-   这个命令会在后台启动所有定义在 `docker-compose.yml` 文件中的服务。
+推荐使用 Docker 进行部署，使用以下 Docker 镜像：`xindongg/frontend:latest`。
 
+```bash
+docker run -d -p 8080:80 xindongg/frontend:latest
+```
 
-3. 如果你不在 `docker-compose.yml` 文件所在的目录中，你可以指定文件的完整路径来运行 Docker Compose 文件：
+此命令将启动容器并将容器内的端口 80 映射到主机的端口 8080。
 
-    ```bash
-    docker-compose -f /path/to/your/docker-compose.yml up -d
-    ```
+### 后端 Node 服务
 
-   替换 `/path/to/your/docker-compose.yml` 为你的 `docker-compose.yml` 文件的实际路径。
+推荐使用 Docker 进行部署，使用以下 Docker 镜像：`xindongg/backend:latest`。
+
+```bash
+docker run -d -p 4000:4000 xindongg/backend:latest
+```
+
+此命令将启动容器并将容器内的端口 4000 映射到主机的端口 4000。如果端口 4000 已被占用，可以选择其他可用端口，并在启动时查看控制台输出的信息。
+
+另外，你也可以从 [Releases 页面](https://github.com/XindongG/Monorepo/releases) 下载对应系统的二进制文件运行。
+
+```bash
+chmod +x backend-binary
+./backend-binary
+```
+
+### 转发推流服务
+
+推荐使用 Docker 进行部署，使用以下 Docker 镜像：`xindongg/allinone:latest`。
+
+```bash
+docker run -d -p 35455:35455 --privileged xindongg/allinone:latest
+```
+
+此命令将启动容器并将容器内的端口 35455 映射到主机的端口 35455。请注意，此服务需要特权模式运行，因此需要添加 `--privileged` 参数。
+
+另外，你也可以从 [LiveRedirect Releases 页面](https://github.com/XindongG/LiveRedirect/releases) 下载对应系统版本的二进制文件运行，默认端口为 35455。
+
+```bash
+chmod +x allinone-binary
+./allinone-binary
+```
+
+## docker-compose.yml 示例
+
+你也可以使用 `docker-compose.yml` 文件来同时部署前端管理平台、后端 Node 服务和转发推流服务。
+
+```yaml 
+version: '3.8'
+services:
+  frontend:
+    image: xindongg/frontend:latest
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+  backend:
+    image: xindongg/backend:latest
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+  allinone:
+    image: xindongg/allinone:latest
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "35455:35455"
+```
+
+将以上内容保存为 `docker-compose.yml` 文件，并在项目根目录执行以下命令启动容器。
+
+```bash
+docker-compose up -d
+```
+
+这将会同时启动前端管理平台、后端 Node 服务和转发推流服务。
+
+✨ 祝您部署愉快！✨
