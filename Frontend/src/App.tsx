@@ -9,6 +9,7 @@ import styles from "./index.module.less";
 import { getServerConfig } from "./api/generalApi";
 import Setting from "./pages/Setting";
 import "./reset.less";
+import { useStore } from "./store";
 
 const MenuItem = Menu.Item;
 const { SubMenu } = Menu;
@@ -96,14 +97,16 @@ const App: FC = () => {
 };
 
 const Page: FC = () => {
+  const { streamStore } = useStore();
   const [pageState, setPageState] = useState(localStorage.pageState);
   useAsyncEffect(async () => {
     const {
       data: {
-        data: { config },
+        data: { config, data },
       },
     } = await getServerConfig();
     setPageState(config);
+    streamStore.setUserSettings(data);
   }, []);
   return pageState === 1 ? <App /> : <Setting />;
 };

@@ -1,11 +1,11 @@
 import { createContext, useContext } from "react";
-import UserStore from "./userStore";
+import StreamStore from "./streamStore";
 
 class RootStore {
-  userStore: UserStore;
+  streamStore: StreamStore;
 
   constructor() {
-    this.userStore = new UserStore();
+    this.streamStore = new StreamStore();
   }
 }
 

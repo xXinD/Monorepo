@@ -5,7 +5,7 @@
  */
 import { RowDataPacket } from "mysql2";
 import { getDb } from "../db";
-import { LiveOptions } from "../scripts/streaming";
+import { LiveOptions } from "../scripts/stream";
 import { getVideoResolution } from "../utils/stringUtils";
 
 export class LiveStream {

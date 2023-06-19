@@ -3,15 +3,13 @@ import * as Sentry from "@sentry/node";
 import { liveMismatching } from "../../config/liveMismatching";
 import { asyncHandler } from "../../utils/handler";
 import redisClient from "../../utils/redisClient";
-import { EmailService } from "../../utils/sendEmail";
-import { platformFormat } from "../../utils/dataFormat";
 import {
   childProcesses,
   closeAllStreams,
   LiveOptions,
   playVideoFiles,
   updateLiveStreamStatus,
-} from "../streaming";
+} from "./index";
 import { LiveStream } from "../../models/LiveStream";
 
 export function onData(childProcess: ChildProcess, options: LiveOptions) {

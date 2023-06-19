@@ -13,12 +13,15 @@ export async function getServerConfig(ctx: any) {
     }
     const configFilePath = path.resolve(configPath, "config.json");
     let flag: number = 0;
+    let fileData: any = {};
     if (fs.existsSync(configFilePath)) {
       flag = 1; // 如果 config.json 不存在，直接返回
+      fileData = JSON.parse(fs.readFileSync(configFilePath, "utf-8"));
     }
     ctx.body = {
       data: {
         config: flag,
+        data: fileData,
       },
     };
   }, "服务、数据库等配置不存在");
@@ -43,7 +46,9 @@ export async function updateServerConfig(ctx: any) {
     // 写入文件
     fs.writeFileSync(configFilePath, JSON.stringify(data));
     await reloadDb();
-    await EmailService.reloadInstance();
+    if (data.is_email) {
+      await EmailService.reloadInstance();
+    }
     ctx.body = {
       message: "更新配置信息成功",
     };

@@ -1,5 +1,5 @@
 import si from "systeminformation";
-import { LiveOptions } from "./streaming";
+import { LiveOptions } from "./index";
 
 export async function buildFFmpegCommand(
   options: LiveOptions

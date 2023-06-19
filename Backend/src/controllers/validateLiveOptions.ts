@@ -1,4 +1,4 @@
-import { LiveOptions } from "../scripts/streaming";
+import { LiveOptions } from "../scripts/stream";
 
 const FIELD_NAME_MAP = {
   platform: "平台",

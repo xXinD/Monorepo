@@ -1,7 +1,7 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
-import { LiveStream } from "../models/LiveStream";
-import { asyncHandler } from "../utils/handler";
-import redisClient from "../utils/redisClient";
+import { LiveStream } from "../../models/LiveStream";
+import { asyncHandler } from "../../utils/handler";
+import redisClient from "../../utils/redisClient";
 import { buildFFmpegCommand } from "./buildFFmpegCommand";
 import {
   onClose,
@@ -9,7 +9,7 @@ import {
   onExit,
   onSignal,
   onSpawn,
-} from "./stream/streamEventHandlers";
+} from "./streamEventHandlers";
 
 // 子进程统一管理
 export const childProcesses = new Map<string, ChildProcessWithoutNullStreams>();

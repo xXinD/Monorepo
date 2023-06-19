@@ -3,7 +3,7 @@ import bodyParser from "koa-bodyparser";
 import koa2Cors from "koa2-cors";
 import portfinder from "portfinder";
 import * as Sentry from "@sentry/node";
-import { CaptureConsole, Dedupe } from "@sentry/integrations";
+import { CaptureConsole } from "@sentry/integrations";
 import config from "./config/default";
 import { errorHandler } from "./middleware/error";
 import routes from "./routes";
@@ -25,7 +25,6 @@ if (process.env.ENV_VAR !== "development") {
       new CaptureConsole({
         levels: ["error"],
       }),
-      new Dedupe(),
     ],
   });
 }

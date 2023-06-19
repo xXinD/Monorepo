@@ -11,7 +11,7 @@ import {
   LiveOptions,
   startStreaming,
   stopStreaming,
-} from "../scripts/streaming";
+} from "../scripts/stream";
 import { validateLiveOptions } from "./validateLiveOptions";
 import { LiveStream } from "../models/LiveStream";
 import { asyncHandler } from "../utils/handler";
