@@ -111,6 +111,10 @@ jobs:
       - name: Build binary file
         run: cd "${{ github.workspace }}/Backend" && npm install && npm run build:pkg:win
 
+      - name: List binary directory
+        run: Get-ChildItem -Path "${{ github.workspace }}/Backend/binary"
+        shell: pwsh
+
       - name: Compress binary file
         run: Compress-Archive -Path "${{ github.workspace }}/Backend/binary/win_binary" -DestinationPath "${{ github.workspace }}/Backend/binary/win_binary.zip"
 
