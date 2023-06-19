@@ -9,7 +9,8 @@
   "scripts": {
     "start-dev": "cross-env ENV_VAR=development nodemon --watch src/**/*.ts --exec ts-node src/app.ts",
     "build": "tsc && copyfiles -u 1 \"src/**/*.json\" dist",
-    "build:pkg": "npm run build && pkg . --targets node16-macos-arm64 --out-path binary && mv binary/backend binary/arm64_binary",
+    "build:pkg": "npm run build && pkg . --targets node18-macos-arm64 --out-path binary && mv binary/backend binary/arm64_binary",
+    "build:pkg:amd64": "npm run build && pkg . --targets node18-linux-amd64 --out-path binary && mv binary/backend binary/amd64_binary",
     "start:prod": "npm run build && cross-env ENV_VAR=production node dist/app.js"
   },
   "dependencies": {

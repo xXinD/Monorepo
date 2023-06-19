@@ -1,4 +1,4 @@
-name: Build and Publish Binary
+name: Build and Publish Release
 
 on:
   push:
@@ -7,7 +7,11 @@ on:
 
 jobs:
   build-and-publish:
-    runs-on: self-hosted
+    strategy:
+      matrix:
+        os: [self-hosted, ubuntu-latest]
+        architecture: [arm64, amd64]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Set up Node.js
@@ -22,20 +26,27 @@ jobs:
           token: ${{ secrets.MY_PAT }}
           ssh-strict: true
 
-      - name: Change ownership of .npm folder
+      - name: Change ownership of .npm folder (macOS only)
+        if: matrix.os == 'self-hosted'
         run: sudo chown -R 501:20 "/Users/xindong/.npm"
 
       - name: Build binary file
-        run: cd "${{ github.workspace }}/Backend" && npm install && npm run build:pkg
+        run: |
+          cd "${{ github.workspace }}/Backend" && npm install
+          if [ "${{ matrix.architecture }}" = "arm64" ]; then
+            npm run build:pkg
+          else
+            npm run build:pkg:amd64
+          fi
 
       - name: Compress binary file
-        run: tar -czvf "${{ github.workspace }}/Backend/binary/arm64_binary.tar.gz" -C "${{ github.workspace }}/Backend/binary/" arm64_binary
+        run: tar -czvf "${{ github.workspace }}/Backend/binary/${{ matrix.architecture }}_binary.tar.gz" -C "${{ github.workspace }}/Backend/binary/" ${{ matrix.architecture }}_binary
 
       - name: Get the date
         id: date
         run: |
           echo "::set-output name=date::$(date +'%Y.%m.%d')"
-          echo "::set-output name=tag::release-$(date +'%Y%m%d%H%M%S')" # this will generate a tag like "release-20230609123000"
+          echo "::set-output name=tag::release-$(date +'%Y%m%d%H%M%S')"
 
       - name: Create Release
         id: create_release
@@ -43,7 +54,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.MY_PAT }}
         with:
-          tag_name: ${{ steps.date.outputs.tag }} # use the tag output from the previous step
+          tag_name: ${{ steps.date.outputs.tag }}
           release_name: Release ${{ steps.date.outputs.date }}
           draft: false
           prerelease: false
@@ -54,8 +65,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.MY_PAT }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: "${{ github.workspace }}/Backend/binary/arm64_binary.tar.gz"
-          asset_name: macos_arm64_binary.tar.gz
+          asset_path: "${{ github.workspace }}/Backend/binary/${{ matrix.architecture }}_binary.tar.gz"
+          asset_name: ${{ matrix.os }}_${{ matrix.architecture }}_binary.tar.gz
           asset_content_type: application/gzip
-
-
