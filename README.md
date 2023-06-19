@@ -6,7 +6,7 @@
 1.  后端 Node 服务：使用 Node.js、Koa2 和 FFmpeg 构建。
 1.  转发推流服务：使用 Golang 实现，用于转发其他直播流。
 
-## 部署方式
+## 🚀部署方式
 
 ### 前端管理平台
 
@@ -26,7 +26,7 @@ docker run -d -p 8080:80 xindongg/frontend:latest
 docker run -d -p 4000:4000 xindongg/backend:latest
 ```
 
-此命令将启动容器并将容器内的端口 4000 映射到主机的端口 4000。如果端口 4000 已被占用，可以选择其他可用端口，并在启动时查看控制台输出的信息。
+此命令将启动容器并将容器内的端口 4000 映射到主机的端口 4000。
 
 另外，你也可以从 [Releases 页面](https://github.com/XindongG/Monorepo/releases) 下载对应系统的二进制文件运行。
 
@@ -34,6 +34,7 @@ docker run -d -p 4000:4000 xindongg/backend:latest
 chmod +x backend-binary
 ./backend-binary
 ```
+此服务将监听主机的端口 4000，如端口4000被占用，会自行累加，具体监听端口可查看控制台输出
 
 ### 转发推流服务
 
