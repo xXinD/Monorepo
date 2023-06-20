@@ -1,8 +1,7 @@
 export const liveMismatching = [
-  "Error",
-  "error",
+  "Input/output error",
   "Protocol not found",
-  "failed",
-  "Failed",
-  "fail",
+  "Operation not permitted",
+  "auth:remote_auth:not_allowed",
+  "Server error",
 ];
