@@ -93,6 +93,14 @@ export function onSignal() {
     }
     process.exit(1);
   });
+
+  process.on("exit", async () => {
+    console.log("Caught termination signal. Cleaning up...");
+    if (childProcesses.size > 0) {
+      await closeAllStreams();
+    }
+    process.exit(1);
+  });
 }
 
 export async function onSpawn(
