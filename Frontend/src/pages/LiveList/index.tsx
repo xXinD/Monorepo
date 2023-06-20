@@ -50,6 +50,7 @@ import { platformOptions } from "../StreamList";
 const FormItem = Form.Item;
 const { Option } = Select;
 export interface LiveOptions {
+  is_video_style?: boolean;
   unique_id?: string;
   uniqueId?: string;
   // 直播间 ID
@@ -139,6 +140,7 @@ const LiveList: FC = () => {
   const [form] = Form.useForm();
   const [editVisible, setEditVisible] = useState(false);
   const [retweet, setRetweet] = useState(2);
+  const [isVideoStyle, setIsVideoStyle] = useState(2);
   const getFileList = async (value: string) => {
     const {
       data: { data: result },
@@ -196,7 +198,7 @@ const LiveList: FC = () => {
       title: "硬件加速",
       dataIndex: "is_it_hardware",
       render: (text, _item) => {
-        if (_item.retweet == "1") {
+        if (_item.retweet == "1" || _item.is_video_style == 2) {
           return <IconMinus />;
         }
         return text === 1 ? (
@@ -241,7 +243,11 @@ const LiveList: FC = () => {
       title: "码率值",
       dataIndex: "bit_rate_value",
       render: (text, _item) =>
-        _item.retweet == "1" ? <IconMinus /> : `${text}kbps`,
+        _item.retweet == "1" || _item.is_video_style == 2 ? (
+          <IconMinus />
+        ) : (
+          `${text}kbps`
+        ),
     },
     {
       title: "分辨率",
@@ -274,6 +280,8 @@ const LiveList: FC = () => {
               form.resetFields();
               form.setFieldsValue(_item);
               setEditData(_item);
+              setIsVideoStyle(_item.is_video_style);
+              setRetweet(_item.retweet);
               await getFileList(_item.fileType);
               form.setFieldsValue({
                 video_dir: {
@@ -377,66 +385,91 @@ const LiveList: FC = () => {
       },
     ];
     if (retweet == 2) {
-      // @ts-ignore
-      result.push(
-        {
-          label: "推流文件",
-          field: "video_dir",
-          rules: [{ required: true }],
-          type: "chooseFile",
-          placeholder: "请输入推流码",
-          defaultValue: editData?.video_dir,
-        },
-
-        {
-          label: "硬件加速",
-          field: "is_it_hardware",
-          rules: [{ required: true }],
-          type: "switch",
-          defaultValue: editData?.is_it_hardware,
-        },
-        {
-          label: "编码器",
-          field: "encoder",
-          rules: [{ required: true }],
-          type: "select",
-          options: encoderOptions,
-          placeholder: "请选择编码器",
-        },
-        {
-          label: "码率模式",
-          field: "encoding_mode",
-          rules: [{ required: true }],
-          type: "select",
-          options: encodingModeOptions,
-          placeholder: "请选择码率模式",
-        },
-        {
-          label: "码率值",
-          field: "bit_rate_value",
-          rules: [{ required: true }],
-          type: "numberInput",
-          placeholder: "请输入码率值",
-        },
-        {
-          label: "音轨",
-          field: "audioTrack",
-          type: "input",
-          placeholder: "请输入音轨（不输入则默认音轨）",
-        },
-        {
-          label: "字幕轨道",
-          field: "subtitleTrack",
-          type: "input",
-          placeholder: "请输入字幕轨道（不输入则默认字幕轨道）",
-        },
-        {
-          label: "开始推流的时间",
-          field: "start_time",
-          type: "timePicker",
-          placeholder: "请输入开始推流的时间（例如：00:10:00）",
-        }
-      );
+      if (isVideoStyle == 1) {
+        result.push(
+          {
+            label: "推流文件",
+            field: "video_dir",
+            rules: [{ required: true }],
+            type: "chooseFile",
+            placeholder: "请输入推流码",
+            defaultValue: editData?.video_dir,
+          },
+          {
+            label: "自定义推流格式",
+            field: "is_video_style",
+            rules: [{ required: true }],
+            type: "switch",
+            defaultValue: isVideoStyle,
+          },
+          {
+            label: "硬件加速",
+            field: "is_it_hardware",
+            rules: [{ required: true }],
+            type: "switch",
+            defaultValue: editData?.is_it_hardware,
+          },
+          {
+            label: "编码器",
+            field: "encoder",
+            rules: [{ required: true }],
+            type: "select",
+            options: encoderOptions,
+            placeholder: "请选择编码器",
+          },
+          {
+            label: "码率模式",
+            field: "encoding_mode",
+            rules: [{ required: true }],
+            type: "select",
+            options: encodingModeOptions,
+            placeholder: "请选择码率模式",
+          },
+          {
+            label: "码率值",
+            field: "bit_rate_value",
+            rules: [{ required: true }],
+            type: "numberInput",
+            placeholder: "请输入码率值",
+          },
+          {
+            label: "音轨",
+            field: "audioTrack",
+            type: "input",
+            placeholder: "请输入音轨（不输入则默认音轨）",
+          },
+          {
+            label: "字幕轨道",
+            field: "subtitleTrack",
+            type: "input",
+            placeholder: "请输入字幕轨道（不输入则默认字幕轨道）",
+          },
+          {
+            label: "开始推流的时间",
+            field: "start_time",
+            type: "timePicker",
+            placeholder: "请输入开始推流的时间（例如：00:10:00）",
+          }
+        );
+      } else {
+        result.push(
+          {
+            label: "推流文件",
+            field: "video_dir",
+            rules: [{ required: true }],
+            type: "chooseFile",
+            placeholder: "请输入推流码",
+            defaultValue: editData?.video_dir,
+          },
+          {
+            label: "自定义推流格式",
+            field: "is_video_style",
+            rules: [{ required: true }],
+            type: "switch",
+            defaultValue: isVideoStyle,
+          }
+        );
+      }
     } else {
       result.push({
         label: "拉流地址",
@@ -451,7 +484,7 @@ const LiveList: FC = () => {
       });
     }
     return result;
-  }, [editData, editVisible, retweet, fileList]);
+  }, [editData, editVisible, retweet, fileList, isVideoStyle]);
   useAsyncEffect(async () => {
     const { data: liveSteams } = await getLiveStreamingList();
     const {
@@ -480,10 +513,21 @@ const LiveList: FC = () => {
         if (item.field === "retweet") {
           return (
             <Switch
-              defaultChecked={retweet !== 2}
+              defaultChecked={retweet == 1}
               onChange={async (value) => {
                 setRetweet(value ? 1 : 2);
                 await getFileList("pull_address");
+              }}
+            />
+          );
+        }
+
+        if (item.field === "is_video_style") {
+          return (
+            <Switch
+              defaultChecked={isVideoStyle == 1}
+              onChange={async (value) => {
+                setIsVideoStyle(value ? 1 : 2);
               }}
             />
           );
@@ -577,7 +621,7 @@ const LiveList: FC = () => {
           {getFormElement(item)}
         </FormItem>
       )),
-    [editData, editVisible, fileTypes, fileList, retweet]
+    [editData, editVisible, fileTypes, fileList, retweet, isVideoStyle]
   );
   return (
     <>
@@ -627,6 +671,7 @@ const LiveList: FC = () => {
           }
           values.retweet = retweet;
           delete values.stream;
+          values.is_video_style = isVideoStyle;
           try {
             if (editData) {
               await updateLiveStream(editData.unique_id as string, values);

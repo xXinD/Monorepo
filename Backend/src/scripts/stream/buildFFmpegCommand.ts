@@ -18,7 +18,7 @@ export async function buildFFmpegCommand(
     graphicsEncoder = options.encoder === "h264" ? "libx264" : "libx265";
   }
   const args =
-    options.retweet == 2
+    options.retweet == 2 && options.is_video_style == 1
       ? [
           "-re",
           "-y",
