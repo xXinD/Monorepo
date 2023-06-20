@@ -41,7 +41,7 @@ async function initDb(): Promise<Pool> {
       database: config.sql_database,
       waitForConnections: true,
       connectionLimit: 20, // increase the connection limit
-      queueLimit: 0,
+      queueLimit: 2,
       connectTimeout: 20000, // increase the connect timeout
     });
 
