@@ -15,6 +15,7 @@ import {
 export const childProcesses = new Map<string, ChildProcessWithoutNullStreams>();
 
 export interface LiveOptions {
+  is_video_style?: number;
   unique_id?: string;
   // 直播间 ID
   id?: string;
@@ -103,6 +104,7 @@ export async function closeAllStreams(): Promise<void> {
  * @returns {Promise<void>} Promise 对象
  */
 export async function playVideoFiles(options: LiveOptions, ctx: any) {
+  console.log(options);
   if (childProcesses.has(options.unique_id)) {
     await redisClient.set(options.unique_id, "true");
     childProcesses.get(options.unique_id)?.kill("SIGKILL");
@@ -114,6 +116,7 @@ export async function playVideoFiles(options: LiveOptions, ctx: any) {
   }
   await redisClient.del(options.unique_id);
   const args = await buildFFmpegCommand(options);
+  console.log(args);
   const childProcess = spawn("ffmpeg", args);
 
   onData(childProcess, options);

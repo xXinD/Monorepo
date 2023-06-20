@@ -40,8 +40,8 @@ export function onData(childProcess: ChildProcess, options: LiveOptions) {
 }
 
 export function onClose(childProcess: ChildProcess) {
-  childProcess.on("close", (code) => {
-    console.log(`进程已关闭，对应code： ${code}`);
+  childProcess.on("close", (code, type) => {
+    console.log(`进程已关闭，对应code： ${code}，关闭类型：${type}`);
   });
 }
 
@@ -67,11 +67,14 @@ export function onExit(
       if (childProcesses.has(options.unique_id)) {
         childProcesses.delete(options.unique_id);
       }
-      await LiveStream.update(options.unique_id, {
-        ...options,
-        start_time: "00:00:00",
-        status: 1,
-      });
+      const liveStream = await LiveStream.findById(options.unique_id);
+      if (liveStream) {
+        await LiveStream.update(options.unique_id, {
+          ...liveStream,
+          start_time: "00:00:00",
+          status: 1,
+        });
+      }
       // 在数据库中删除对应的记录
     }
   });
@@ -87,6 +90,14 @@ export function onSignal() {
   });
 
   process.on("SIGTERM", async () => {
+    console.log("Caught termination signal. Cleaning up...");
+    if (childProcesses.size > 0) {
+      await closeAllStreams();
+    }
+    process.exit(1);
+  });
+
+  process.on("exit", async () => {
     console.log("Caught termination signal. Cleaning up...");
     if (childProcesses.size > 0) {
       await closeAllStreams();

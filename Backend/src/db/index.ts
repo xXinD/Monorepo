@@ -1,9 +1,30 @@
-import { createPool, Pool } from "mysql2/promise";
+import { createPool, Pool, PoolConnection } from "mysql2/promise";
 import fs from "fs";
 import path from "path";
 import { asyncHandler } from "../utils/handler";
 import errorJson from "../config/errorMessages.json";
 
+async function tryConnect(
+  pool: Pool,
+  attempts = 0,
+  delay = 1000
+): Promise<PoolConnection> {
+  if (attempts > 5) {
+    throw new Error("Failed to connect to the database after 5 attempts.");
+  }
+  try {
+    return await pool.getConnection();
+  } catch (err) {
+    if (err.code === "ETIMEDOUT") {
+      console.log("Connection timed out. Retrying...");
+      await new Promise((resolve) => {
+        setTimeout(resolve, delay);
+      });
+      return tryConnect(pool, attempts + 1, delay * 2);
+    }
+    throw err;
+  }
+}
 async function initDb(): Promise<Pool> {
   return await asyncHandler(async () => {
     const config = JSON.parse(
@@ -19,11 +40,12 @@ async function initDb(): Promise<Pool> {
       password: config.sql_password,
       database: config.sql_database,
       waitForConnections: true,
-      connectionLimit: 10,
-      queueLimit: 0,
+      connectionLimit: 20, // increase the connection limit
+      queueLimit: 2,
+      connectTimeout: 20000, // increase the connect timeout
     });
 
-    const conn = await pool.getConnection();
+    const conn = await tryConnect(pool);
 
     await conn.query(`CREATE TABLE IF NOT EXISTS live_streams (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -50,6 +72,7 @@ async function initDb(): Promise<Pool> {
     transition_type INT,
     simple_transition INT,
     complex_transition INT,
+    is_video_style INT,
     start_time TEXT
   )`);
 

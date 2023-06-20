@@ -157,6 +157,7 @@ export class LiveStream {
         file_name: options.file_name || null,
         video_dir: options.video_dir || null,
         is_it_hardware: !!options.is_it_hardware,
+        is_video_style: options.is_video_style,
         encoder: options.encoder ? options.encoder : "h264",
         encoding_mode: options.encoding_mode || null,
         bit_rate_value: options.bit_rate_value || null,
