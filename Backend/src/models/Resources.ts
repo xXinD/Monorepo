@@ -11,15 +11,19 @@ import errorJson from "../config/errorMessages.json";
 export class Resources {
   unique_id: string;
 
+  status?: number;
+
   id?: number;
 
   name: string;
 
   video_dir: string;
 
+  srs_address: string;
+
   file_type: string;
 
-  date: string;
+  update_date: string;
 
   /**
    * 查询所有资源

@@ -130,13 +130,12 @@ export async function updateLiveInfo(ctx: ParameterizedContext<DefaultState>) {
   await asyncHandler(async () => {
     // 从数据库中查找直播记录
     const liveStream = await LiveStream.findById(id);
-
     if (!liveStream) {
       ctx.throw(404, "直播不存在");
     }
     // 根据提供的直播 ID 和新的直播信息更新数据库中的记录
     const afterUpdate = await LiveStream.update(id, data);
-    await stopStreaming(liveStream.unique_id);
+    await stopStreaming(afterUpdate.unique_id);
     await startStreaming(afterUpdate, ctx);
     // 返回创建的直播间信息
     ctx.body = {

@@ -3,13 +3,9 @@ import { LiveStream } from "../../models/LiveStream";
 import { asyncHandler } from "../../utils/handler";
 import redisClient from "../../utils/redisClient";
 import { buildFFmpegCommand } from "./buildFFmpegCommand";
-import {
-  onClose,
-  onData,
-  onExit,
-  onSignal,
-  onSpawn,
-} from "./streamEventHandlers";
+import { onData, onExit, onSpawn } from "./streamEventHandlers";
+import { creatSRS, SRS_ChildProcesses } from "../../controllers/resources";
+import { Resources } from "../../models/Resources";
 
 // 子进程统一管理
 export const childProcesses = new Map<string, ChildProcessWithoutNullStreams>();
@@ -20,7 +16,6 @@ export interface LiveOptions {
   // 直播间 ID
   id?: string;
   platform?: string;
-  retweet?: string | number;
   // 直播名称
   name: string;
   // 直播状态
@@ -41,9 +36,9 @@ export interface LiveOptions {
   // 是否开启硬件加速
   is_it_hardware?: number;
   // 码率模式
-  encoding_mode: number;
+  encoding_mode?: number;
   // 码率值
-  bit_rate_value: number;
+  bit_rate_value?: number;
   // 分辨率
   resolving_power?: string;
   // 是否启用水印，默认不启用
@@ -83,7 +78,7 @@ export async function closeAllStreams(): Promise<void> {
       new Promise(async (resolve, reject) => {
         try {
           await redisClient.set(unique_id, "true");
-          childProcess.kill("SIGKILL");
+          childProcess.kill("SIGINT");
           resolve(null);
         } catch (e) {
           reject(e);
@@ -104,25 +99,24 @@ export async function closeAllStreams(): Promise<void> {
  * @returns {Promise<void>} Promise 对象
  */
 export async function playVideoFiles(options: LiveOptions, ctx: any) {
-  console.log(options);
   if (childProcesses.has(options.unique_id)) {
     await redisClient.set(options.unique_id, "true");
-    childProcesses.get(options.unique_id)?.kill("SIGKILL");
+    childProcesses.get(options.unique_id)?.kill("SIGINT");
     childProcesses.delete(options.unique_id);
-    const redisFlag = await redisClient.get(options.unique_id);
-    if (redisFlag) {
-      await redisClient.del(options.unique_id);
-    }
   }
   await redisClient.del(options.unique_id);
+  const SRS = await Resources.findById(options.video_dir);
+  if (!SRS_ChildProcesses.has(options.video_dir)) {
+    await creatSRS({
+      streaming_code: options.video_dir,
+      video_dir: SRS.video_dir,
+    });
+  }
   const args = await buildFFmpegCommand(options);
-  console.log(args);
   const childProcess = spawn("ffmpeg", args);
 
   onData(childProcess, options);
-  onClose(childProcess);
   onExit(childProcess, options, ctx);
-  onSignal();
   await onSpawn(childProcess, options);
 }
 /**
@@ -151,7 +145,7 @@ export async function stopStreaming(unique_id: string) {
     const childProcess = childProcesses.get(unique_id);
     const liveStream = await LiveStream.findById(unique_id);
     if (childProcess) {
-      childProcess.kill("SIGKILL");
+      childProcess.kill("SIGINT");
       childProcesses.delete(unique_id);
     }
     if (liveStream.status == 0) {
@@ -173,7 +167,7 @@ export async function delStreaming(unique_id: string, ctx: any) {
     const childProcess = childProcesses.get(unique_id);
     const liveStream = await LiveStream.findById(unique_id);
     if (childProcess) {
-      childProcess.kill("SIGKILL");
+      childProcess.kill("SIGINT");
       childProcesses.delete(unique_id);
     }
     if (liveStream) {
@@ -197,7 +191,7 @@ export async function clearAllStreams(): Promise<void> {
       // eslint-disable-next-line no-async-promise-executor
       new Promise(async (resolve) => {
         await redisClient.set(unique_id, "true");
-        childProcess.kill("SIGKILL");
+        childProcess.kill("SIGINT");
         resolve(null);
       })
   );
