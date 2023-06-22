@@ -20,12 +20,12 @@ import {
   IconCloseCircle,
   IconDelete,
   IconInfoCircleFill,
+  IconMinus,
   IconPlayCircle,
   IconPlus,
   IconRecordStop,
   IconSettings,
   IconStop,
-  IconMinus,
 } from "@arco-design/web-react/icon";
 import { useAsyncEffect } from "ahooks";
 import styles from "./index.module.less";
@@ -40,6 +40,7 @@ import {
 import {
   getResourcesByFileType,
   getResourcesFileTypes,
+  getResourcesList,
 } from "../../api/resourcesApi";
 import {
   getStreamAddressList,
@@ -131,7 +132,6 @@ interface FormItemData {
   defaultValue?: any;
 }
 const LiveList: FC = () => {
-  const [fileTypes, setFileTypes] = useState<any[]>([]);
   const [fileList, setFileList] = useState<any[]>([]);
   const [streamList, setStreamList] = useState<StreamAddress[]>([]);
   const [confirmLoading, setConfirmLoading] = useState(false);
@@ -139,12 +139,11 @@ const LiveList: FC = () => {
   const [editData, setEditData] = useState<LiveOptions>();
   const [form] = Form.useForm();
   const [editVisible, setEditVisible] = useState(false);
-  const [retweet, setRetweet] = useState(2);
   const [isVideoStyle, setIsVideoStyle] = useState(2);
-  const getFileList = async (value: string) => {
+  const getFileList = async () => {
     const {
       data: { data: result },
-    } = await getResourcesByFileType(value);
+    } = await getResourcesList();
     setFileList(result);
   };
   const columns: TableColumnProps[] = [
@@ -169,16 +168,6 @@ const LiveList: FC = () => {
       ),
     },
     {
-      title: "转发推流",
-      dataIndex: "retweet",
-      render: (text) =>
-        text == "1" ? (
-          <IconCheckCircleFill className={styles.icon_running} />
-        ) : (
-          <IconStop className={styles.icon_stop} />
-        ),
-    },
-    {
       title: "状态",
       dataIndex: "status",
       render: (text) => {
@@ -198,7 +187,7 @@ const LiveList: FC = () => {
       title: "硬件加速",
       dataIndex: "is_it_hardware",
       render: (text, _item) => {
-        if (_item.retweet == "1" || _item.is_video_style == 2) {
+        if (_item.is_video_style == 2) {
           return <IconMinus />;
         }
         return text === 1 ? (
@@ -212,7 +201,7 @@ const LiveList: FC = () => {
       title: "编码器",
       dataIndex: "encoder",
       render: (text, _item) => {
-        if (_item.retweet == "1") {
+        if (_item.is_video_style == 2) {
           return <IconMinus />;
         }
         switch (text) {
@@ -229,7 +218,7 @@ const LiveList: FC = () => {
       title: "码率模式",
       dataIndex: "encoding_mode",
       render: (text, _item) => {
-        if (_item.retweet === "1") {
+        if (_item.is_video_style == 2) {
           return <IconMinus />;
         }
         return text === "1" ? (
@@ -243,28 +232,25 @@ const LiveList: FC = () => {
       title: "码率值",
       dataIndex: "bit_rate_value",
       render: (text, _item) =>
-        _item.retweet == "1" || _item.is_video_style == 2 ? (
-          <IconMinus />
-        ) : (
-          `${text}kbps`
-        ),
+        _item.is_video_style == 2 ? <IconMinus /> : `${text}kbps`,
     },
     {
       title: "分辨率",
       dataIndex: "resolving_power",
-      render: (text, _item) => (_item.retweet === "1" ? <IconMinus /> : text),
+      render: (text, _item) =>
+        _item.is_video_style == 2 ? <IconMinus /> : text,
     },
     {
       title: "音轨",
       dataIndex: "audioTrack",
       render: (text, _item) =>
-        _item.retweet == "1" ? <IconMinus /> : text || "默认",
+        _item.is_video_style == 2 ? <IconMinus /> : text || "默认",
     },
     {
       title: "字幕轨道",
       dataIndex: "subtitleTrack",
       render: (text, _item) =>
-        _item.retweet == "1" ? <IconMinus /> : text || "默认",
+        _item.is_video_style == 2 ? <IconMinus /> : text || "默认",
     },
     {
       title: "操作",
@@ -281,8 +267,6 @@ const LiveList: FC = () => {
               form.setFieldsValue(_item);
               setEditData(_item);
               setIsVideoStyle(_item.is_video_style);
-              setRetweet(_item.retweet);
-              await getFileList(_item.fileType);
               form.setFieldsValue({
                 video_dir: {
                   type: _item.fileType,
@@ -377,125 +361,84 @@ const LiveList: FC = () => {
         placeholder: "请选择房间",
       },
       {
-        label: "转发推流",
-        field: "retweet",
-        rules: [{ required: true }],
-        type: "switch",
-        defaultValue: retweet,
-      },
-    ];
-    if (retweet == 2) {
-      if (isVideoStyle == 1) {
-        result.push(
-          {
-            label: "推流文件",
-            field: "video_dir",
-            rules: [{ required: true }],
-            type: "chooseFile",
-            placeholder: "请输入推流码",
-            defaultValue: editData?.video_dir,
-          },
-          {
-            label: "自定义推流格式",
-            field: "is_video_style",
-            rules: [{ required: true }],
-            type: "switch",
-            defaultValue: isVideoStyle,
-          },
-          {
-            label: "硬件加速",
-            field: "is_it_hardware",
-            rules: [{ required: true }],
-            type: "switch",
-            defaultValue: editData?.is_it_hardware,
-          },
-          {
-            label: "编码器",
-            field: "encoder",
-            rules: [{ required: true }],
-            type: "select",
-            options: encoderOptions,
-            placeholder: "请选择编码器",
-          },
-          {
-            label: "码率模式",
-            field: "encoding_mode",
-            rules: [{ required: true }],
-            type: "select",
-            options: encodingModeOptions,
-            placeholder: "请选择码率模式",
-          },
-          {
-            label: "码率值",
-            field: "bit_rate_value",
-            rules: [{ required: true }],
-            type: "numberInput",
-            placeholder: "请输入码率值",
-          },
-          {
-            label: "音轨",
-            field: "audioTrack",
-            type: "input",
-            placeholder: "请输入音轨（不输入则默认音轨）",
-          },
-          {
-            label: "字幕轨道",
-            field: "subtitleTrack",
-            type: "input",
-            placeholder: "请输入字幕轨道（不输入则默认字幕轨道）",
-          },
-          {
-            label: "开始推流的时间",
-            field: "start_time",
-            type: "timePicker",
-            placeholder: "请输入开始推流的时间（例如：00:10:00）",
-          }
-        );
-      } else {
-        result.push(
-          {
-            label: "推流文件",
-            field: "video_dir",
-            rules: [{ required: true }],
-            type: "chooseFile",
-            placeholder: "请输入推流码",
-            defaultValue: editData?.video_dir,
-          },
-          {
-            label: "自定义推流格式",
-            field: "is_video_style",
-            rules: [{ required: true }],
-            type: "switch",
-            defaultValue: isVideoStyle,
-          }
-        );
-      }
-    } else {
-      result.push({
         label: "拉流地址",
         field: "pull_address",
         rules: [{ required: true }],
         type: "select",
         options: fileList.map((item) => ({
           label: item.name,
-          value: item.video_dir,
+          value: item.srs_address ?? item.video_dir,
+          srs_address: item.srs_address,
         })),
         placeholder: "请选择拉流地址",
-      });
+      },
+      {
+        label: "自定义推流格式",
+        field: "is_video_style",
+        type: "switch",
+        defaultValue: isVideoStyle,
+      },
+    ];
+    if (isVideoStyle == 1) {
+      result.push(
+        {
+          label: "硬件加速",
+          field: "is_it_hardware",
+          type: "switch",
+          defaultValue: editData?.is_it_hardware,
+        },
+        {
+          label: "编码器",
+          field: "encoder",
+          rules: [{ required: true }],
+          type: "select",
+          options: encoderOptions,
+          placeholder: "请选择编码器",
+        },
+        {
+          label: "码率模式",
+          field: "encoding_mode",
+          rules: [{ required: true }],
+          type: "select",
+          options: encodingModeOptions,
+          placeholder: "请选择码率模式",
+        },
+        {
+          label: "码率值",
+          field: "bit_rate_value",
+          rules: [{ required: true }],
+          type: "numberInput",
+          placeholder: "请输入码率值",
+        },
+        {
+          label: "音轨",
+          field: "audioTrack",
+          type: "input",
+          placeholder: "请输入音轨（不输入则默认音轨）",
+        },
+        {
+          label: "字幕轨道",
+          field: "subtitleTrack",
+          type: "input",
+          placeholder: "请输入字幕轨道（不输入则默认字幕轨道）",
+        },
+        {
+          label: "开始推流的时间",
+          field: "start_time",
+          type: "timePicker",
+          placeholder: "请输入开始推流的时间（例如：00:10:00）",
+        }
+      );
     }
     return result;
-  }, [editData, editVisible, retweet, fileList, isVideoStyle]);
+  }, [editData, editVisible, fileList, isVideoStyle]);
   useAsyncEffect(async () => {
     const { data: liveSteams } = await getLiveStreamingList();
-    const {
-      data: { data: fileTypesList },
-    } = await getResourcesFileTypes();
     const {
       data: { data: streams },
     } = await getStreamAddressList();
     setData(liveSteams);
     setStreamList(streams);
-    setFileTypes(fileTypesList);
   }, []);
   const addData = () => {
     form.resetFields();
@@ -510,18 +453,6 @@ const LiveList: FC = () => {
       case "numberInput":
         return <InputNumber placeholder={item.placeholder} />;
       case "switch":
-        if (item.field === "retweet") {
-          return (
-            <Switch
-              defaultChecked={retweet == 1}
-              onChange={async (value) => {
-                setRetweet(value ? 1 : 2);
-                await getFileList("pull_address");
-              }}
-            />
-          );
-        }
-
         if (item.field === "is_video_style") {
           return (
             <Switch
@@ -541,7 +472,11 @@ const LiveList: FC = () => {
           item.options && (
             <Select placeholder={item.placeholder} allowClear>
               {item.options.map((option) => (
-                <Option key={option.label} value={option.value}>
+                <Option
+                  key={option.label}
+                  value={option.value}
+                  datatype={option.srs_address}
+                >
                   {option.label}
                 </Option>
               ))}
@@ -554,55 +489,6 @@ const LiveList: FC = () => {
             style={{ width: "100%" }}
             placeholder={item.placeholder}
           />
-        );
-      case "chooseFile":
-        return (
-          <div className={styles.cascade}>
-            <Select
-              placeholder="请选择文件类型"
-              defaultValue={editData?.fileType}
-              onChange={async (value) => {
-                form.setFieldsValue({
-                  video_dir: {
-                    ...form.getFieldValue("video_dir"),
-                    type: value,
-                  },
-                });
-                await getFileList(value);
-              }}
-            >
-              {fileTypes.map((option) => {
-                if (option !== "pull_address") {
-                  return (
-                    <Option key={option} value={option}>
-                      {option}
-                    </Option>
-                  );
-                }
-              })}
-            </Select>
-            <Select
-              placeholder="请选择文件"
-              allowClear
-              defaultValue={editData?.file_name}
-              onChange={async (value: any, option: any) => {
-                form.setFieldsValue({
-                  video_dir: {
-                    ...form.getFieldValue("video_dir"),
-                    path: value,
-                    // eslint-disable-next-line no-underscore-dangle
-                    name: option.children,
-                  },
-                });
-              }}
-            >
-              {fileList.map((option) => (
-                <Option key={option.unique_id} value={option.video_dir}>
-                  {option.name}
-                </Option>
-              ))}
-            </Select>
-          </div>
         );
       default:
         return <Input placeholder={item.placeholder} />;
@@ -621,7 +507,7 @@ const LiveList: FC = () => {
           {getFormElement(item)}
         </FormItem>
       )),
-    [editData, editVisible, fileTypes, fileList, retweet, isVideoStyle]
+    [editData, editVisible, fileList, isVideoStyle]
   );
   return (
     <>
@@ -648,52 +534,58 @@ const LiveList: FC = () => {
         title="新建直播"
         visible={editVisible}
         confirmLoading={confirmLoading}
+        afterOpen={async () => {
+          await getFileList();
+        }}
         onOk={async () => {
-          setConfirmLoading(true);
-          const values = form.getFieldsValue();
-          const stream = streamList.find(
-            (item) => item.unique_id === values.stream
-          );
-          values.platform = stream?.platform;
-          values.streaming_address = stream?.streaming_address;
-          values.room_address = stream?.room_address;
-          values.streaming_code = stream?.streaming_code;
-          if (retweet == 2) {
-            if (typeof values.is_it_hardware === "boolean") {
-              values.is_it_hardware = values.is_it_hardware ? 1 : 2;
-            }
-            values.fileType = values.video_dir.type;
-            values.file_name = values.video_dir.name;
-            values.video_dir = values.video_dir.path;
-          } else {
+          try {
+            await form.validate();
+            setConfirmLoading(true);
+            const values = form.getFieldsValue();
+            const stream = streamList.find(
+              (item) => item.unique_id === values.stream
+            );
+            values.platform = stream?.platform;
+            values.streaming_address = stream?.streaming_address;
+            values.room_address = stream?.room_address;
+            values.streaming_code = stream?.streaming_code;
             values.video_dir = values.pull_address;
             delete values.pull_address;
+            delete values.stream;
+            values.is_video_style = isVideoStyle;
+            // try {
+            //   if (editData) {
+            //     await updateLiveStream(editData.unique_id as string, values);
+            //   } else {
+            //     await createLiveStream(values);
+            //   }
+            //   const { data: liveSteams } = await getLiveStreamingList();
+            //   setData(liveSteams);
+            //   setEditVisible(false);
+            // } catch (e: any) {
+            //   Notification.error({
+            //     title: "接口错误",
+            //     content: e.message,
+            //   });
+            // }
+            console.log(values, 11111);
+            setConfirmLoading(false);
+          } catch (e) {
+            console.error(e);
           }
-          values.retweet = retweet;
-          delete values.stream;
-          values.is_video_style = isVideoStyle;
-          try {
-            if (editData) {
-              await updateLiveStream(editData.unique_id as string, values);
-            } else {
-              await createLiveStream(values);
-            }
-            const { data: liveSteams } = await getLiveStreamingList();
-            setData(liveSteams);
-            setEditVisible(false);
-          } catch (e: any) {
-            Notification.error({
-              title: "接口错误",
-              content: e.message,
-            });
-          }
-          setConfirmLoading(false);
         }}
         onCancel={() => {
           setEditVisible(false);
         }}
       >
-        <Form autoComplete="off" layout="vertical" form={form}>
+        <Form
+          autoComplete="off"
+          layout="vertical"
+          form={form}
+          validateMessages={{
+            required: (_, { label }) => `${label}不能为空`,
+          }}
+        >
           {formItemRender}
         </Form>
       </Drawer>

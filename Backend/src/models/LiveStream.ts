@@ -164,7 +164,6 @@ export class LiveStream {
         resolving_power: options.resolving_power
           ? options.resolving_power
           : `${VideoResolution.width}x${VideoResolution.height}`,
-        retweet: options.retweet,
         platform: options.platform,
         watermark_enabled: options.watermarkEnabled ? 1 : 0,
         watermark_img: options.watermarkImg || null,
