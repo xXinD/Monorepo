@@ -32,7 +32,9 @@ export const creatSRS = async (options: {
     "-f",
     "flv",
     // `rtmp://localhost/live/${options.streaming_code}`,
-    `rtmp://SRS/live/${options.streaming_code}`,
+    `rtmp://${
+      process.env.ENV_VAR === "development" ? "localhost" : "SRS"
+    }/live/${options.streaming_code}`,
   ];
   const childProcess = spawn("ffmpeg", args);
   SRS_ChildProcesses.set(options.streaming_code, childProcess);
