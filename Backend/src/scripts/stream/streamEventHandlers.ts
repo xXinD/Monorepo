@@ -13,10 +13,6 @@ import {
 import { LiveStream } from "../../models/LiveStream";
 
 export function onData(childProcess: ChildProcess, options: LiveOptions) {
-  childProcess.stdout.on("data", (data) => {
-    console.log(`stdout: ${data}`);
-  });
-
   childProcess.stderr.on("data", async (data) => {
     const hasError = liveMismatching.some((keyword) => data.includes(keyword));
     if (hasError) {
@@ -26,10 +22,9 @@ export function onData(childProcess: ChildProcess, options: LiveOptions) {
       });
       console.error(`错误日志: ${data}`);
       await asyncHandler(async () => {
-        await redisClient.set(options.unique_id, "true");
         if (childProcesses.has(options.unique_id)) {
           await redisClient.set(options.unique_id, "true");
-          childProcesses.get(options.unique_id)?.kill("SIGKILL");
+          childProcesses.get(options.unique_id)?.kill("SIGINT");
         }
         await updateLiveStreamStatus(options.unique_id, 2);
       }, "直播间被封禁");
@@ -39,18 +34,12 @@ export function onData(childProcess: ChildProcess, options: LiveOptions) {
   });
 }
 
-export function onClose(childProcess: ChildProcess) {
-  childProcess.on("close", (code, type) => {
-    console.log(`进程已关闭，对应code： ${code}，关闭类型：${type}`);
-  });
-}
-
 export function onExit(
   childProcess: ChildProcess,
   options: LiveOptions,
   ctx: any
 ) {
-  childProcess.on("exit", async () => {
+  childProcess.once("exit", async () => {
     const isStopped = await redisClient.get(options.unique_id);
     // @ts-ignore
     if (isStopped !== "true") {
@@ -75,7 +64,6 @@ export function onExit(
           status: 1,
         });
       }
-      // 在数据库中删除对应的记录
     }
   });
 }
@@ -111,7 +99,7 @@ export async function onSpawn(
   options: LiveOptions
 ) {
   return new Promise((resolve, reject) => {
-    childProcess.on("spawn", async () => {
+    childProcess.once("spawn", async () => {
       await asyncHandler(async () => {
         // 更新直播状态为 'running'
         const live = await LiveStream.findById(options.unique_id);
@@ -125,7 +113,7 @@ export async function onSpawn(
       }, "启动/重启推流失败：").catch(reject);
     });
 
-    childProcess.on("error", async (error) => {
+    childProcess.once("error", async (error) => {
       await asyncHandler(async () => {
         // 直播状态更新为错误
         await updateLiveStreamStatus(options.unique_id, 2);

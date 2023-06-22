@@ -18,14 +18,14 @@ export async function buildFFmpegCommand(
     graphicsEncoder = options.encoder === "h264" ? "libx264" : "libx265";
   }
   const args =
-    options.retweet == 2 && options.is_video_style == 1
+    options.is_video_style == 1
       ? [
           "-re",
           "-y",
           "-ss",
           `${options.start_time ?? "00:00:00"}`,
           "-i",
-          options.video_dir,
+          `rtmp://localhost/live/${options.video_dir}`,
           "-c:v",
           graphicsEncoder,
           `${options.encoding_mode === 2 && "-maxrate"}`,
@@ -48,16 +48,16 @@ export async function buildFFmpegCommand(
           "mov_text",
           "-map",
           "0:s:0?",
-          "-f",
-          "flv",
           "-qp",
           "20",
-          `tee:[f=flv]${options.streaming_address}/${options.streaming_code}`,
+          "-f",
+          "flv",
+          `${options.streaming_address}/${options.streaming_code}`,
         ]
       : [
           "-re",
           "-i",
-          options.video_dir,
+          `rtmp://localhost/live/${options.video_dir}`,
           "-c:v",
           "copy",
           "-c:a",

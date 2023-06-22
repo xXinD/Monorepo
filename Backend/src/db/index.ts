@@ -51,7 +51,6 @@ async function initDb(): Promise<Pool> {
     id INT PRIMARY KEY AUTO_INCREMENT,
     unique_id TEXT UNIQUE,
     name TEXT,
-    retweet INT,
     platform TEXT,
     status INT,
     streaming_address TEXT,
@@ -80,7 +79,9 @@ async function initDb(): Promise<Pool> {
     id INT PRIMARY KEY AUTO_INCREMENT,
     unique_id TEXT UNIQUE,
     name TEXT,
+    status INT,
     video_dir TEXT,
+    srs_address TEXT,
     file_type TEXT,
     update_date TEXT
   )`);
@@ -94,6 +95,17 @@ async function initDb(): Promise<Pool> {
     streaming_code TEXT,
     description TEXT,
     update_date INT
+                                               
+  )`);
+
+    await conn.query(`CREATE TABLE IF NOT EXISTS streaming_srs (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    unique_id TEXT UNIQUE,
+    source_address TEXT,
+    streaming_address TEXT,
+    streaming_code TEXT,
+    update_date INT
+                                               
   )`);
 
     conn.release();

@@ -1,13 +1,14 @@
-# Node Dockerfile
 
 # 使用 Node.js 容器
-FROM node:16 as build-stage
+FROM node:18 as build-stage
 
 # 设置工作目录
 WORKDIR /usr/src/app
 
 # 将 package*.json 复制到工作目录
 COPY package.json ./
+
+RUN npm install -g pm2
 
 RUN npm install -g npm@latest
 
@@ -31,4 +32,4 @@ RUN npm run build
 EXPOSE 4000
 
 # 启动 Node.js 项目
-CMD ["node", "dist/app.js"]
+CMD ["pm2-runtime", "start", "dist/app.js", "--name", "backend"]

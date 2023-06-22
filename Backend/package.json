@@ -1,6 +1,6 @@
 {
   "name": "backend",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "node后端服务",
   "main": "./src/app.ts",
   "bin": "./dist/app.js",
@@ -37,7 +37,6 @@
     "koa2-cors": "^2.0.6",
     "moment": "^2.29.4",
     "mysql2": "^3.3.3",
-    "node-fetch": "^3.3.1",
     "nodemailer": "^6.9.3",
     "nodemon": "^2.0.21",
     "openai": "^3.2.1",
