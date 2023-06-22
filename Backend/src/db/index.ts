@@ -98,16 +98,6 @@ async function initDb(): Promise<Pool> {
                                                
   )`);
 
-    await conn.query(`CREATE TABLE IF NOT EXISTS streaming_srs (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    unique_id TEXT UNIQUE,
-    source_address TEXT,
-    streaming_address TEXT,
-    streaming_code TEXT,
-    update_date INT
-                                               
-  )`);
-
     conn.release();
     return pool;
   }, errorJson.SQL_TABLE_CREATION_FAILED);

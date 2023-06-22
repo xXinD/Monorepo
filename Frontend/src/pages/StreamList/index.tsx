@@ -289,7 +289,7 @@ const ResourcesList: FC = () => {
         onOk={async () => {
           setConfirmLoading(true);
           const values = form.getFieldsValue();
-          // values.update_date = new Date().getTime().toString();
+          values.update_date = new Date().getTime().toString();
           try {
             if (!editData) {
               await createStreamAddress(values as StreamAddress);
