@@ -6,7 +6,12 @@
 import { v4 as uuidv4 } from "uuid";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { Resources } from "../models/Resources";
-import { onExit, onSignal, onSpawn } from "../scripts/SRS_EventHandlers";
+import {
+  onData,
+  onExit,
+  onSignal,
+  onSpawn,
+} from "../scripts/SRS_EventHandlers";
 
 export const SRS_ChildProcesses = new Map<
   string,
@@ -26,10 +31,12 @@ export const creatSRS = async (options: {
     "copy",
     "-f",
     "flv",
-    `rtmp://localhost/live/${options.streaming_code}`,
+    // `rtmp://localhost/live/${options.streaming_code}`,
+    `rtmp://SRS/live/${options.streaming_code}`,
   ];
   const childProcess = spawn("ffmpeg", args);
   SRS_ChildProcesses.set(options.streaming_code, childProcess);
+  onData(childProcess, options.streaming_code);
   onExit(childProcess, {
     unique_id: options.streaming_code,
     video_dir: options.video_dir,
