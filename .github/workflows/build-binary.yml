@@ -57,40 +57,40 @@ jobs:
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
 
-  build-and-publish-arm64:
-    needs: build-and-publish-amd64
-    runs-on: self-hosted
-    steps:
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: 18.16.0
-
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          repository: XindongG/Monorepo
-          token: ${{ secrets.MY_PAT }}
-          ssh-strict: true
-
-      - name: Change ownership of .npm folder
-        run: sudo chown -R 501:20 "/Users/xindong/.npm"
-
-      - name: Build binary file
-        run: cd "${{ github.workspace }}/Backend" && npm install && npm run build:pkg
-
-      - name: Compress binary file
-        run: tar -czvf "${{ github.workspace }}/Backend/binary/arm64_binary.tar.gz" -C "${{ github.workspace }}/Backend/binary/" arm64_binary
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.MY_PAT }}
-        with:
-          upload_url: ${{ needs.build-and-publish-amd64.outputs.upload_url }}
-          asset_path: "${{ github.workspace }}/Backend/binary/arm64_binary.tar.gz"
-          asset_name: macos_arm64_binary.tar.gz
-          asset_content_type: application/gzip
+#  build-and-publish-arm64:
+#    needs: build-and-publish-amd64
+#    runs-on: self-hosted
+#    steps:
+#      - name: Set up Node.js
+#        uses: actions/setup-node@v2
+#        with:
+#          node-version: 18.16.0
+#
+#      - name: Checkout code
+#        uses: actions/checkout@v3
+#        with:
+#          repository: XindongG/Monorepo
+#          token: ${{ secrets.MY_PAT }}
+#          ssh-strict: true
+#
+#      - name: Change ownership of .npm folder
+#        run: sudo chown -R 501:20 "/Users/xindong/.npm"
+#
+#      - name: Build binary file
+#        run: cd "${{ github.workspace }}/Backend" && npm install && npm run build:pkg
+#
+#      - name: Compress binary file
+#        run: tar -czvf "${{ github.workspace }}/Backend/binary/arm64_binary.tar.gz" -C "${{ github.workspace }}/Backend/binary/" arm64_binary
+#
+#      - name: Upload Release Asset
+#        uses: actions/upload-release-asset@v1
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.MY_PAT }}
+#        with:
+#          upload_url: ${{ needs.build-and-publish-amd64.outputs.upload_url }}
+#          asset_path: "${{ github.workspace }}/Backend/binary/arm64_binary.tar.gz"
+#          asset_name: macos_arm64_binary.tar.gz
+#          asset_content_type: application/gzip
 
   build-and-publish-win:
     needs: build-and-publish-amd64
