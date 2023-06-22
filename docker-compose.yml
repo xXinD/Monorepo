@@ -7,17 +7,20 @@ services:
       - "4000:4000"
     volumes:
       - /Volumes:/Volumes
+    pull_policy: always
   frontend:
     image: xindongg/frontend:latest
     restart: unless-stopped
     ports:
       - "8080:80"
+    pull_policy: always
   LiveRedirect:
     image: xindongg/allinone:latest
     restart: unless-stopped
     privileged: true
     ports:
       - "35455:35455"
+    pull_policy: always
   SRS:
     image: registry.cn-hangzhou.aliyuncs.com/ossrs/srs:4
     restart: unless-stopped
@@ -26,3 +29,4 @@ services:
       - "1985:1985"
       - "8080:8080"
     command: ./objs/srs -c conf/docker.conf
+    pull_policy: always
