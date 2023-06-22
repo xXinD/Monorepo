@@ -7,6 +7,11 @@ import {
 } from "../controllers/resources";
 import { Resources } from "../models/Resources";
 
+export function onData(childProcess: ChildProcess, unique_id: string) {
+  childProcess.stderr.on("data", async (data) => {
+    console.log(`标准日志: ${unique_id} \n ${data}`);
+  });
+}
 export function onExit(
   childProcess: ChildProcess,
   options: { unique_id: string; video_dir: string }

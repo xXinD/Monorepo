@@ -553,22 +553,21 @@ const LiveList: FC = () => {
             delete values.pull_address;
             delete values.stream;
             values.is_video_style = isVideoStyle;
-            // try {
-            //   if (editData) {
-            //     await updateLiveStream(editData.unique_id as string, values);
-            //   } else {
-            //     await createLiveStream(values);
-            //   }
-            //   const { data: liveSteams } = await getLiveStreamingList();
-            //   setData(liveSteams);
-            //   setEditVisible(false);
-            // } catch (e: any) {
-            //   Notification.error({
-            //     title: "接口错误",
-            //     content: e.message,
-            //   });
-            // }
-            console.log(values, 11111);
+            try {
+              if (editData) {
+                await updateLiveStream(editData.unique_id as string, values);
+              } else {
+                await createLiveStream(values);
+              }
+              const { data: liveSteams } = await getLiveStreamingList();
+              setData(liveSteams);
+              setEditVisible(false);
+            } catch (e: any) {
+              Notification.error({
+                title: "接口错误",
+                content: e.message,
+              });
+            }
             setConfirmLoading(false);
           } catch (e) {
             console.error(e);

@@ -4,6 +4,7 @@ import path from "path";
 import { asyncHandler } from "../utils/handler";
 import errorJson from "../config/errorMessages.json";
 
+console.log(process.env.ENV_VAR);
 async function tryConnect(
   pool: Pool,
   attempts = 0,
