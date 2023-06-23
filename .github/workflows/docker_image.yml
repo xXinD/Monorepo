@@ -38,6 +38,12 @@ jobs:
           git clone https://x-access-token:${{ secrets.MY_PAT }}@github.com/XindongG/LiveRedirect.git
         working-directory: ./Backend
 
+      - name: Show current directory
+        run: |
+          pwd
+          ls -al
+        working-directory: ./Backend
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
