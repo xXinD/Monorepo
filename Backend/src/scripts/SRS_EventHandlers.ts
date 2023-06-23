@@ -6,6 +6,8 @@ import {
   stopAllSRS,
 } from "../controllers/resources";
 import { Resources } from "../models/Resources";
+import { LiveStream } from "../models/LiveStream";
+import { stopStreaming } from "./stream";
 
 export function onData(childProcess: ChildProcess, unique_id: string) {
   childProcess.stderr.on("data", async (data) => {
@@ -17,18 +19,27 @@ export function onExit(
   options: { unique_id: string; video_dir: string }
 ) {
   childProcess.once("exit", async (code) => {
-    if (SRS_ChildProcesses.has(options.unique_id)) {
-      SRS_ChildProcesses.delete(options.unique_id);
-    }
-    if (code === 0) {
-      console.warn(`SRS进程${options.unique_id}退出，退出码为${code}`);
-      await creatSRS({
-        streaming_code: options.unique_id,
-        video_dir: options.video_dir,
+    await asyncHandler(async () => {
+      const liveStream = await LiveStream.findByColumn(
+        "video_dir",
+        options.unique_id
+      );
+      liveStream.map(async (_item) => {
+        await stopStreaming(_item.unique_id);
       });
-    } else {
-      console.error(`SRS进程${options.unique_id}退出，退出码为${code}`);
-    }
+      if (SRS_ChildProcesses.has(options.unique_id)) {
+        SRS_ChildProcesses.delete(options.unique_id);
+      }
+      if (code === 0) {
+        console.warn(`SRS进程${options.unique_id}退出，退出码为${code}`);
+        await creatSRS({
+          streaming_code: options.unique_id,
+          video_dir: options.video_dir,
+        });
+      } else {
+        console.error(`SRS进程${options.unique_id}退出，退出码为${code}`);
+      }
+    }, "源流转发停止出错：");
   });
 }
 

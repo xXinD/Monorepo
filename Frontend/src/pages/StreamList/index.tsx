@@ -281,7 +281,7 @@ const ResourcesList: FC = () => {
       </div>
       <Drawer
         unmountOnExit
-        title="新建推流"
+        title={editData ? "编辑推流地址" : "新建推流地址"}
         className={styles.drawerWrapper}
         width="30%"
         visible={editVisible}

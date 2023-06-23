@@ -92,6 +92,27 @@ export class LiveStream {
   }
 
   /**
+   * 根据指定列和值查询直播流
+   *
+   * @async
+   * @param {string} column 指定列的名称
+   * @param {any} value 指定列的值
+   * @returns {Array} 符合条件的直播流数组
+   */
+  static async findByColumn(column: string, value: any): Promise<LiveStream[]> {
+    return await asyncHandler(async () => {
+      const db = getDb();
+      const [rows] = await db.query(
+        `SELECT * FROM live_streams WHERE ${column} = ?`,
+        [value]
+      );
+      return (rows as RowDataPacket[]).map((row: any) =>
+        Object.assign(new LiveStream(), row)
+      );
+    }, errorJson.SQL_QUERY_ERROR);
+  }
+
+  /**
    * 更新直播流
    *
    * @async

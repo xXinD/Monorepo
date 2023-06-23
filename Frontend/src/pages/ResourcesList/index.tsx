@@ -228,7 +228,7 @@ const ResourcesList: FC = () => {
         unmountOnExit
         className={styles.drawerWrapper}
         width="30%"
-        title="新建直播源"
+        title={editData ? "编辑直播源" : "新建直播源"}
         visible={editVisible}
         confirmLoading={confirmLoading}
         onOk={async () => {

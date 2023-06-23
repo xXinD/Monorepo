@@ -22,8 +22,8 @@ const App: FC = () => {
       children: [
         {
           key: "1_1",
-          name: "房间管理",
-          path: "/live-list",
+          name: "直播流管理",
+          path: "live-list",
         },
         {
           key: "1_2",
