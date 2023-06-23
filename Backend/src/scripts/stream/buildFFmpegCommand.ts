@@ -26,9 +26,7 @@ export async function buildFFmpegCommand(
           `${options.start_time ?? "00:00:00"}`,
           "-i",
           `rtmp://${
-            process.env.ENV_VAR === "development"
-              ? "143.110.159.133"
-              : "localhost"
+            process.env.ENV_VAR === "development" ? "143.110.159.133" : "SRS"
           }/live/${options.video_dir}`,
           "-c:v",
           graphicsEncoder,
@@ -62,9 +60,7 @@ export async function buildFFmpegCommand(
           "-re",
           "-i",
           `rtmp://${
-            process.env.ENV_VAR === "development"
-              ? "143.110.159.133"
-              : "localhost"
+            process.env.ENV_VAR === "development" ? "143.110.159.133" : "SRS"
           }/live/${options.video_dir}`,
           "-c:v",
           "copy",
