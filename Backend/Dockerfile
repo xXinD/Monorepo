@@ -1,35 +1,58 @@
+# 第一阶段：构建 Golang 项目
+FROM golang:1.19-alpine AS build-go
 
-# 使用 Node.js 容器
-FROM node:18 as build-stage
+WORKDIR /app
 
-# 设置工作目录
+COPY ./Golang/go.mod ./
+COPY ./Golang/go.sum ./
+RUN go mod download
+
+COPY ./Golang/*.go ./
+COPY ./Golang/list/*.go ./list/
+COPY ./Golang/liveurls/*.go ./liveurls/
+
+RUN go build -o /allinone
+
+# 第二阶段：构建 Node.js 项目
+FROM node:18 as build-node
+
 WORKDIR /usr/src/app
 
-# 将 package*.json 复制到工作目录
 COPY package.json ./
 
 RUN npm install -g pm2
-
 RUN npm install -g npm@latest
-
 RUN npm install -g typescript
 
-# 安装项目依赖
 RUN npm install
 
-# 安装 ffmpeg
 RUN apt-get update && apt-get install -y ffmpeg
 
-# 复制所有源代码到工作目录
 COPY . .
 
 RUN ls -al
-
-# 构建 Node.js 项目
 RUN npm run build
 
+# 第三阶段：创建最终的运行阶段
+FROM alpine:3.14
+
+RUN apk add --update nodejs npm
+RUN npm install -g pm2
+RUN apk add ffmpeg
+
+# 从第一阶段拷贝 Golang 项目
+COPY --from=build-go /allinone /allinone
+
+# 从第二阶段拷贝 Node.js 项目
+COPY --from=build-node /usr/src/app/dist /app/dist
+COPY --from=build-node /usr/src/app/node_modules /app/node_modules
+
 # 暴露端口
-EXPOSE 4000
+EXPOSE 4000 1935 8000 35455
+
+# 创建启动脚本
+RUN echo -e "#!/bin/sh\n/allinone &\npm2-runtime start /app/dist/app.js --name backend" > start.sh
+RUN chmod +x start.sh
 
 # 启动 Node.js 项目
-CMD ["pm2-runtime", "start", "dist/app.js", "--name", "backend"]
+CMD ["./start.sh"]
