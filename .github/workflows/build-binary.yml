@@ -3,7 +3,7 @@ name: Build and Publish Release
 on:
   push:
     branches:
-      - main
+      - main_build-binary
 
 jobs:
   build-and-publish-amd64:

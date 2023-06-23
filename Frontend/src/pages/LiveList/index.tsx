@@ -37,11 +37,7 @@ import {
   stopLiveStream,
   updateLiveStream,
 } from "../../api/liveApi";
-import {
-  getResourcesByFileType,
-  getResourcesFileTypes,
-  getResourcesList,
-} from "../../api/resourcesApi";
+import { getResourcesList } from "../../api/resourcesApi";
 import {
   getStreamAddressList,
   StreamAddress,
@@ -264,16 +260,17 @@ const LiveList: FC = () => {
             icon={<IconSettings />}
             onClick={async () => {
               form.resetFields();
-              form.setFieldsValue(_item);
+              const stream = streamList.find(
+                (item) => item.streaming_code === _item.streaming_code
+              );
+              form.setFieldsValue({
+                ..._item,
+                type: _item.fileType,
+                stream: stream?.unique_id,
+                pull_address: _item.video_dir,
+              });
               setEditData(_item);
               setIsVideoStyle(_item.is_video_style);
-              form.setFieldsValue({
-                video_dir: {
-                  type: _item.fileType,
-                  name: _item.file_name,
-                  path: _item.video_dir,
-                },
-              });
               setEditVisible(true);
             }}
           />
@@ -290,7 +287,7 @@ const LiveList: FC = () => {
                 } catch (e: any) {
                   Notification.error({
                     title: "接口错误",
-                    content: e,
+                    content: e.message,
                   });
                 }
               }}
@@ -308,7 +305,7 @@ const LiveList: FC = () => {
                 } catch (e: any) {
                   Notification.error({
                     title: "接口错误",
-                    content: e,
+                    content: e.message,
                   });
                 }
               }}
@@ -319,9 +316,16 @@ const LiveList: FC = () => {
             title="停止&删除"
             content="确认停止&删除当前直播吗？"
             onOk={async () => {
-              await delLiveStream(_item.unique_id);
-              const { data: liveSteams } = await getLiveStreamingList();
-              setData(liveSteams);
+              try {
+                await delLiveStream(_item.unique_id);
+                const { data: liveSteams } = await getLiveStreamingList();
+                setData(liveSteams);
+              } catch (e: any) {
+                Notification.error({
+                  title: "接口错误",
+                  content: e.message,
+                });
+              }
             }}
           >
             <Button shape="round" type="text" icon={<IconDelete />} />
@@ -353,15 +357,15 @@ const LiveList: FC = () => {
         placeholder: "请输入名称",
       },
       {
-        label: "房间",
+        label: "开播房间",
         field: "stream",
         rules: [{ required: true }],
         type: "select",
         options: streamOptions,
-        placeholder: "请选择房间",
+        placeholder: "请选择开播房间",
       },
       {
-        label: "拉流地址",
+        label: "直播源",
         field: "pull_address",
         rules: [{ required: true }],
         type: "select",
@@ -370,7 +374,7 @@ const LiveList: FC = () => {
           value: item.srs_address ?? item.video_dir,
           srs_address: item.srs_address,
         })),
-        placeholder: "请选择拉流地址",
+        placeholder: "请选择直播员",
       },
       {
         label: "自定义推流格式",
@@ -531,7 +535,7 @@ const LiveList: FC = () => {
         unmountOnExit
         className={styles.drawerWrapper}
         width="30%"
-        title="新建直播"
+        title={editData ? "编辑直播流" : "新建直播流"}
         visible={editVisible}
         confirmLoading={confirmLoading}
         afterOpen={async () => {
