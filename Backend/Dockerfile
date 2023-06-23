@@ -3,13 +3,13 @@ FROM golang:1.19-alpine AS build-go
 
 WORKDIR /app
 
-COPY ./Golang/go.mod ./
-COPY ./Golang/go.sum ./
+COPY ./LiveRedirect/Golang/go.mod ./
+COPY ./LiveRedirect/Golang/go.sum ./
 RUN go mod download
 
-COPY ./Golang/*.go ./
-COPY ./Golang/list/*.go ./list/
-COPY ./Golang/liveurls/*.go ./liveurls/
+COPY ./LiveRedirect/Golang/*.go ./
+COPY ./LiveRedirect/Golang/list/*.go ./list/
+COPY ./LiveRedirect/Golang/liveurls/*.go ./liveurls/
 
 RUN go build -o /allinone
 
