@@ -5,6 +5,8 @@ services:
     restart: unless-stopped
     ports:
       - "4000:4000"
+      - "1935:1935"
+      - "8000:8000"
     volumes:
       - /Volumes:/Volumes
     pull_policy: always
@@ -20,13 +22,4 @@ services:
     privileged: true
     ports:
       - "35455:35455"
-    pull_policy: always
-  SRS:
-    image: registry.cn-hangzhou.aliyuncs.com/ossrs/srs:4
-    restart: unless-stopped
-    ports:
-      - "1935:1935"
-      - "1985:1985"
-      - "8080:8080"
-    command: ./objs/srs -c conf/docker.conf
     pull_policy: always
