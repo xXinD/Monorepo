@@ -30,7 +30,11 @@ import {
   updateStreamAddress,
 } from "../../api/streamAddressApi";
 import { timestampToTime } from "../../utils/format";
-import { getLoginPoll, getLoginQrCode } from "../../api/bilibiliApi";
+import {
+  getLoginPoll,
+  getLoginQrCode,
+  getStreamAddr,
+} from "../../api/bilibiliApi";
 import { urlToQrCode } from "../../utils/stringUtils";
 
 const FormItem = Form.Item;
@@ -45,6 +49,7 @@ interface FormItemData {
   placeholder?: string;
   options?: any[];
   defaultValue?: any;
+  disable?: boolean;
 }
 export const platformOptions = [
   {
@@ -88,6 +93,12 @@ const ResourcesList: FC = () => {
     bilibiliLoginVerificationInformation,
     setBilibiliLoginVerificationInformation,
   ] = useState<null | { qr_code: string; qrcode_key: string }>(null);
+  const [addr, setAddr] = useState<any>({
+    rtmp: {
+      addr: "rtmp://live-push.bilivideo.com/live-bvc/",
+      code: "?streamname=live_3493290051636127_87789890&key=977e79d8bc606dc52e7e5baffbec88a3&schedule=rtmp&pflag=1",
+    },
+  });
   const [form] = Form.useForm();
   const queryList = async () => {
     const {
@@ -234,19 +245,55 @@ const ResourcesList: FC = () => {
         }
       );
     } else {
-      FromItemData.push({
-        label: "使用bilibili扫码登录",
-        field: "qr_code",
-        rules: [{ required: true }],
-        type: "image",
-      });
+      console.log(addr, "addrad");
+      if (addr) {
+        FromItemData.push(
+          {
+            label: "直播地址",
+            field: "streaming_address",
+            rules: [{ required: true }],
+            type: "input",
+            placeholder: "请输入直播地址",
+            disable: true,
+            defaultValue: addr.rtmp.addr,
+          },
+          {
+            label: "直播码",
+            field: "streaming_code",
+            rules: [{ required: true }],
+            type: "input",
+            placeholder: "请输入直播码",
+            disable: true,
+            defaultValue: addr.rtmp.code,
+          }
+        );
+        form.setFieldsValue({
+          streaming_address: addr.rtmp.addr,
+          streaming_code: addr.rtmp.code,
+        });
+      } else {
+        FromItemData.push({
+          label: "使用bilibili扫码登录",
+          field: "qr_code",
+          rules: [{ required: true }],
+          type: "image",
+        });
+        setAddr(null);
+      }
     }
     return FromItemData;
-  }, [editVisible, platform]);
+  }, [editVisible, platform, addr]);
   const getFormElement = (item: FormItemData) => {
     switch (item.type) {
       case "input":
-        return <Input placeholder={item.placeholder} />;
+        console.log(item.defaultValue, "item.defaultValue");
+        return (
+          <Input
+            placeholder={item.placeholder}
+            disabled={item.disable}
+            value={item.defaultValue}
+          />
+        );
       case "select":
         return (
           item.options && (
@@ -293,16 +340,27 @@ const ResourcesList: FC = () => {
             onLoad={async () => {
               try {
                 timer = setInterval(async () => {
+                  // @ts-ignore
                   const {
-                    data: {
-                      message: { code },
-                    },
+                    data: { code },
                   } = await getLoginPoll(
                     bilibiliLoginVerificationInformation?.qrcode_key as string
                   );
+                  console.log(code, "code");
                   if (code === 0 || code === 86038) {
                     clearInterval(timer);
                     clearInterval(qr_code_timer);
+                    const {
+                      data: {
+                        data: { addr: rtmp_addr, srt_addr },
+                      },
+                    } = await getStreamAddr(
+                      bilibiliLoginVerificationInformation?.qrcode_key as string
+                    );
+                    setAddr({
+                      rtmp: rtmp_addr,
+                      srt: srt_addr,
+                    });
                   }
                 }, 1000);
               } catch (e: any) {
@@ -330,7 +388,7 @@ const ResourcesList: FC = () => {
           {getFormElement(item)}
         </FormItem>
       )),
-    [editVisible, platform, bilibiliLoginVerificationInformation]
+    [editVisible, platform, bilibiliLoginVerificationInformation, addr]
   );
 
   const addData = () => {

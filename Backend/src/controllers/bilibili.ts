@@ -34,7 +34,6 @@ class BilibiliService {
 
   getTheLoginPoll = async (ctx: any): Promise<void> => {
     const { id } = ctx.params;
-
     try {
       const { data } = await this.fetchInstance.get(
         `/x/passport-login/web/qrcode/poll?qrcode_key=${id}`
@@ -51,13 +50,35 @@ class BilibiliService {
           JSON.stringify(loginVerifyData)
         );
       }
-
-      ctx.body = { code: 0, message: data };
+      ctx.body = data;
     } catch (error) {
       console.error(error);
       ctx.status = 500;
       ctx.body = { message: "扫码登录失败：", error };
     }
+  };
+
+  getStreamAddr = async (ctx: any): Promise<void> => {
+    const { id } = ctx.params;
+    const { loginCookie, bili_jct } = JSON.parse(
+      await redisClient.get(`login_data_${id}`)
+    );
+    console.log(loginCookie, bili_jct, 11111);
+    const data = await this.fetchLiveInstance.post(
+      "/v1/live/FetchWebUpStreamAddr",
+      {
+        platform: "pc",
+        backup_stream: 0,
+        csrf_token: bili_jct,
+        csrf: bili_jct,
+      },
+      "urlencoded",
+      "json",
+      {
+        cookie: loginCookie,
+      }
+    );
+    ctx.body = data;
   };
 }
 export const bilibiliService = new BilibiliService();
