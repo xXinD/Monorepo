@@ -45,3 +45,23 @@ export const getVideoResolution = (filePath: string): Promise<Resolution> =>
       }
     });
   });
+
+/**
+ * 获取url内的参数
+ *
+ * @async
+ * @returns {Object}
+ * @param url: string
+ */
+export function getUrlParams(url: string) {
+  const params: { [key: string]: string } = {};
+  const paramsStr = url.split("?")[1];
+  if (paramsStr) {
+    const paramsArr = paramsStr.split("&");
+    paramsArr.forEach((item) => {
+      const [key, value] = item.split("=");
+      params[key] = value;
+    });
+  }
+  return params;
+}

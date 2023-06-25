@@ -11,6 +11,7 @@ import {
   Switch,
   Table,
   TableColumnProps,
+  Image,
 } from "@arco-design/web-react";
 import {
   IconCheckCircleFill,
@@ -29,6 +30,7 @@ import {
   updateStreamAddress,
 } from "../../api/streamAddressApi";
 import { timestampToTime } from "../../utils/format";
+import { getLoginQrCode } from "../../api/bilibiliApi";
 
 const FormItem = Form.Item;
 const { TextArea } = Input;
@@ -78,6 +80,11 @@ const ResourcesList: FC = () => {
   const [editVisible, setEditVisible] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [editData, setEditData] = useState<StreamAddress>();
+  const [platform, setPlatform] = useState("");
+  const [
+    bilibiliLoginVerificationInformation,
+    setBilibiliLoginVerificationInformation,
+  ] = useState<null | { qr_code: string; qrcode_key: string }>(null);
   const [form] = Form.useForm();
   const queryList = async () => {
     const {
@@ -161,8 +168,14 @@ const ResourcesList: FC = () => {
       ),
     },
   ];
-  const formItemData = useMemo(
-    () => [
+  const formItemData = useMemo(() => {
+    const FromItemData: FormItemData[] = [
+      {
+        label: "推流简称",
+        field: "description",
+        type: "textArea",
+        defaultValue: editData?.description,
+      },
       {
         label: "平台",
         field: "platform",
@@ -171,43 +184,48 @@ const ResourcesList: FC = () => {
         options: platformOptions,
         placeholder: "请选择平台",
       },
-      {
-        label: "直播地址",
-        field: "streaming_address",
+    ];
+    if (platform !== "bilibili") {
+      FromItemData.push(
+        {
+          label: "直播地址",
+          field: "streaming_address",
+          rules: [{ required: true }],
+          type: "input",
+          placeholder: "请输入直播地址",
+        },
+        {
+          label: "直播码",
+          field: "streaming_code",
+          rules: [{ required: true }],
+          type: "input",
+          placeholder: "请输入直播码",
+        },
+        {
+          label: "房间地址",
+          field: "room_address",
+          rules: [{ required: true }],
+          type: "input",
+          placeholder: "请输入房间地址",
+        },
+        {
+          label: "自动开播",
+          field: "start_broadcasting",
+          rules: [{ required: true }],
+          type: "switch",
+          defaultValue: editData?.start_broadcasting,
+        }
+      );
+    } else {
+      FromItemData.push({
+        label: "使用bilibili扫码登录",
+        field: "qr_code",
         rules: [{ required: true }],
-        type: "input",
-        placeholder: "请输入直播地址",
-      },
-      {
-        label: "直播码",
-        field: "streaming_code",
-        rules: [{ required: true }],
-        type: "input",
-        placeholder: "请输入直播码",
-      },
-      {
-        label: "房间地址",
-        field: "room_address",
-        rules: [{ required: true }],
-        type: "input",
-        placeholder: "请输入房间地址",
-      },
-      {
-        label: "自动开播",
-        field: "start_broadcasting",
-        rules: [{ required: true }],
-        type: "switch",
-        defaultValue: editData?.start_broadcasting,
-      },
-      {
-        label: "备注",
-        field: "description",
-        type: "textArea",
-        defaultValue: editData?.description,
-      },
-    ],
-    [editVisible]
-  );
+        type: "image",
+      });
+    }
+    return FromItemData;
+  }, [editVisible, platform]);
   const getFormElement = (item: FormItemData) => {
     switch (item.type) {
       case "input":
@@ -215,7 +233,24 @@ const ResourcesList: FC = () => {
       case "select":
         return (
           item.options && (
-            <Select placeholder={item.placeholder} allowClear>
+            <Select
+              placeholder={item.placeholder}
+              allowClear
+              onChange={async (value) => {
+                if (item.field === "platform") {
+                  const {
+                    data: {
+                      data: { url, qrcode_key },
+                    },
+                  } = await getLoginQrCode();
+                  setPlatform(value);
+                  setBilibiliLoginVerificationInformation({
+                    qr_code: url,
+                    qrcode_key,
+                  });
+                }
+              }}
+            >
               {item.options.map((option) => (
                 <Option key={option.label} value={option.value}>
                   {option.label}
@@ -236,6 +271,15 @@ const ResourcesList: FC = () => {
             allowClear
           />
         );
+      case "image":
+        return (
+          <Image
+            width="100%"
+            src={bilibiliLoginVerificationInformation?.qr_code}
+            description="登录后可监控是否关播、自动开播、获取推流地址、推流码等"
+            footerPosition="outer"
+          />
+        );
       default:
         return <Input placeholder={item.placeholder} />;
     }
@@ -252,7 +296,7 @@ const ResourcesList: FC = () => {
           {getFormElement(item)}
         </FormItem>
       )),
-    [editVisible]
+    [editVisible, platform, bilibiliLoginVerificationInformation]
   );
 
   const addData = () => {
