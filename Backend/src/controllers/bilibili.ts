@@ -1,5 +1,6 @@
 import { FetchClass } from "../api/fetchInstance";
 import { getUrlParams } from "../utils/stringUtils";
+import redisClient from "../utils/redisClient";
 
 class BilibiliService {
   private fetchInstance: any;
@@ -40,6 +41,15 @@ class BilibiliService {
       );
       if (data.code === 0) {
         const { bili_jct, SESSDATA } = getUrlParams(data.url);
+        const loginVerifyData = {
+          bili_jct,
+          SESSDATA,
+          loginCookie: `bili_jct=${bili_jct};SESSDATA=${SESSDATA}`,
+        };
+        await redisClient.set(
+          `login_data_${id}`,
+          JSON.stringify(loginVerifyData)
+        );
       }
 
       ctx.body = { code: 0, message: data };

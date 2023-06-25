@@ -3,6 +3,7 @@ import {
   Button,
   Drawer,
   Form,
+  Image,
   Input,
   Link,
   Notification,
@@ -11,7 +12,6 @@ import {
   Switch,
   Table,
   TableColumnProps,
-  Image,
 } from "@arco-design/web-react";
 import {
   IconCheckCircleFill,
@@ -30,7 +30,8 @@ import {
   updateStreamAddress,
 } from "../../api/streamAddressApi";
 import { timestampToTime } from "../../utils/format";
-import { getLoginQrCode } from "../../api/bilibiliApi";
+import { getLoginPoll, getLoginQrCode } from "../../api/bilibiliApi";
+import { urlToQrCode } from "../../utils/stringUtils";
 
 const FormItem = Form.Item;
 const { TextArea } = Input;
@@ -75,6 +76,8 @@ export const platformOptions = [
     value: "twitch",
   },
 ];
+let qr_code_timer: any;
+let timer: any;
 const ResourcesList: FC = () => {
   const [data, setData] = useState([]);
   const [editVisible, setEditVisible] = useState(false);
@@ -94,6 +97,8 @@ const ResourcesList: FC = () => {
   };
   useAsyncEffect(async () => {
     await queryList();
+    timer = null;
+    qr_code_timer = null;
   }, []);
   const columns: TableColumnProps[] = [
     {
@@ -168,6 +173,18 @@ const ResourcesList: FC = () => {
       ),
     },
   ];
+  const getBilibiliLoginQrCode = async () => {
+    const {
+      data: {
+        data: { url, qrcode_key },
+      },
+    } = await getLoginQrCode();
+    const qr_code = await urlToQrCode(url);
+    setBilibiliLoginVerificationInformation({
+      qr_code,
+      qrcode_key,
+    });
+  };
   const formItemData = useMemo(() => {
     const FromItemData: FormItemData[] = [
       {
@@ -238,16 +255,11 @@ const ResourcesList: FC = () => {
               allowClear
               onChange={async (value) => {
                 if (item.field === "platform") {
-                  const {
-                    data: {
-                      data: { url, qrcode_key },
-                    },
-                  } = await getLoginQrCode();
                   setPlatform(value);
-                  setBilibiliLoginVerificationInformation({
-                    qr_code: url,
-                    qrcode_key,
-                  });
+                  await getBilibiliLoginQrCode();
+                  qr_code_timer = setInterval(async () => {
+                    await getBilibiliLoginQrCode();
+                  }, 180000);
                 }
               }}
             >
@@ -278,6 +290,28 @@ const ResourcesList: FC = () => {
             src={bilibiliLoginVerificationInformation?.qr_code}
             description="登录后可监控是否关播、自动开播、获取推流地址、推流码等"
             footerPosition="outer"
+            onLoad={async () => {
+              try {
+                timer = setInterval(async () => {
+                  const {
+                    data: {
+                      message: { code },
+                    },
+                  } = await getLoginPoll(
+                    bilibiliLoginVerificationInformation?.qrcode_key as string
+                  );
+                  if (code === 0 || code === 86038) {
+                    clearInterval(timer);
+                    clearInterval(qr_code_timer);
+                  }
+                }, 1000);
+              } catch (e: any) {
+                Notification.error({
+                  title: "接口错误",
+                  content: e.message,
+                });
+              }
+            }}
           />
         );
       default:
@@ -356,6 +390,11 @@ const ResourcesList: FC = () => {
         }}
         onCancel={() => {
           setEditVisible(false);
+          clearInterval(qr_code_timer);
+          clearInterval(timer);
+          setBilibiliLoginVerificationInformation(null);
+          form.resetFields();
+          setPlatform("");
         }}
       >
         <Form autoComplete="off" layout="vertical" form={form}>
