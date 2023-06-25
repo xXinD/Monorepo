@@ -8,3 +8,6 @@ export const getLoginPoll = (id: string) =>
 
 export const getStreamAddr = (id: string) =>
   axiosInstance.get(`/bilibili/getStreamAddr/${id}`);
+export const getAreaList = () => axiosInstance.get("/bilibili/getAreaList");
+export const getRoomId = (id: string) =>
+  axiosInstance.get(`/bilibili/getRoomId/${id}`);

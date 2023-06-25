@@ -56,11 +56,21 @@ export class Fetch {
       .join("&");
   }
 
-  get(endpoint: string, params: any = {}, format: ResponseFormat = "json") {
+  get(
+    endpoint: string,
+    params: any = {},
+    format: ResponseFormat = "json",
+    headerConfig: any = {}
+  ) {
     const url = Object.keys(params).length
       ? `${this.baseURL}${endpoint}?this.objectToUrlEncoded(params)`
       : `${this.baseURL}${endpoint}`;
-    return fetch(url).then((response) => this.parseResponse(response, format));
+    return fetch(url, {
+      method: "GET",
+      headers: {
+        ...headerConfig,
+      },
+    }).then((response) => this.parseResponse(response, format));
   }
 
   post(
@@ -71,7 +81,6 @@ export class Fetch {
     headerConfig: any = {}
   ) {
     const { headers, body: formattedBody } = this.formatBody(body, bodyFormat);
-    console.log(headerConfig, 11111);
     return fetch(`${this.baseURL}${endpoint}`, {
       method: "POST",
       headers: {
