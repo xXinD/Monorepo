@@ -7,6 +7,7 @@ import resourcesRoutes from "./resourcesRoutes";
 import streamAddressRoutes from "./streamAddressRoutes";
 import generalRoutes from "./generalRoutes";
 import bilibili_login from "./bilibiliRoutes/login";
+import bilibili_live from "./bilibiliRoutes/live";
 
 const router = new Router();
 router.use(escapeParams);
@@ -25,7 +26,9 @@ router.use(
 router.use(
   "/bilibili",
   bilibili_login.routes(),
-  bilibili_login.allowedMethods()
+  bilibili_login.allowedMethods(),
+  bilibili_live.routes(),
+  bilibili_live.allowedMethods()
 );
 
 export default router;

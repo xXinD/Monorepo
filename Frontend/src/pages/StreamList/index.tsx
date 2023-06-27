@@ -1,4 +1,4 @@
-import { FC, useMemo, useState, useEffect } from "react";
+import { FC, useMemo, useState } from "react";
 import {
   Button,
   Drawer,
@@ -34,7 +34,7 @@ import {
   getAreaList,
   getLoginPoll,
   getLoginQrCode,
-  getRoomId,
+  getRoomInfo,
   getStreamAddr,
 } from "../../api/bilibiliApi";
 import { urlToQrCode } from "../../utils/stringUtils";
@@ -72,7 +72,7 @@ interface FormItemData {
   placeholder?: string;
   options?: any[];
   defaultValue?: any;
-  disable?: boolean;
+  disabled?: boolean;
   tooltip?: string;
 }
 export const platformOptions = [
@@ -117,6 +117,7 @@ const StreamList: FC = () => {
     areaList: AreaListType[] | null;
     areaListChild: AreaListTypeChild[] | null;
   }>(null);
+  const [areaId, setAreaId] = useState("");
   const [
     bilibiliLoginVerificationInformation,
     setBilibiliLoginVerificationInformation,
@@ -130,18 +131,42 @@ const StreamList: FC = () => {
     setData(resourcesList);
   };
   useAsyncEffect(async () => {
+    const {
+      data: { data: areaArr },
+    } = await getAreaList();
+    setAreaList({
+      areaList: areaArr,
+      areaListChild: null,
+    });
     await queryList();
     timer = null;
     qr_code_timer = null;
   }, []);
-  useEffect(() => {
-    if (addr) {
-      form.setFieldsValue({
-        streaming_address: addr.rtmp.addr,
-        streaming_code: addr.rtmp.code,
+
+  // 初始化编辑信息
+  const initData = (_item: any) => {
+    form.resetFields();
+    form.setFieldsValue(_item);
+    setEditData(_item);
+    setPlatform(_item.platform);
+    setEditVisible(true);
+    if (_item.platform === "bilibili") {
+      setAddr({
+        rtmp: {
+          addr: _item.streaming_address,
+          code: _item.streaming_code,
+        },
+      });
+      const child: any = areaList?.areaList?.find(
+        (area: any) => area.id === _item.areaId
+      );
+      setAreaList({
+        ...areaList,
+        areaList: areaList?.areaList as AreaListType[],
+        areaListChild: child?.list as any,
       });
     }
-  }, [addr]);
+  };
   const columns: TableColumnProps[] = [
     {
       title: "平台",
@@ -194,10 +219,7 @@ const StreamList: FC = () => {
             type="text"
             icon={<IconSettings />}
             onClick={() => {
-              form.resetFields();
-              form.setFieldsValue(_item);
-              setEditData(_item);
-              setEditVisible(true);
+              initData(_item);
             }}
           />
           <Popconfirm
@@ -230,18 +252,30 @@ const StreamList: FC = () => {
   const formItemData = useMemo(() => {
     const FromItemData: FormItemData[] = [
       {
-        label: "直播间名称",
-        field: "description",
-        type: "textArea",
+        label: "直播间标题",
+        field: "title",
+        disabled: !!editData,
+        rules: [{ required: true }],
+        type: "input",
         defaultValue: editData?.description,
+        placeholder: "请输入直播间名称",
       },
       {
         label: "平台",
         field: "platform",
         rules: [{ required: true }],
+        disabled: !!editData,
         type: "select",
         options: platformOptions,
         placeholder: "请选择平台",
+      },
+      {
+        label: "房间地址",
+        field: "room_address",
+        rules: [{ required: true }],
+        disabled: platform === "bilibili" || !!editData,
+        type: "input",
+        placeholder: "请输入房间地址",
       },
     ];
     if (platform !== "bilibili") {
@@ -249,6 +283,7 @@ const StreamList: FC = () => {
         {
           label: "直播地址",
           field: "streaming_address",
+          disabled: !!editData,
           rules: [{ required: true }],
           type: "input",
           placeholder: "请输入直播地址",
@@ -256,41 +291,36 @@ const StreamList: FC = () => {
         {
           label: "直播码",
           field: "streaming_code",
+          disabled: !!editData,
           rules: [{ required: true }],
           type: "input",
           placeholder: "请输入直播码",
-        },
-        {
-          label: "房间地址",
-          field: "room_address",
-          rules: [{ required: true }],
-          type: "input",
-          placeholder: "请输入房间地址",
         }
       );
     } else if (addr) {
       FromItemData.push(
         {
-          label: "直播地址",
+          label: "推流地址",
           field: "streaming_address",
           rules: [{ required: true }],
           type: "input",
           placeholder: "请输入直播地址",
-          disable: true,
+          disabled: true,
           defaultValue: addr.rtmp.addr,
         },
         {
-          label: "直播码",
+          label: "推流码",
           field: "streaming_code",
           rules: [{ required: true }],
           type: "input",
           placeholder: "请输入直播码",
-          disable: true,
+          disabled: true,
           defaultValue: addr.rtmp.code,
         },
         {
           label: "分区",
-          field: "area",
+          field: "childAreaId",
+          disabled: !!editData,
           rules: [{ required: true }],
           type: "linkage",
           options: areaList?.areaList as any,
@@ -298,6 +328,7 @@ const StreamList: FC = () => {
         },
         {
           label: "自动开播",
+          disabled: !!editData,
           field: "start_broadcasting",
           type: "switch",
           defaultValue: editData?.start_broadcasting,
@@ -320,7 +351,7 @@ const StreamList: FC = () => {
         return (
           <Input
             placeholder={item.placeholder}
-            disabled={item.disable}
+            disabled={item.disabled}
             value={item.defaultValue}
           />
         );
@@ -330,6 +361,7 @@ const StreamList: FC = () => {
             <Select
               placeholder={item.placeholder}
               allowClear
+              disabled={item.disabled}
               onChange={async (value) => {
                 if (item.field === "platform") {
                   setPlatform(value);
@@ -350,7 +382,10 @@ const StreamList: FC = () => {
         );
       case "switch":
         return (
-          <Switch defaultChecked={editData ? item.defaultValue === 1 : false} />
+          <Switch
+            defaultChecked={editData ? item.defaultValue === 1 : false}
+            disabled={item.disabled}
+          />
         );
       case "textArea":
         return (
@@ -361,12 +396,13 @@ const StreamList: FC = () => {
           />
         );
       case "linkage":
-        console.log(areaList?.areaListChild);
         return (
           <>
             <Select
+              disabled={item.disabled}
               placeholder={item.placeholder}
               allowClear
+              defaultValue={editData?.areaId}
               onChange={(value) => {
                 const child: any = areaList?.areaList?.find(
                   (area: any) => area.id === value
@@ -376,6 +412,7 @@ const StreamList: FC = () => {
                   areaList: areaList?.areaList as AreaListType[],
                   areaListChild: child?.list as any,
                 });
+                setAreaId(value);
               }}
             >
               {item?.options?.map((option) => (
@@ -387,12 +424,13 @@ const StreamList: FC = () => {
 
             {areaList?.areaListChild && (
               <Select
+                disabled={item.disabled}
                 style={{ marginTop: 10 }}
                 placeholder={item.placeholder}
+                defaultValue={editData?.childAreaId}
                 allowClear
                 onChange={(value) => {
-                  form.setFieldValue("area", value);
-                  console.log(form.getFieldsValue());
+                  form.setFieldValue("childAreaId", value);
                 }}
               >
                 {areaList?.areaListChild?.map((option) => (
@@ -435,15 +473,19 @@ const StreamList: FC = () => {
                       srt: srt_addr,
                     });
                     const {
-                      data: { data: areaArr },
-                    } = await getAreaList();
-                    setAreaList({
-                      areaList: areaArr,
-                      areaListChild: null,
-                    });
-                    await getRoomId(
+                      data: {
+                        data: { room_id, title },
+                      },
+                    } = await getRoomInfo(
                       bilibiliLoginVerificationInformation?.qrcode_key as string
                     );
+                    form.setFieldsValue({
+                      ...form.getFieldsValue(),
+                      title,
+                      room_address: `https://live.bilibili.com/${room_id}`,
+                      streaming_address: rtmp_addr.addr,
+                      streaming_code: rtmp_addr.code,
+                    });
                   }
                 }, 1000);
               } catch (e: any) {
@@ -486,7 +528,16 @@ const StreamList: FC = () => {
     setEditData(undefined);
     setEditVisible(true);
   };
-
+  const resetData = () => {
+    setEditVisible(false);
+    clearInterval(qr_code_timer);
+    clearInterval(timer);
+    setBilibiliLoginVerificationInformation(null);
+    form.resetFields();
+    setPlatform("");
+    setAddr(null);
+    timer = null;
+  };
   return (
     <>
       <div>
@@ -498,7 +549,7 @@ const StreamList: FC = () => {
         />
         {data && (
           <Table
-            key="unique_id"
+            rowKey="unique_id"
             columns={columns}
             data={data}
             style={{ marginTop: 10 }}
@@ -513,11 +564,18 @@ const StreamList: FC = () => {
         visible={editVisible}
         confirmLoading={confirmLoading}
         onOk={async () => {
+          await form.validate();
           setConfirmLoading(true);
-          const values = form.getFieldsValue();
-          values.update_date = new Date().getTime().toString();
           try {
+            const values = form.getFieldsValue();
+            values.update_date = new Date().getTime().toString();
             if (!editData) {
+              values.areaId = Number(areaId);
+              values.unique_id =
+                platform === "bilibili"
+                  ? bilibiliLoginVerificationInformation?.qrcode_key
+                  : "";
+              values.start_broadcasting = values.start_broadcasting ? 1 : 0;
               await createStreamAddress(values as StreamAddress);
             } else {
               values.unique_id = editData.unique_id;
@@ -529,24 +587,27 @@ const StreamList: FC = () => {
             await queryList();
             setEditVisible(false);
           } catch (e: any) {
+            console.log(e);
             Notification.error({
               title: "接口错误",
-              content: e,
+              content: e?.message,
             });
           }
           setConfirmLoading(false);
+          resetData();
         }}
         onCancel={() => {
-          setEditVisible(false);
-          clearInterval(qr_code_timer);
-          clearInterval(timer);
-          setBilibiliLoginVerificationInformation(null);
-          form.resetFields();
-          setPlatform("");
-          setAddr(null);
+          resetData();
         }}
       >
-        <Form autoComplete="off" layout="vertical" form={form}>
+        <Form
+          autoComplete="off"
+          layout="vertical"
+          form={form}
+          validateMessages={{
+            required: (_, { label }) => `${label}不能为空`,
+          }}
+        >
           {formItemRender}
         </Form>
       </Drawer>

@@ -38,7 +38,7 @@ export async function createStreamAddressList(ctx: any) {
 
   try {
     ctx.body = await StreamAddress.create({
-      unique_id: uniqueId,
+      unique_id: data?.unique_id ? data?.unique_id : uniqueId,
       ...data,
     });
   } catch (error) {

@@ -92,10 +92,14 @@ async function initDb(): Promise<Pool> {
     unique_id TEXT UNIQUE,
     platform TEXT,
     room_address TEXT,
+    start_broadcasting INT,
     streaming_address TEXT,
     streaming_code TEXT,
+    title TEXT,
+    areaId INT,
+    childAreaId TEXT,
     description TEXT,
-    update_date INT
+    update_date TEXT
                                                
   )`);
 

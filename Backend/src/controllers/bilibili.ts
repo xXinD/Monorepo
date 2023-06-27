@@ -34,11 +34,19 @@ class BilibiliService {
     } catch (error) {
       console.error(error);
       ctx.status = 500;
-      ctx.body = { message: "申请二维码失败：", error };
+      ctx.body = { message: "调用Bilibili【申请二维码】出错：", error };
     }
   };
 
-  // 查询二维码扫码状态
+  /**
+   * 查询二维码扫描状态
+   *
+   * @async
+   * @param {string} id 二维码ID。
+   * @returns {Object} Result returned by json.
+   * @throws {Error} Error thrown by json.
+   */
+
   getTheLoginPoll = async (ctx: any): Promise<void> => {
     const { id } = ctx.params;
     try {
@@ -61,11 +69,19 @@ class BilibiliService {
     } catch (error) {
       console.error(error);
       ctx.status = 500;
-      ctx.body = { message: "扫码登录失败：", error };
+      ctx.body = { message: "调用Bilibili【查询二维码扫描状态】出错：", error };
     }
   };
 
-  // 获取推流地址
+  /**
+   * 获取推流地址
+   *
+   * @async
+   * @param {string} ctx.params.id 二维码ID。
+   * @returns {Object} Result returned by json.
+   * @throws {Error} Error thrown by json.
+   * @param ctx
+   */
   getStreamAddr = async (ctx: any): Promise<void> => {
     await asyncHandler(async () => {
       const { id } = ctx.params;
@@ -89,14 +105,29 @@ class BilibiliService {
     }, "获取推流地址出错：");
   };
 
-  // 获取分区列表
+  /**
+   * 获取分区列表
+   *
+   * @async
+   * @returns {Object} Result returned by json.
+   * @throws {Error} Error thrown by json.
+   * @param ctx
+   */
   getAreaList = async (ctx: any): Promise<void> => {
     await asyncHandler(async () => {
       ctx.body = await this.fetchRoomInstance.get("/v1/Area/getList");
-    }, "获取分区列表出错：");
+    }, "调用Bilibili【获取分区列表】出错：");
   };
 
-  // 获取房间号
+  /**
+   * 获取房间ID
+   *
+   * @async
+   * @param {string} ctx.params.id 二维码ID。
+   * @returns {Object} Result returned by json.
+   * @throws {Error} Error thrown by json.
+   * @param ctx
+   */
   getRoomId = async (ctx: any): Promise<void> => {
     const { id } = ctx.params;
     const { loginCookie } = JSON.parse(
@@ -111,7 +142,220 @@ class BilibiliService {
           cookie: loginCookie,
         }
       );
-    }, "获取分区列表出错：");
+    }, "调用Bilibili【获取分区列表】出错：");
+  };
+
+  /**
+   * 修改直播间标题
+   *
+   * @async
+   * @param {string} ctx.params.id 二维码ID。
+   * @param {string} ctx.request.body.room_name 直播间标题。
+   * @returns {Object} Result returned by json.
+   * @throws {Error} Error thrown by json.
+   * @param ctx
+   */
+  updateRoomTitle = async (ctx: any): Promise<void> => {
+    const { id } = ctx.params;
+    const { room_name } = ctx.request.body;
+    const { bili_jct, loginCookie } = JSON.parse(
+      await redisClient.get(`login_data_${id}`)
+    );
+    await asyncHandler(async () => {
+      const {
+        data: { room_id },
+      } = await this.fetchLiveInstance.get(
+        "/v1/streamingRelay/relayInfo",
+        {},
+        "",
+        {
+          cookie: loginCookie,
+        }
+      );
+      ctx.body = await this.fetchRoomInstance.post(
+        "/v1/Room/update",
+        {
+          room_id,
+          title: room_name,
+          csrf: bili_jct,
+        },
+        "urlencoded",
+        "json",
+        {
+          cookie: loginCookie,
+        }
+      );
+    }, "调用Bilibili【更新房间标题】出错：");
+  };
+
+  /**
+   * 开始直播
+   *
+   * @async
+   * @param {string} ctx.params.id 二维码ID。
+   * @param {string} ctx.request.body.area_v2 直播分区最子级ID。
+   * @returns {Object} Result returned by json.
+   * @throws {Error} Error thrown by json.
+   * @param ctx
+   */
+  postStartLive = async (ctx: any): Promise<void> => {
+    const { id } = ctx.params;
+    const { area_v2 } = ctx.request.body;
+    const { bili_jct, loginCookie } = JSON.parse(
+      await redisClient.get(`login_data_${id}`)
+    );
+    await asyncHandler(async () => {
+      const {
+        data: { room_id },
+      } = await this.fetchLiveInstance.get(
+        "/v1/streamingRelay/relayInfo",
+        {},
+        "",
+        {
+          cookie: loginCookie,
+        }
+      );
+      ctx.body = await this.fetchRoomInstance.post(
+        "/v1/Room/startLive",
+        {
+          room_id,
+          area_v2,
+          platform: "pc",
+          csrf: bili_jct,
+        },
+        "urlencoded",
+        "json",
+        {
+          cookie: loginCookie,
+        }
+      );
+    }, "调用Bilibili【开始直播】出错：");
+  };
+
+  /**
+   * 关闭直播
+   *
+   * @async
+   * @param {string} ctx.params.id 二维码ID。
+   * @returns {Object} Result returned by json.
+   * @throws {Error} Error thrown by json.
+   * @param ctx
+   */
+  postStopLive = async (ctx: any): Promise<void> => {
+    const { id } = ctx.params;
+    const { bili_jct, loginCookie } = JSON.parse(
+      await redisClient.get(`login_data_${id}`)
+    );
+    await asyncHandler(async () => {
+      const {
+        data: { room_id },
+      } = await this.fetchLiveInstance.get(
+        "/v1/streamingRelay/relayInfo",
+        {},
+        "",
+        {
+          cookie: loginCookie,
+        }
+      );
+      ctx.body = await this.fetchRoomInstance.post(
+        "/v1/Room/stopLive",
+        {
+          room_id,
+          csrf: bili_jct,
+        },
+        "urlencoded",
+        "json",
+        {
+          cookie: loginCookie,
+        }
+      );
+    }, "调用Bilibili【关闭直播】出错：");
+  };
+
+  /**
+   * 获取直播间信息
+   *
+   * @async
+   * @param {string} ctx.params.id 二维码ID。
+   * @returns {Object} Result returned by json.
+   * @throws {Error} Error thrown by json.
+   * @param ctx
+   */
+  getRoomInfo = async (ctx: any): Promise<void> => {
+    const { id } = ctx.params;
+    const { loginCookie } = JSON.parse(
+      await redisClient.get(`login_data_${id}`)
+    );
+    await asyncHandler(async () => {
+      const {
+        data: { room_id },
+      } = await this.fetchLiveInstance.get(
+        "/v1/streamingRelay/relayInfo",
+        {},
+        "",
+        {
+          cookie: loginCookie,
+        }
+      );
+      ctx.body = await this.fetchRoomInstance.get(
+        `/v1/Room/get_info?room_id=${room_id}`,
+        {},
+        "urlencoded",
+        "json",
+        {
+          cookie: loginCookie,
+        }
+      );
+    }, "调用Bilibili【获取直播间信息】出错：");
+  };
+
+  /**
+   * 获取直播间状态
+   *
+   * @async
+   * @param {string} ctx.params.id 二维码ID。
+   * @returns {Object} Result returned by json.
+   * @throws {Error} Error thrown by json.
+   * @param ctx
+   */
+  getRoomStatusInfo = async (ctx: any): Promise<void> => {
+    const { id } = ctx.params;
+    const { loginCookie } = JSON.parse(
+      await redisClient.get(`login_data_${id}`)
+    );
+    await asyncHandler(async () => {
+      const {
+        data: { room_id },
+      } = await this.fetchLiveInstance.get(
+        "/v1/streamingRelay/relayInfo",
+        {},
+        "",
+        {
+          cookie: loginCookie,
+        }
+      );
+      const {
+        data: { uid },
+      } = await this.fetchRoomInstance.get(
+        `/v1/Room/get_info?room_id=${room_id}`,
+        {},
+        "urlencoded",
+        "json",
+        {
+          cookie: loginCookie,
+        }
+      );
+      console.log(`/v1/Room/get_status_info_by_uids?uids[]=[${uid}]`, 11);
+      ctx.body = await this.fetchRoomInstance.get(
+        `/v1/Room/get_status_info_by_uids?uids[]=${uid}`,
+        {},
+        "urlencoded",
+        "json",
+        {
+          cookie: loginCookie,
+        }
+      );
+    }, "调用Bilibili【获取直播间信息】出错：");
   };
 }
 export const bilibiliService = new BilibiliService();

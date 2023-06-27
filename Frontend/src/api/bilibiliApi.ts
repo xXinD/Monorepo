@@ -11,3 +11,5 @@ export const getStreamAddr = (id: string) =>
 export const getAreaList = () => axiosInstance.get("/bilibili/getAreaList");
 export const getRoomId = (id: string) =>
   axiosInstance.get(`/bilibili/getRoomId/${id}`);
+export const getRoomInfo = (id: string) =>
+  axiosInstance.get(`/bilibili/getRoomInfo/${id}`);

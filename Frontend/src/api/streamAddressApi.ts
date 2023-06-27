@@ -1,6 +1,8 @@
 import { axiosInstance } from "./axios";
 
 export interface StreamAddress {
+  childAreaId?: any;
+  areaId?: number;
   unique_id?: string;
   platform: string;
   room_address: string;
