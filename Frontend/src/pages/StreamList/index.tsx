@@ -587,7 +587,6 @@ const StreamList: FC = () => {
             await queryList();
             setEditVisible(false);
           } catch (e: any) {
-            console.log(e);
             Notification.error({
               title: "接口错误",
               content: e?.message,
