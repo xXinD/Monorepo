@@ -34,23 +34,12 @@ RUN ls -al
 RUN npm run build
 
 # 第三阶段：创建最终的运行阶段
-FROM alpine:3.14
+FROM node:18.16.1-alpine
 
 # 安装一些必要的依赖
-RUN apk add --no-cache curl make gcc g++ python3 linux-headers
-
-# 下载并安装 Node.js 版本18.16.1
-RUN curl -fsSLO --compressed "https://unofficial-builds.nodejs.org/download/release/v18.16.1/node-v18.16.1-linux-x64-musl.tar.xz" \
-    && tar -xJf "node-v18.16.1-linux-x64-musl.tar.xz" -C /usr/local --strip-components=1 --no-same-owner \
-    && rm "node-v18.16.1-linux-x64-musl.tar.xz" \
-    && ln -s /usr/local/bin/node /usr/local/bin/nodejs
-
-# 验证 Node.js 版本
-RUN node -v
-
+RUN apk add --no-cache curl make gcc g++ python3 linux-headers ffmpeg
 
 RUN npm install -g pm2
-RUN apk add ffmpeg
 
 # 从第一阶段拷贝 Golang 项目
 COPY --from=build-go /allinone /allinone
@@ -68,3 +57,4 @@ RUN chmod +x start.sh
 
 # 启动 Node.js 项目
 CMD ["./start.sh"]
+
