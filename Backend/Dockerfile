@@ -37,12 +37,12 @@ RUN npm run build
 FROM alpine:3.14
 
 # 安装一些必要的依赖
-RUN apk add --no-cache curl make gcc g++ python linux-headers
+RUN apk add --no-cache curl make gcc g++ python3 linux-headers
 
 # 下载并安装 Node.js 版本18.16.1
 RUN curl -fsSLO --compressed "https://unofficial-builds.nodejs.org/download/release/v18.16.1/node-v18.16.1-linux-x64-musl.tar.xz" \
-    && tar -xJf "node-v18.16.1-linux-x64.tar.xz" -C /usr/local --strip-components=1 --no-same-owner \
-    && rm "node-v18.16.1-linux-x64.tar.xz" \
+    && tar -xJf "node-v18.16.1-linux-x64-musl.tar.xz" -C /usr/local --strip-components=1 --no-same-owner \
+    && rm "node-v18.16.1-linux-x64-musl.tar.xz" \
     && ln -s /usr/local/bin/node /usr/local/bin/nodejs
 
 # 验证 Node.js 版本
