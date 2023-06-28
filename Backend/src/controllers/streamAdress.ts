@@ -35,11 +35,10 @@ export async function createStreamAddressList(ctx: any) {
   const data = ctx.request.body;
 
   const uniqueId = uuidv4();
-
   try {
     ctx.body = await StreamAddress.create({
-      unique_id: data?.unique_id ? data?.unique_id : uniqueId,
       ...data,
+      unique_id: data?.unique_id ? data?.unique_id : uniqueId,
     });
   } catch (error) {
     ctx.status = 500;

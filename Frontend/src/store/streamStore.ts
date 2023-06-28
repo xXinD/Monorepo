@@ -9,7 +9,6 @@ class StreamStore {
 
   setUserSettings(payload: any) {
     this.userSettings = payload;
-    console.log(this.userSettings, 3333);
   }
 }
 

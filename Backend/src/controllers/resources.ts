@@ -6,12 +6,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { Resources } from "../models/Resources";
-import {
-  onData,
-  onExit,
-  onSignal,
-  onSpawn,
-} from "../scripts/SRS_EventHandlers";
+import { onData, onExit, onSpawn } from "../scripts/SRS_EventHandlers";
 
 export const SRS_ChildProcesses = new Map<
   string,
@@ -41,7 +36,6 @@ export const creatSRS = async (options: {
     unique_id: options.streaming_code,
     video_dir: options.video_dir,
   });
-  onSignal();
   await onSpawn(
     childProcess,
     options.streaming_code,

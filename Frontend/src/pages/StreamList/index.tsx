@@ -37,7 +37,7 @@ import {
   getRoomInfo,
   getStreamAddr,
 } from "../../api/bilibiliApi";
-import { urlToQrCode } from "../../utils/stringUtils";
+import { getRoomLink, urlToQrCode } from "../../utils/stringUtils";
 
 const FormItem = Form.Item;
 const { TextArea } = Input;
@@ -185,10 +185,10 @@ const StreamList: FC = () => {
       ellipsis: true,
     },
     {
-      title: "房间地址",
-      dataIndex: "room_address",
-      render: (text) => (
-        <Link href={text} target="_blank">
+      title: "直播间ID",
+      dataIndex: "room_id",
+      render: (text, _item) => (
+        <Link href={getRoomLink(_item.platform, text)} target="_blank">
           {text}
         </Link>
       ),
@@ -270,12 +270,13 @@ const StreamList: FC = () => {
         placeholder: "请选择平台",
       },
       {
-        label: "房间地址",
-        field: "room_address",
+        label: "直播间ID",
+        field: "room_id",
         rules: [{ required: true }],
         disabled: platform === "bilibili" || !!editData,
         type: "input",
-        placeholder: "请输入房间地址",
+        placeholder: "请输入直播间ID",
+        tooltip: "短ID，直播房间url上的那个ID",
       },
     ];
     if (platform !== "bilibili") {
@@ -482,7 +483,7 @@ const StreamList: FC = () => {
                     form.setFieldsValue({
                       ...form.getFieldsValue(),
                       title,
-                      room_address: `https://live.bilibili.com/${room_id}`,
+                      room_id,
                       streaming_address: rtmp_addr.addr,
                       streaming_code: rtmp_addr.code,
                     });

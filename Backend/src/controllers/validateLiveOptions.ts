@@ -61,15 +61,11 @@ export function isStreamingProtocolSupported(
  * @returns {string | null} - 如果参数有空值，则返回第一个空参数的名称；如果推流地址的协议不支持，则返回错误信息；否则返回 null
  */
 export function validateLiveOptions(options: LiveOptions): string | null {
-  const requiredParams = ["name", "streaming_address", "streaming_code"];
+  const requiredParams = ["streaming_address", "streaming_code"];
 
   const emptyParam = checkRequiredParams(options, requiredParams);
   if (emptyParam) {
     return `${emptyParam}不能为空`;
-  }
-
-  if (!isStreamingProtocolSupported(options.streaming_address)) {
-    return "不支持该推流地址的协议";
   }
 
   return null;

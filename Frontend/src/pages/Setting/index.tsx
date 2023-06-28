@@ -116,7 +116,6 @@ const Setting: FC = observer(() => {
               try {
                 await form.validate();
                 const values = form.getFieldsValue() as ServerConfig;
-                console.log(values, 1111);
                 axiosInstance.updateBaseURL(values.service_address);
                 await updateServerConfig(values);
                 // window.location.reload();

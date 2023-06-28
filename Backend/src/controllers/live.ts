@@ -8,26 +8,24 @@ import { DefaultState, ParameterizedContext } from "koa";
 import {
   clearAllStreams,
   delStreaming,
-  LiveOptions,
   startStreaming,
   stopStreaming,
 } from "../scripts/stream";
-import { validateLiveOptions } from "./validateLiveOptions";
 import { LiveStream } from "../models/LiveStream";
 import { asyncHandler } from "../utils/handler";
+import { StreamAddress } from "../models/StreamAdress";
+import { bilibiliService } from "./bilibili";
 
-type RtmpLiveOptions = Pick<
-  LiveOptions,
-  "streaming_address" | "streaming_code" | "video_dir"
->;
-
+function delay(time: number) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, time);
+  });
+}
 /**
  * 开始推流直播。
  *
  * @async
  * @param {string} ctx.request.body.name 直播间名称。
- * @param {string} ctx.request.body.streaming_address RTMP 服务器地址。
- * @param {string} ctx.request.body.streaming_code 推流码。
  * @param {string} ctx.request.body.video_dir 视频文件目录。
  * @param {boolean} ctx.request.body.watermarkEnabled 是否添加水印。
  * @param {string} ctx.request.body.watermarkImg 水印图片路径。
@@ -35,30 +33,39 @@ type RtmpLiveOptions = Pick<
  * @throws {Error} 如果平台参数为空，则抛出异常。
  */
 export async function startLive(ctx: any) {
-  const { name, streaming_address, streaming_code } = ctx.request.body;
-  // 检查必填参数是否为空
-  const invalidOption = validateLiveOptions(<LiveOptions>(<RtmpLiveOptions>{
-    name,
-    streaming_address,
-    streaming_code,
-    watermarkEnabled: false,
-  }));
-  if (invalidOption) {
-    ctx.status = 400;
-    ctx.body = {
-      error: "请求无效，请审查请求参数",
-      message: invalidOption,
-    };
-    return;
-  }
-  const uniqueId = uuidv4();
-
+  const { stream_id } = ctx.request.body;
   await asyncHandler(async () => {
+    const streamAddress = await StreamAddress.findById(stream_id);
+    const uniqueId = uuidv4();
+    if (streamAddress.platform === "bilibili") {
+      const { live_status } = await bilibiliService.roomStatusInfo(
+        streamAddress.unique_id
+      );
+      const {
+        data: { lock_till },
+      } = await bilibiliService.getBannedInfoById(streamAddress.unique_id);
+
+      if (!live_status && lock_till) {
+        const currentTime = Date.now();
+        const waitTime = lock_till - currentTime + 3000;
+        if (waitTime > 0) {
+          await delay(waitTime);
+        }
+      }
+
+      if (!live_status) {
+        await bilibiliService.startLive({
+          id: streamAddress.unique_id,
+          area_v2: streamAddress.childAreaId,
+        });
+      }
+    }
     const res = await startStreaming(
       {
         unique_id: uniqueId,
         ...ctx.request.body,
         watermarkEnabled: false,
+        stream_id: streamAddress.unique_id,
       },
       ctx
     );
@@ -145,9 +152,7 @@ export async function updateLiveInfo(ctx: ParameterizedContext<DefaultState>) {
   }, "修改直播间信息失败");
 }
 
-export async function startSpecifiedLive(
-  ctx: ParameterizedContext<DefaultState>
-) {
+export async function startSpecifiedLive(ctx: any) {
   const { id } = ctx.params;
   await asyncHandler(async () => {
     // 从数据库中查找直播记录
@@ -156,13 +161,15 @@ export async function startSpecifiedLive(
       ctx.status = 404;
       ctx.body = { error: "未查询找到相关直播信息" };
     } else {
-      const res = await startStreaming(
-        {
-          ...liveStream,
-          start_time: "00:00:00",
+      const res = await startLive({
+        ...ctx,
+        request: {
+          ...ctx.request,
+          body: {
+            ...liveStream,
+          },
         },
-        ctx
-      );
+      });
       // 返回创建的直播间信息
       ctx.body = {
         message: "创建直播间成功",

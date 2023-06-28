@@ -51,15 +51,12 @@ async function initDb(): Promise<Pool> {
     await conn.query(`CREATE TABLE IF NOT EXISTS live_streams (
     id INT PRIMARY KEY AUTO_INCREMENT,
     unique_id TEXT UNIQUE,
-    name TEXT,
     platform TEXT,
+    title TEXT,
     status INT,
-    streaming_address TEXT,
-    streaming_code TEXT,
-    room_address TEXT,
-    fileType TEXT,
+    stream_id TEXT,
+    room_id TEXT,
     video_dir TEXT,
-    file_name TEXT,
     encoder TEXT,
     is_it_hardware INT,
     encoding_mode INT,
@@ -72,8 +69,7 @@ async function initDb(): Promise<Pool> {
     transition_type INT,
     simple_transition INT,
     complex_transition INT,
-    is_video_style INT,
-    start_time TEXT
+    is_video_style INT
   )`);
 
     await conn.query(`CREATE TABLE IF NOT EXISTS resources (
@@ -91,7 +87,7 @@ async function initDb(): Promise<Pool> {
     id INT PRIMARY KEY AUTO_INCREMENT,
     unique_id TEXT UNIQUE,
     platform TEXT,
-    room_address TEXT,
+    room_id TEXT,
     start_broadcasting INT,
     streaming_address TEXT,
     streaming_code TEXT,

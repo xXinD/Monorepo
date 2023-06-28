@@ -12,5 +12,6 @@ bilibili_live.post("/postStartLive/:id", bilibiliService.postStartLive);
 bilibili_live.post("/postStopLive/:id", bilibiliService.postStopLive);
 bilibili_live.get("/getRoomInfo/:id", bilibiliService.getRoomInfo);
 bilibili_live.get("/getRoomStatusInfo/:id", bilibiliService.getRoomStatusInfo);
+bilibili_live.get("/getBannedInfo/:id", bilibiliService.getBannedInfo);
 
 export default bilibili_live;
