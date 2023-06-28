@@ -61,8 +61,11 @@ class RedisClientSingleton {
     const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
 
     // 根据新的内容重新建立 Redis 连接
+    const database = process.env.ENV_VAR === "development" ? 1 : 0;
     this.client = createClient({
-      url: `redis://${config.redis_address}:${config.redis_port ?? 6379}`,
+      url: `redis://${config.redis_address}:${
+        config.redis_port ?? 6379
+      }/${database}`,
       password: "199615xin",
     });
     this.client.connect();

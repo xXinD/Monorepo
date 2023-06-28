@@ -9,17 +9,29 @@ import { asyncHandler } from "../utils/handler";
 import errorJson from "../config/errorMessages.json";
 
 export class StreamAddress {
-  unique_id: string;
-
   id?: number;
 
-  name: string;
+  unique_id: string;
 
-  video_dir: string;
+  platform: string;
 
-  file_type: string;
+  room_id: string;
 
-  date: string;
+  start_broadcasting: number;
+
+  streaming_address: string;
+
+  streaming_code: string;
+
+  title?: string;
+
+  areaId?: number;
+
+  childAreaId?: string;
+
+  description?: string;
+
+  update_date?: string;
 
   /**
    * 查询所有直播地址

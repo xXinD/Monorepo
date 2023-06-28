@@ -1,4 +1,5 @@
 type ResponseFormat = "json" | "text" | "blob" | "formData";
+type BodyFormat = "json" | "urlencoded";
 
 export class Fetch {
   baseURL: string;
@@ -23,20 +24,71 @@ export class Fetch {
     return await response.json();
   }
 
-  get(endpoint: string, format: ResponseFormat = "json") {
-    return fetch(`${this.baseURL}${endpoint}`).then((response) =>
-      this.parseResponse(response, format)
-    );
+  formatBody(
+    body: any,
+    format: BodyFormat
+  ): { headers: { "Content-Type": string }; body: string } {
+    if (format === "json") {
+      return {
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      };
+    }
+    if (format === "urlencoded") {
+      return {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        },
+        body: this.objectToUrlEncoded(body),
+      };
+    }
+    return {
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    };
   }
 
-  post(endpoint: string, body: any, format: ResponseFormat = "json") {
+  objectToUrlEncoded(obj: any) {
+    return Object.keys(obj)
+      .map(
+        (key) => `${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`
+      )
+      .join("&");
+  }
+
+  get(
+    endpoint: string,
+    params: any = {},
+    format: ResponseFormat = "json",
+    headerConfig: any = {}
+  ) {
+    const url = Object.keys(params).length
+      ? `${this.baseURL}${endpoint}?this.objectToUrlEncoded(params)`
+      : `${this.baseURL}${endpoint}`;
+    return fetch(url, {
+      method: "GET",
+      headers: {
+        ...headerConfig,
+      },
+    }).then((response) => this.parseResponse(response, format));
+  }
+
+  post(
+    endpoint: string,
+    body: any,
+    bodyFormat: BodyFormat = "json",
+    responseFormat: ResponseFormat = "json",
+    headerConfig: any = {}
+  ) {
+    const { headers, body: formattedBody } = this.formatBody(body, bodyFormat);
     return fetch(`${this.baseURL}${endpoint}`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        ...headers,
+        ...headerConfig,
       },
-      body: JSON.stringify(body),
-    }).then((response) => this.parseResponse(response, format));
+      body: formattedBody,
+    }).then((response) => this.parseResponse(response, responseFormat));
   }
 
   delete(endpoint: string, format: ResponseFormat = "json") {
@@ -45,25 +97,40 @@ export class Fetch {
     }).then((response) => this.parseResponse(response, format));
   }
 
-  put(endpoint: string, body: any, format: ResponseFormat = "json") {
+  put(
+    endpoint: string,
+    body: any,
+    bodyFormat: BodyFormat = "json",
+    responseFormat: ResponseFormat = "json"
+  ) {
+    const { headers, body: formattedBody } = this.formatBody(body, bodyFormat);
+
     return fetch(`${this.baseURL}${endpoint}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    }).then((response) => this.parseResponse(response, format));
+      headers,
+      body: formattedBody,
+    }).then((response) => this.parseResponse(response, responseFormat));
   }
 
-  patch(endpoint: string, body: any, format: ResponseFormat = "json") {
+  patch(
+    endpoint: string,
+    body: any,
+    bodyFormat: BodyFormat = "json",
+    responseFormat: ResponseFormat = "json",
+    headerConfig: any = {}
+  ) {
+    const { headers, body: formattedBody } = this.formatBody(body, bodyFormat);
+
     return fetch(`${this.baseURL}${endpoint}`, {
       method: "PATCH",
       headers: {
-        "Content-Type": "application/json",
+        ...headers,
+        ...headerConfig,
       },
-      body: JSON.stringify(body),
-    }).then((response) => this.parseResponse(response, format));
+      body: formattedBody,
+    }).then((response) => this.parseResponse(response, responseFormat));
   }
 }
 
+export const FetchClass = Fetch;
 export const FetchInstance = new Fetch();

@@ -6,26 +6,22 @@ import { buildFFmpegCommand } from "./buildFFmpegCommand";
 import { onData, onExit, onSpawn } from "./streamEventHandlers";
 import { creatSRS, SRS_ChildProcesses } from "../../controllers/resources";
 import { Resources } from "../../models/Resources";
+import { StreamAddress } from "../../models/StreamAdress";
 
 // 子进程统一管理
 export const childProcesses = new Map<string, ChildProcessWithoutNullStreams>();
 
 export interface LiveOptions {
+  title?: string;
+  room_id?: string;
+  stream_id: string;
   is_video_style?: number;
   unique_id?: string;
   // 直播间 ID
   id?: string;
   platform?: string;
-  // 直播名称
-  name: string;
   // 直播状态
   state?: string;
-  // 推流地址
-  streaming_address: string;
-  // 推流密钥
-  streaming_code: string;
-  // 房间地址
-  room_address?: string;
   start_time?: string;
   // 视频文件所在目录
   video_dir?: string;
@@ -98,7 +94,10 @@ export async function closeAllStreams(): Promise<void> {
  * @param {Object} ctx Koa 上下文
  * @returns {Promise<void>} Promise 对象
  */
-export async function playVideoFiles(options: LiveOptions, ctx: any) {
+export async function playVideoFiles(
+  options: LiveOptions & StreamAddress,
+  ctx: any
+) {
   if (childProcesses.has(options.unique_id)) {
     await redisClient.set(options.unique_id, "true");
     childProcesses.get(options.unique_id)?.kill("SIGINT");
@@ -128,7 +127,14 @@ export async function playVideoFiles(options: LiveOptions, ctx: any) {
  * @param {any} ctx Koa 上下文
  */
 export async function startStreaming(options: LiveOptions, ctx: any) {
-  return playVideoFiles(options, ctx);
+  const streamAddress = await StreamAddress.findById(options.stream_id);
+  return playVideoFiles(
+    {
+      ...options,
+      ...streamAddress,
+    } as any,
+    ctx
+  );
 }
 
 /**

@@ -43,6 +43,7 @@ import {
   StreamAddress,
 } from "../../api/streamAddressApi";
 import { platformOptions } from "../StreamList";
+import { getRoomLink } from "../../utils/stringUtils";
 
 const FormItem = Form.Item;
 const { Option } = Select;
@@ -53,16 +54,14 @@ export interface LiveOptions {
   // 直播间 ID
   id?: string;
   platform?: string;
-  // 直播名称
-  name: string;
   // 直播状态
   state?: string;
   // 推流地址
   streaming_address: string;
   // 推流密钥
   streaming_code: string;
-  // 房间地址
-  room_address?: string;
+  // 房间ID
+  room_id?: string;
   // 视频文件所在目录
   video_dir?: string;
   fileType?: string;
@@ -145,7 +144,7 @@ const LiveList: FC = () => {
   const columns: TableColumnProps[] = [
     {
       title: "名称",
-      dataIndex: "name",
+      dataIndex: "title",
     },
     {
       title: "平台",
@@ -156,10 +155,10 @@ const LiveList: FC = () => {
     },
     {
       title: "房间地址",
-      dataIndex: "room_address",
-      render: (text) => (
-        <Link href={text} target="_blank">
-          {text}
+      dataIndex: "room_id",
+      render: (text, _item) => (
+        <Link href={getRoomLink(_item.platform, text)} target="_blank">
+          {getRoomLink(_item.platform, text)}
         </Link>
       ),
     },
@@ -341,7 +340,7 @@ const LiveList: FC = () => {
           (_) => _.value === item.platform
         );
         return {
-          label: `${formatPlatform?.label}-${item.description}`,
+          label: `${formatPlatform?.label}-${item.title}`,
           value: item.unique_id,
         };
       }),
@@ -350,15 +349,8 @@ const LiveList: FC = () => {
   const formItemData = useMemo(() => {
     const result: FormItemData[] = [
       {
-        label: "名称",
-        field: "name",
-        rules: [{ required: true }],
-        type: "input",
-        placeholder: "请输入名称",
-      },
-      {
         label: "开播房间",
-        field: "stream",
+        field: "stream_id",
         rules: [{ required: true }],
         type: "select",
         options: streamOptions,
@@ -524,7 +516,7 @@ const LiveList: FC = () => {
         />
         {data && (
           <Table
-            key="unique_id"
+            rowKey="unique_id"
             columns={columns}
             data={data}
             style={{ marginTop: 10 }}
@@ -546,13 +538,6 @@ const LiveList: FC = () => {
             await form.validate();
             setConfirmLoading(true);
             const values = form.getFieldsValue();
-            const stream = streamList.find(
-              (item) => item.unique_id === values.stream
-            );
-            values.platform = stream?.platform;
-            values.streaming_address = stream?.streaming_address;
-            values.room_address = stream?.room_address;
-            values.streaming_code = stream?.streaming_code;
             values.video_dir = values.pull_address;
             delete values.pull_address;
             delete values.stream;

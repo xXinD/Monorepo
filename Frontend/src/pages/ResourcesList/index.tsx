@@ -217,7 +217,7 @@ const ResourcesList: FC = () => {
         />
         {data && (
           <Table
-            key="unique_id"
+            rowKey="unique_id"
             columns={columns}
             data={data}
             style={{ marginTop: 10 }}

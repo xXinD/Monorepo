@@ -3,14 +3,9 @@ import * as Sentry from "@sentry/node";
 import { liveMismatching } from "../../config/liveMismatching";
 import { asyncHandler } from "../../utils/handler";
 import redisClient from "../../utils/redisClient";
-import {
-  childProcesses,
-  closeAllStreams,
-  LiveOptions,
-  playVideoFiles,
-  updateLiveStreamStatus,
-} from "./index";
+import { childProcesses, LiveOptions, updateLiveStreamStatus } from "./index";
 import { LiveStream } from "../../models/LiveStream";
+import { startLive } from "../../controllers/live";
 
 export function onData(childProcess: ChildProcess, options: LiveOptions) {
   childProcess.stderr.on("data", async (data) => {
@@ -20,16 +15,15 @@ export function onData(childProcess: ChildProcess, options: LiveOptions) {
         options,
         childProcess,
       });
-      console.error(`错误日志: ${data}`);
+      console.error(`【直播推流】错误日志: ${data}`);
       await asyncHandler(async () => {
         if (childProcesses.has(options.unique_id)) {
-          await redisClient.set(options.unique_id, "true");
           childProcesses.get(options.unique_id)?.kill("SIGINT");
         }
         await updateLiveStreamStatus(options.unique_id, 2);
       }, "直播间被封禁");
     } else {
-      console.log(`标准日志: ${data}`);
+      console.log(`【直播推流】标准日志: ${data}`);
     }
   });
 }
@@ -45,13 +39,7 @@ export function onExit(
     if (isStopped !== "true") {
       // 如果没有被停止，就重新开始推流
       await redisClient.del(options.unique_id);
-      await playVideoFiles(
-        {
-          ...options,
-          start_time: "00:00:00",
-        },
-        ctx
-      );
+      await startLive(ctx);
     } else {
       if (childProcesses.has(options.unique_id)) {
         childProcesses.delete(options.unique_id);
@@ -60,37 +48,10 @@ export function onExit(
       if (liveStream) {
         await LiveStream.update(options.unique_id, {
           ...liveStream,
-          start_time: "00:00:00",
           status: 1,
         });
       }
     }
-  });
-}
-
-export function onSignal() {
-  process.on("SIGINT", async () => {
-    console.log("Caught interrupt signal. Cleaning up...");
-    if (childProcesses.size > 0) {
-      await closeAllStreams();
-    }
-    process.exit(1);
-  });
-
-  process.on("SIGTERM", async () => {
-    console.log("Caught termination signal. Cleaning up...");
-    if (childProcesses.size > 0) {
-      await closeAllStreams();
-    }
-    process.exit(1);
-  });
-
-  process.on("exit", async () => {
-    console.log("Caught termination signal. Cleaning up...");
-    if (childProcesses.size > 0) {
-      await closeAllStreams();
-    }
-    process.exit(1);
   });
 }
 

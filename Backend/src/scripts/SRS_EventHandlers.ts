@@ -11,7 +11,7 @@ import { stopStreaming } from "./stream";
 
 export function onData(childProcess: ChildProcess, unique_id: string) {
   childProcess.stderr.on("data", async (data) => {
-    console.log(`标准日志: ${unique_id} \n ${data}`);
+    console.log(`【转发推流】标准日志: ${unique_id} \n ${data}`);
   });
 }
 export function onExit(
@@ -40,35 +40,6 @@ export function onExit(
         console.error(`SRS进程${options.unique_id}退出，退出码为${code}`);
       }
     }, "源流转发停止出错：");
-  });
-}
-
-export function onSignal() {
-  process.on("SIGINT", async () => {
-    console.time("Caught interrupt signal. Cleaning up...");
-    if (SRS_ChildProcesses.size > 0) {
-      await stopAllSRS();
-    }
-    console.timeEnd("Cleaning ended.");
-    process.exit(1);
-  });
-
-  process.on("SIGTERM", async () => {
-    console.time("Caught termination signal. Cleaning up...");
-    if (SRS_ChildProcesses.size > 0) {
-      await stopAllSRS();
-    }
-    console.timeEnd("Cleaning ended.");
-    process.exit(1);
-  });
-
-  process.on("exit", async () => {
-    console.time("Caught termination signal. Cleaning up...");
-    if (SRS_ChildProcesses.size > 0) {
-      await stopAllSRS();
-    }
-    console.timeEnd("Cleaning ended.");
-    process.exit(1);
   });
 }
 

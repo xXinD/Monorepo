@@ -13,17 +13,11 @@ import errorJson from "../config/errorMessages.json";
 export class LiveStream {
   id?: string;
 
+  stream_id: string;
+
   unique_id: string;
 
-  name: string;
-
   status: number;
-
-  start_time: string;
-
-  streaming_address: string;
-
-  streaming_code: string;
 
   bit_rate_value: number;
 
@@ -137,8 +131,7 @@ export class LiveStream {
       // 如果直播状态是开启，必填项不可以修改
       if (liveStream.status === 0) {
         delete updatedData.unique_id;
-        delete updatedData.streaming_address;
-        delete updatedData.streaming_code;
+        delete updatedData.stream_id;
       }
 
       // 更新允许修改的字段
@@ -169,13 +162,10 @@ export class LiveStream {
       const db = getDb();
       const data = {
         unique_id: options.unique_id || null,
-        name: options.name || null,
-        streaming_address: options.streaming_address || null,
-        streaming_code: options.streaming_code || null,
-        room_address: options.room_address || null,
+        stream_id: options.stream_id || null,
+        room_id: options.room_id || null,
         status: "0",
-        fileType: options.fileType || null,
-        file_name: options.file_name || null,
+        title: options.title || null,
         video_dir: options.video_dir || null,
         is_it_hardware: !!options.is_it_hardware,
         is_video_style: options.is_video_style,

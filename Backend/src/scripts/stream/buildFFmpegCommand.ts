@@ -1,8 +1,9 @@
 import si from "systeminformation";
 import { LiveOptions } from "./index";
+import { StreamAddress } from "../../models/StreamAdress";
 
 export async function buildFFmpegCommand(
-  options: LiveOptions
+  options: LiveOptions & StreamAddress
 ): Promise<string[]> {
   const { controllers } = await si.graphics();
   let graphicsEncoder: string;
@@ -52,7 +53,7 @@ export async function buildFFmpegCommand(
           "20",
           "-f",
           "flv",
-          `${options.streaming_address}/${options.streaming_code}`,
+          `${options.streaming_address}${options.streaming_code}`,
         ]
       : [
           "-re",
@@ -64,7 +65,7 @@ export async function buildFFmpegCommand(
           "copy",
           "-f",
           "flv",
-          `${options.streaming_address}/${options.streaming_code}`,
+          `${options.streaming_address}${options.streaming_code}`,
         ];
 
   // 删除args内的false值
