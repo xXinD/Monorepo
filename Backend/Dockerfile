@@ -14,7 +14,7 @@ COPY ./LiveRedirect/Golang/liveurls/*.go ./liveurls/
 RUN go build -o /allinone
 
 # 第二阶段：构建 Node.js 项目
-FROM node:18 as build-node
+FROM node:18.16.1 as build-node
 
 WORKDIR /usr/src/app
 
@@ -36,7 +36,19 @@ RUN npm run build
 # 第三阶段：创建最终的运行阶段
 FROM alpine:3.14
 
-RUN apk add --update nodejs npm
+# 安装一些必要的依赖
+RUN apk add --no-cache curl make gcc g++ python linux-headers binutils-gold gnupg libstdc++
+
+# 下载并安装 Node.js 版本18.16.1
+RUN curl -fsSLO --compressed "https://unofficial-builds.nodejs.org/download/release/v18.16.1/node-v18.16.1-linux-x64-musl.tar.xz" \
+    && tar -xJf "node-v18.16.1-linux-x64.tar.xz" -C /usr/local --strip-components=1 --no-same-owner \
+    && rm "node-v18.16.1-linux-x64.tar.xz" \
+    && ln -s /usr/local/bin/node /usr/local/bin/nodejs
+
+# 验证 Node.js 版本
+RUN node -v
+
+
 RUN npm install -g pm2
 RUN apk add ffmpeg
 
