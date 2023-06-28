@@ -295,7 +295,7 @@ const LiveList: FC = () => {
             <Button
               shape="round"
               type="text"
-              disabled={_item.status == 1}
+              disabled={_item.status == 2}
               icon={<IconPlayCircle />}
               onClick={async () => {
                 try {
