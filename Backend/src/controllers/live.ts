@@ -53,7 +53,7 @@ export async function startLive(ctx: any) {
         const waitTime =
           (lock_till.toString().length < 13 ? lock_till * 1000 : lock_till) -
           currentTime +
-          3000;
+          3600000;
         if (waitTime > 0) {
           await delay(waitTime);
         }
