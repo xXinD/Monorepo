@@ -364,7 +364,7 @@ const LiveList: FC = () => {
         type: "select",
         options: fileList.map((item) => ({
           label: item.name,
-          value: item.srs_address ?? item.video_dir,
+          value: item.unique_id,
           srs_address: item.srs_address,
         })),
         placeholder: "请选择直播员",
