@@ -73,11 +73,19 @@ export async function createResources(ctx: any) {
 
   const uniqueId = uuidv4();
   try {
-    ctx.body = await creatSRS({
-      ...data,
-      streaming_code: uniqueId,
+    await Resources.create({
+      unique_id: uniqueId,
+      update_date: data.update_date,
+      file_type: data.file_type,
+      name: data.name,
       video_dir: data.video_dir,
+      srs_address:
+        data.file_type === "pull_address" ? data.video_dir : uniqueId,
+      status: 1,
     });
+    ctx.body = {
+      message: "新增资源成功",
+    };
   } catch (error) {
     ctx.status = 500;
     ctx.body = {

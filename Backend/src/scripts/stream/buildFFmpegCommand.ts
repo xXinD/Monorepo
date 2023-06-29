@@ -26,7 +26,7 @@ export async function buildFFmpegCommand(
           "-ss",
           `${options.start_time ?? "00:00:00"}`,
           "-i",
-          `rtmp://localhost/live/${options.video_dir}`,
+          `${options.sourcePath}`,
           "-c:v",
           graphicsEncoder,
           `${options.encoding_mode === 2 && "-maxrate"}`,
@@ -58,7 +58,7 @@ export async function buildFFmpegCommand(
       : [
           "-re",
           "-i",
-          `rtmp://localhost/live/${options.video_dir}`,
+          `${options.sourcePath}`,
           "-c:v",
           "copy",
           "-c:a",

@@ -12,6 +12,7 @@ import { StreamAddress } from "../../models/StreamAdress";
 export const childProcesses = new Map<string, ChildProcessWithoutNullStreams>();
 
 export interface LiveOptions {
+  sourcePath?: string;
   title?: string;
   room_id?: string;
   stream_id: string;
@@ -98,19 +99,27 @@ export async function playVideoFiles(
   options: LiveOptions & StreamAddress,
   ctx: any
 ) {
+  // 检查是否有重复推流
   if (childProcesses.has(options.unique_id)) {
     await redisClient.set(options.unique_id, "true");
     childProcesses.get(options.unique_id)?.kill("SIGINT");
     childProcesses.delete(options.unique_id);
   }
   await redisClient.del(options.unique_id);
+
+  // 检查是否需要SRS转发，并且判断是否有 SRS 进程
   const SRS = await Resources.findById(options.video_dir);
-  if (!SRS_ChildProcesses.has(options.video_dir)) {
+  if (SRS.file_type === "video" && !SRS_ChildProcesses.has(SRS.unique_id)) {
     await creatSRS({
-      streaming_code: options.video_dir,
+      streaming_code: SRS.unique_id,
       video_dir: SRS.video_dir,
     });
   }
+  options.sourcePath =
+    SRS.file_type === "video"
+      ? `rtmp://localhost/live/${SRS.unique_id}`
+      : SRS.video_dir;
+  // 构建 ffmpeg 命令行参数
   const args = await buildFFmpegCommand(options);
   const childProcess = spawn("ffmpeg", args);
 
