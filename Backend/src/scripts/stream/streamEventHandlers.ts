@@ -39,7 +39,15 @@ export function onExit(
     if (isStopped !== "true") {
       // 如果没有被停止，就重新开始推流
       await redisClient.del(options.unique_id);
-      await startLive(ctx);
+      if (options.platform === "bilibili") {
+        await startLive({
+          request: {
+            body: {
+              ...options,
+            },
+          },
+        });
+      }
     } else {
       if (childProcesses.has(options.unique_id)) {
         childProcesses.delete(options.unique_id);

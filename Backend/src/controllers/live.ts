@@ -45,18 +45,19 @@ export async function startLive(ctx: any) {
       const {
         data: { lock_till },
       } = await bilibiliService.getBannedInfoById(streamAddress.unique_id);
-
-      if (!live_status && lock_till) {
+      if (lock_till) {
         if (unique_id) {
           await updateLiveStreamStatus(unique_id, 2);
         }
         const currentTime = Date.now();
-        const waitTime = lock_till - currentTime + 3000;
+        const waitTime =
+          (lock_till.toString().length < 13 ? lock_till * 1000 : lock_till) -
+          currentTime +
+          3000;
         if (waitTime > 0) {
           await delay(waitTime);
         }
       }
-
       if (!live_status) {
         await bilibiliService.startLive({
           id: streamAddress.unique_id,
