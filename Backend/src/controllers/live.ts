@@ -10,6 +10,7 @@ import {
   delStreaming,
   startStreaming,
   stopStreaming,
+  updateLiveStreamStatus,
 } from "../scripts/stream";
 import { LiveStream } from "../models/LiveStream";
 import { asyncHandler } from "../utils/handler";
@@ -33,7 +34,7 @@ function delay(time: number) {
  * @throws {Error} 如果平台参数为空，则抛出异常。
  */
 export async function startLive(ctx: any) {
-  const { stream_id } = ctx.request.body;
+  const { stream_id, unique_id } = ctx.request.body;
   await asyncHandler(async () => {
     const streamAddress = await StreamAddress.findById(stream_id);
     const uniqueId = uuidv4();
@@ -44,15 +45,19 @@ export async function startLive(ctx: any) {
       const {
         data: { lock_till },
       } = await bilibiliService.getBannedInfoById(streamAddress.unique_id);
-
-      if (!live_status && lock_till) {
+      if (lock_till) {
+        if (unique_id) {
+          await updateLiveStreamStatus(unique_id, 2);
+        }
         const currentTime = Date.now();
-        const waitTime = lock_till - currentTime + 3000;
+        const waitTime =
+          (lock_till.toString().length < 13 ? lock_till * 1000 : lock_till) -
+          currentTime +
+          3000;
         if (waitTime > 0) {
           await delay(waitTime);
         }
       }
-
       if (!live_status) {
         await bilibiliService.startLive({
           id: streamAddress.unique_id,
@@ -62,7 +67,7 @@ export async function startLive(ctx: any) {
     }
     const res = await startStreaming(
       {
-        unique_id: uniqueId,
+        unique_id: unique_id ?? uniqueId,
         ...ctx.request.body,
         watermarkEnabled: false,
         stream_id: streamAddress.unique_id,

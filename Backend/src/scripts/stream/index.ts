@@ -130,8 +130,8 @@ export async function startStreaming(options: LiveOptions, ctx: any) {
   const streamAddress = await StreamAddress.findById(options.stream_id);
   return playVideoFiles(
     {
-      ...options,
       ...streamAddress,
+      ...options,
     } as any,
     ctx
   );

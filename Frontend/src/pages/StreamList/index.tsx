@@ -169,6 +169,10 @@ const StreamList: FC = () => {
   };
   const columns: TableColumnProps[] = [
     {
+      title: "名称",
+      dataIndex: "title",
+    },
+    {
       title: "平台",
       dataIndex: "platform",
       render: (text) =>

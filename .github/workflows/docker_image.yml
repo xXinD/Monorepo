@@ -62,18 +62,6 @@ jobs:
           push: true
           tags: xindongg/backend:latest
 
-      - name: Save Docker image
-        run: |
-          mkdir -p docker-image
-          docker tag xindongg/backend:latest xindongg/backend:${{ github.sha }}
-          docker save xindongg/backend:${{ github.sha }} | gzip > docker-image/backend.tar.gz
-
-      - name: Upload Docker image
-        uses: actions/upload-artifact@v2
-        with:
-          name: docker-image
-          path: docker-image
-
   build-and-push-frontend:
     needs: check_changes
     if: needs.check_changes.outputs.frontend == 'true'
@@ -99,15 +87,3 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: xindongg/frontend:latest
-
-      - name: Save Docker image
-        run: |
-          mkdir -p docker-image
-          docker tag xindongg/frontend:latest xindongg/frontend:${{ github.sha }}
-          docker save xindongg/frontend:${{ github.sha }} | gzip > docker-image/frontend.tar.gz
-
-      - name: Upload Docker image
-        uses: actions/upload-artifact@v2
-        with:
-          name: docker-image
-          path: docker-image

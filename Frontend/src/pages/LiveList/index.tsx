@@ -172,7 +172,7 @@ const LiveList: FC = () => {
           case 1:
             return <IconCloseCircle className={styles.icon_warning} />;
           case 2:
-            return <IconInfoCircleFill className={styles.icon_stop} />;
+            return "被封禁";
           default:
             return <IconCheckCircleFill className={styles.icon_running} />;
         }
@@ -295,6 +295,7 @@ const LiveList: FC = () => {
             <Button
               shape="round"
               type="text"
+              disabled={_item.status == 2}
               icon={<IconPlayCircle />}
               onClick={async () => {
                 try {
