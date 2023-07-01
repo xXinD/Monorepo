@@ -28,6 +28,12 @@ export function onData(childProcess: ChildProcess, options: LiveOptions) {
   });
 }
 
+async function clearProcess(unique_id: string, status: number) {
+  if (childProcesses.has(unique_id)) {
+    childProcesses.delete(unique_id);
+  }
+  await updateLiveStreamStatus(unique_id, status);
+}
 export function onExit(
   childProcess: ChildProcess,
   options: LiveOptions,
@@ -47,18 +53,11 @@ export function onExit(
             },
           },
         });
+      } else {
+        await clearProcess(options.unique_id, 2);
       }
     } else {
-      if (childProcesses.has(options.unique_id)) {
-        childProcesses.delete(options.unique_id);
-      }
-      const liveStream = await LiveStream.findById(options.unique_id);
-      if (liveStream) {
-        await LiveStream.update(options.unique_id, {
-          ...liveStream,
-          status: 1,
-        });
-      }
+      await clearProcess(options.unique_id, 1);
     }
   });
 }
