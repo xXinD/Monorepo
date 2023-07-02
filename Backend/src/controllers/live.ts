@@ -45,6 +45,7 @@ export async function startLive(ctx: any) {
       const {
         data: { lock_till },
       } = await bilibiliService.getBannedInfoById(streamAddress.unique_id);
+      console.log("封禁信息", lock_till, streamAddress.start_broadcasting);
       if (lock_till && streamAddress.start_broadcasting == 1) {
         if (unique_id) {
           await updateLiveStreamStatus(unique_id, 2);
@@ -54,6 +55,9 @@ export async function startLive(ctx: any) {
           (lock_till.toString().length < 13 ? lock_till * 1000 : lock_till) -
           currentTime +
           3600000;
+        console.error(
+          `封禁截止时间：${lock_till} 当前时间：${currentTime} 等待开播倒计时：${waitTime}`
+        );
         if (waitTime > 0) {
           await delay(waitTime);
         }
