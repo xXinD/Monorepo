@@ -110,4 +110,5 @@ const Page: FC = () => {
   }, []);
   return pageState === 1 ? <App /> : <Setting />;
 };
+
 export default Page;

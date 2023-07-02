@@ -56,7 +56,7 @@ export async function startLive(ctx: any) {
           currentTime +
           3600000;
         console.error(
-          `封禁截止时间：${lock_till} 当前时间：${currentTime} 等待开播倒计时：${waitTime}`
+          `封禁截止时间：【${lock_till}】 当前时间：【${currentTime}】 等待开播倒计时：【${waitTime}】`
         );
         if (waitTime > 0) {
           await delay(waitTime);
