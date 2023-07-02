@@ -60,7 +60,9 @@ jobs:
           file: ./Backend/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: xindongg/backend:latest
+          tags: |
+            xindongg/backend:${{ github.sha }}
+            xindongg/backend:latest
 
 #      - name: update Docker Hub Description
 #        uses: peter-evans/dockerhub-description@v3
@@ -94,5 +96,7 @@ jobs:
           file: ./Frontend/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: xindongg/frontend:latest
+          tags: |
+            xindongg/frontend:${{ github.sha }}
+            xindongg/frontend:latest
 
