@@ -60,7 +60,15 @@ jobs:
           file: ./Backend/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: xindongg/backend:latest
+          tags: xindongg/backend:${{ github.sha }}
+
+#      - name: update Docker Hub Description
+#        uses: peter-evans/dockerhub-description@v3
+#        with:
+#          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+#          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+#          repository: xindongg/backend
+#          short-description: "Commit SHA: ${{ github.sha }}"
 
   build-and-push-frontend:
     needs: check_changes
@@ -86,4 +94,5 @@ jobs:
           file: ./Frontend/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: xindongg/frontend:latest
+          tags: xindongg/frontend:${{ github.sha }}
+
