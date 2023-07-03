@@ -12,6 +12,7 @@ import { StreamAddress } from "../../models/StreamAdress";
 export const childProcesses = new Map<string, ChildProcessWithoutNullStreams>();
 
 export interface LiveOptions {
+  start_broadcasting?: number;
   sourcePath?: string;
   title?: string;
   room_id?: string;

@@ -34,7 +34,7 @@ function delay(time: number) {
  * @throws {Error} 如果平台参数为空，则抛出异常。
  */
 export async function startLive(ctx: any) {
-  const { stream_id, unique_id } = ctx.request.body;
+  const { stream_id, unique_id, is_restart } = ctx.request.body;
   await asyncHandler(async () => {
     const streamAddress = await StreamAddress.findById(stream_id);
     const uniqueId = uuidv4();
@@ -42,6 +42,9 @@ export async function startLive(ctx: any) {
       const { live_status } = await bilibiliService.roomStatusInfo(
         streamAddress.unique_id
       );
+      if (is_restart) {
+        await delay(10000);
+      }
       const {
         data: { lock_till },
       } = await bilibiliService.getBannedInfoById(streamAddress.unique_id);
@@ -54,7 +57,7 @@ export async function startLive(ctx: any) {
         const waitTime =
           (lock_till.toString().length < 13 ? lock_till * 1000 : lock_till) -
           currentTime +
-          3600000;
+          1800000;
         console.error(
           `封禁截止时间：【${lock_till}】 当前时间：【${currentTime}】 等待开播倒计时：【${waitTime}】`
         );

@@ -45,11 +45,12 @@ export function onExit(
     if (isStopped !== "true") {
       // 如果没有被停止，就重新开始推流
       await redisClient.del(options.unique_id);
-      if (options.platform === "bilibili") {
+      if (options.platform === "bilibili" && options.start_broadcasting == 1) {
         await startLive({
           request: {
             body: {
               ...options,
+              is_restart: true,
             },
           },
         });
