@@ -5,6 +5,7 @@
  */
 import { v4 as uuidv4 } from "uuid";
 import { DefaultState, ParameterizedContext } from "koa";
+import { log } from "winston";
 import {
   clearAllStreams,
   delStreaming,
@@ -39,9 +40,6 @@ export async function startLive(ctx: any) {
     const streamAddress = await StreamAddress.findById(stream_id);
     const uniqueId = uuidv4();
     if (streamAddress.platform === "bilibili") {
-      const { live_status } = await bilibiliService.roomStatusInfo(
-        streamAddress.unique_id
-      );
       if (is_restart) {
         await delay(10000);
       }
@@ -57,14 +55,19 @@ export async function startLive(ctx: any) {
         const waitTime =
           (lock_till.toString().length < 13 ? lock_till * 1000 : lock_till) -
           currentTime +
-          1800000;
+          2700000;
         console.error(
+          lock_till.toString().length < 13 ? lock_till * 1000 : lock_till,
           `封禁截止时间：【${lock_till}】 当前时间：【${currentTime}】 等待开播倒计时：【${waitTime}】`
         );
         if (waitTime > 0) {
           await delay(waitTime);
         }
       }
+      const statusInfo = await bilibiliService.roomStatusInfo(
+        streamAddress.unique_id
+      );
+      const live_status = statusInfo?.live_status;
       if (!live_status) {
         await bilibiliService.startLive({
           id: streamAddress.unique_id,
