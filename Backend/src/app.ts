@@ -21,16 +21,16 @@ app.use(errorHandler);
 
 // register routes
 app.use(routes.routes()).use(routes.allowedMethods());
-if (process.env.ENV_VAR !== "development") {
-  Sentry.init({
-    dsn: "https://d0091206cb7e47aba576f453777c576e@o4505381409456128.ingest.sentry.io/4505381426102272",
-    integrations: [
-      new CaptureConsole({
-        levels: ["error"],
-      }),
-    ],
-  });
-}
+// if (process.env.ENV_VAR !== "development") {
+//   Sentry.init({
+//     dsn: "https://d0091206cb7e47aba576f453777c576e@o4505381409456128.ingest.sentry.io/4505381426102272",
+//     integrations: [
+//       new CaptureConsole({
+//         levels: ["error"],
+//       }),
+//     ],
+//   });
+// }
 
 app.on("error", (err, ctx) => {
   Sentry.withScope((scope) => {
