@@ -375,6 +375,12 @@ const LiveList: FC = () => {
         type: "switch",
         defaultValue: isVideoStyle,
       },
+      {
+        label: "开始推流的时间",
+        field: "start_time",
+        type: "input",
+        placeholder: "请输入开始推流的时间（例如：00:10:00）",
+      },
     ];
     if (isVideoStyle == 1) {
       result.push(
@@ -418,12 +424,6 @@ const LiveList: FC = () => {
           field: "subtitleTrack",
           type: "input",
           placeholder: "请输入字幕轨道（不输入则默认字幕轨道）",
-        },
-        {
-          label: "开始推流的时间",
-          field: "start_time",
-          type: "timePicker",
-          placeholder: "请输入开始推流的时间（例如：00:10:00）",
         }
       );
     }
@@ -544,6 +544,7 @@ const LiveList: FC = () => {
             delete values.stream;
             values.is_video_style = isVideoStyle;
             try {
+              console.log(values, "values");
               if (editData) {
                 await updateLiveStream(editData.unique_id as string, values);
               } else {
