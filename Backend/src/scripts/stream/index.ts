@@ -110,10 +110,12 @@ export async function playVideoFiles(
 
   // 检查是否需要SRS转发，并且判断是否有 SRS 进程
   const SRS = await Resources.findById(options.video_dir);
+  console.log(options, 11111);
   if (SRS.file_type === "video" && !SRS_ChildProcesses.has(SRS.unique_id)) {
     await creatSRS({
       streaming_code: SRS.unique_id,
       video_dir: SRS.video_dir,
+      start_time: options.start_time,
     });
   }
   options.sourcePath =

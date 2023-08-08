@@ -25,6 +25,7 @@ export function onExit(
         await creatSRS({
           streaming_code: options.unique_id,
           video_dir: options.video_dir,
+          start_time: "00:00:00",
         });
       } else {
         console.error(`SRS进程${options.unique_id}退出，退出码为${code}`);
