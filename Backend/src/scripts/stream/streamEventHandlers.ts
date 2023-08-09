@@ -23,7 +23,7 @@ export function onData(childProcess: ChildProcess, options: LiveOptions) {
         await updateLiveStreamStatus(options.unique_id, 2);
       }, "直播间被封禁");
     } else {
-      console.log(`【直播推流】标准日志: ${data}`);
+      // console.log(`【直播推流】标准日志: ${data}`);
     }
   });
 }

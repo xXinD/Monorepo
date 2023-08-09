@@ -7,6 +7,7 @@ import { onData, onExit, onSpawn } from "./streamEventHandlers";
 import { creatSRS, SRS_ChildProcesses } from "../../controllers/resources";
 import { Resources } from "../../models/Resources";
 import { StreamAddress } from "../../models/StreamAdress";
+import { startLive } from "../../controllers/live";
 
 // 子进程统一管理
 export const childProcesses = new Map<string, ChildProcessWithoutNullStreams>();
@@ -110,12 +111,12 @@ export async function playVideoFiles(
 
   // 检查是否需要SRS转发，并且判断是否有 SRS 进程
   const SRS = await Resources.findById(options.video_dir);
-  console.log(options, 11111);
   if (SRS.file_type === "video" && !SRS_ChildProcesses.has(SRS.unique_id)) {
     await creatSRS({
       streaming_code: SRS.unique_id,
       video_dir: SRS.video_dir,
       start_time: options.start_time,
+      resources_id: SRS.unique_id,
     });
   }
   options.sourcePath =
@@ -218,4 +219,17 @@ export async function clearAllStreams(): Promise<void> {
 
   childProcesses.clear();
   await LiveStream.clearAll();
+}
+export async function initLiveStream() {
+  const liveStream = await LiveStream.findAll();
+  liveStream.map(async (_item) => {
+    await startLive({
+      request: {
+        body: {
+          ..._item,
+          is_restart: true,
+        },
+      },
+    });
+  });
 }

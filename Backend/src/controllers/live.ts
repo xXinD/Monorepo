@@ -5,20 +5,17 @@
  */
 import { v4 as uuidv4 } from "uuid";
 import { DefaultState, ParameterizedContext } from "koa";
-import { log } from "winston";
 import {
   clearAllStreams,
   delStreaming,
   startStreaming,
   stopStreaming,
-  updateLiveStreamStatus,
 } from "../scripts/stream";
 import { LiveStream } from "../models/LiveStream";
-import { asyncHandler } from "../utils/handler";
+import { asyncHandler, handleBilibiliStream } from "../utils/handler";
 import { StreamAddress } from "../models/StreamAdress";
-import { bilibiliService } from "./bilibili";
 
-function delay(time: number) {
+export function delay(time: number) {
   return new Promise((resolve) => {
     setTimeout(resolve, time);
   });
@@ -36,6 +33,8 @@ function delay(time: number) {
  */
 export async function startLive(ctx: any) {
   const { stream_id, unique_id, is_restart } = ctx.request.body;
+  console.log(ctx.request.body, "ctx.request.body");
+  console.log(stream_id, "stream_id");
   await asyncHandler(async () => {
     const streamAddress = await StreamAddress.findById(stream_id);
     const uniqueId = uuidv4();
@@ -43,37 +42,7 @@ export async function startLive(ctx: any) {
       if (is_restart) {
         await delay(10000);
       }
-      const {
-        data: { lock_till },
-      } = await bilibiliService.getBannedInfoById(streamAddress.unique_id);
-      console.log("封禁信息", lock_till, streamAddress.start_broadcasting);
-      if (lock_till && streamAddress.start_broadcasting == 1) {
-        if (unique_id) {
-          await updateLiveStreamStatus(unique_id, 2);
-        }
-        const currentTime = Date.now();
-        const waitTime =
-          (lock_till.toString().length < 13 ? lock_till * 1000 : lock_till) -
-          currentTime +
-          2700000;
-        console.error(
-          lock_till.toString().length < 13 ? lock_till * 1000 : lock_till,
-          `封禁截止时间：【${lock_till}】 当前时间：【${currentTime}】 等待开播倒计时：【${waitTime}】`
-        );
-        if (waitTime > 0) {
-          await delay(waitTime);
-        }
-      }
-      const statusInfo = await bilibiliService.roomStatusInfo(
-        streamAddress.unique_id
-      );
-      const live_status = statusInfo?.live_status;
-      if (!live_status) {
-        await bilibiliService.startLive({
-          id: streamAddress.unique_id,
-          area_v2: streamAddress.childAreaId,
-        });
-      }
+      await handleBilibiliStream(streamAddress, unique_id);
     }
     const res = await startStreaming(
       {
