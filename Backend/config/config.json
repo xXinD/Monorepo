@@ -1,8 +1,1 @@
-{
-  "service_address": "http://localhost:4000",
-  "sql_address": "123.249.124.132",
-  "sql_user": "xindong",
-  "sql_password": "199615xin",
-  "sql_database": "test_database",
-  "redis_address": "123.249.124.132"
-}
+{"service_address":"http://localhost:4000","sql_address":"123.249.124.132","sql_user":"xindong","sql_password":"199615xin","sql_database":"test_database","redis_address":"123.249.124.132"}

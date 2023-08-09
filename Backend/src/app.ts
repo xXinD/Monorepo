@@ -10,6 +10,7 @@ import routes from "./routes";
 import { connectDb } from "./db";
 import GlobalEventHandler from "./utils/globalEventHandler";
 import SingletonNMS from "./middleware/SingletonNMS";
+import { initLiveStream } from "./scripts/stream";
 
 const nmsInstance = SingletonNMS.getInstance();
 const app = new Koa();
@@ -50,6 +51,7 @@ app.on("error", (err, ctx) => {
     app.listen(port, () => {
       GlobalEventHandler.getInstance();
       nmsInstance.run();
+      initLiveStream();
       console.log(`Server running on port ${port}`);
     });
   } catch (err) {

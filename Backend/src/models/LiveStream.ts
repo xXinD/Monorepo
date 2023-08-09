@@ -43,6 +43,8 @@ export class LiveStream {
 
   lastPlayedFile?: string;
 
+  start_time?: string;
+
   /**
    * 查询所有直播流
    *
@@ -164,6 +166,7 @@ export class LiveStream {
         unique_id: options.unique_id || null,
         stream_id: options.stream_id || null,
         room_id: options.room_id || null,
+        start_time: options.start_time || null,
         status: "0",
         title: options.title || null,
         video_dir: options.video_dir || null,

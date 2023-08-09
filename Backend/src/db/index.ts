@@ -69,7 +69,8 @@ async function initDb(): Promise<Pool> {
     transition_type INT,
     simple_transition INT,
     complex_transition INT,
-    is_video_style INT
+    is_video_style INT,
+    start_time TEXT
   )`);
 
     await conn.query(`CREATE TABLE IF NOT EXISTS resources (

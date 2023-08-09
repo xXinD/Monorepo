@@ -5,6 +5,7 @@
  */
 import { v4 as uuidv4 } from "uuid";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
+
 import { Resources } from "../models/Resources";
 import { onData, onExit, onSpawn } from "../scripts/SRS_EventHandlers";
 
@@ -12,38 +13,54 @@ export const SRS_ChildProcesses = new Map<
   string,
   ChildProcessWithoutNullStreams
 >();
+
 export const creatSRS = async (options: {
   streaming_code: string;
   video_dir: string;
   start_time?: string;
+  resources_id?: string;
 }) => {
-  const args = [
-    "-re",
-    "-ss",
-    `${options.start_time ?? "00:00:00"}`,
-    "-i",
-    options.video_dir,
-    "-c:v",
-    "copy",
-    "-c:a",
-    "copy",
-    "-f",
-    "flv",
-    // `rtmp://localhost/live/${options.streaming_code}`,
-    `rtmp://localhost/live/${options.streaming_code}`,
-  ];
-  const childProcess = spawn("ffmpeg", args);
-  SRS_ChildProcesses.set(options.streaming_code, childProcess);
-  onData(childProcess, options.streaming_code);
-  onExit(childProcess, {
-    unique_id: options.streaming_code,
-    video_dir: options.video_dir,
-  });
-  await onSpawn(
-    childProcess,
-    options.streaming_code,
-    options as Resources & { streaming_code: string; video_dir: string }
-  );
+  try {
+    const args = [
+      "-re",
+      "-ss",
+      `${options.start_time ?? "00:00:00"}`,
+      "-i",
+      options.video_dir,
+      "-c:v",
+      "copy",
+      "-c:a",
+      "copy",
+      "-f",
+      "flv",
+      `rtmp://localhost/live/${options.streaming_code}`,
+    ];
+    console.log(options.resources_id, "options.resources_id");
+
+    const childProcess = spawn("ffmpeg", args);
+    SRS_ChildProcesses.set(options.streaming_code, childProcess);
+    onData(
+      childProcess,
+      options.streaming_code,
+      options.start_time ?? "00:00:00",
+      options.resources_id
+    );
+    onExit(
+      childProcess,
+      {
+        unique_id: options.streaming_code,
+        video_dir: options.video_dir,
+      },
+      options.resources_id
+    );
+    await onSpawn(
+      childProcess,
+      options.streaming_code,
+      options as Resources & { streaming_code: string; video_dir: string }
+    );
+  } catch (e) {
+    console.error(e);
+  }
 };
 /**
  * 查询资源列表
