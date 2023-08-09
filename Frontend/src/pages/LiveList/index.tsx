@@ -179,6 +179,10 @@ const LiveList: FC = () => {
       },
     },
     {
+      title: "视频推流进度",
+      dataIndex: "start_time",
+    },
+    {
       title: "硬件加速",
       dataIndex: "is_it_hardware",
       render: (text, _item) => {
@@ -234,18 +238,6 @@ const LiveList: FC = () => {
       dataIndex: "resolving_power",
       render: (text, _item) =>
         _item.is_video_style == 2 ? <IconMinus /> : text,
-    },
-    {
-      title: "音轨",
-      dataIndex: "audioTrack",
-      render: (text, _item) =>
-        _item.is_video_style == 2 ? <IconMinus /> : text || "默认",
-    },
-    {
-      title: "字幕轨道",
-      dataIndex: "subtitleTrack",
-      render: (text, _item) =>
-        _item.is_video_style == 2 ? <IconMinus /> : text || "默认",
     },
     {
       title: "操作",

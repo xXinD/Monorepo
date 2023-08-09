@@ -55,6 +55,6 @@ app.on("error", (err, ctx) => {
       console.log(`Server running on port ${port}`);
     });
   } catch (err) {
-    console.error("Failed to find an available port:", err);
+    console.error("Failed to find an available port：", err);
   }
 })();
