@@ -1,4 +1,6 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
+import path from "path";
+import fs from "fs";
 import { LiveStream } from "../../models/LiveStream";
 import { asyncHandler } from "../../utils/handler";
 import redisClient from "../../utils/redisClient";
@@ -210,15 +212,19 @@ export async function clearAllStreams(): Promise<void> {
   await LiveStream.clearAll();
 }
 export async function initLiveStream() {
-  const liveStream = await LiveStream.findAll();
-  liveStream.map(async (_item) => {
-    await startLive({
-      request: {
-        body: {
-          ..._item,
-          is_restart: true,
+  const configPath = path.resolve(process.cwd(), "./config/");
+  const configFilePath = path.resolve(configPath, "config.json");
+  if (fs.existsSync(configPath) && fs.existsSync(configFilePath)) {
+    const liveStream = await LiveStream.findAll();
+    liveStream.map(async (_item) => {
+      await startLive({
+        request: {
+          body: {
+            ..._item,
+            is_restart: true,
+          },
         },
-      },
+      });
     });
-  });
+  }
 }
