@@ -130,15 +130,6 @@ export async function updateResources(ctx: any) {
     ctx.throw(400, "请提供要更新的字段");
   }
   try {
-    const SRS = SRS_ChildProcesses.get(unique_id);
-    if (SRS) {
-      SRS.kill("SIGINT");
-      SRS_ChildProcesses.delete(unique_id);
-    }
-    await creatSRS({
-      streaming_code: unique_id,
-      video_dir: data.video_dir,
-    });
     // 根据提供的直播 ID 和新的直播信息更新数据库中的记录
     const afterUpdate = await Resources.update(unique_id, data);
     // 返回创建的直播间信息

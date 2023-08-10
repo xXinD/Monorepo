@@ -111,18 +111,7 @@ export async function playVideoFiles(
 
   // 检查是否需要SRS转发，并且判断是否有 SRS 进程
   const SRS = await Resources.findById(options.video_dir);
-  if (SRS.file_type === "video" && !SRS_ChildProcesses.has(SRS.unique_id)) {
-    await creatSRS({
-      streaming_code: SRS.unique_id,
-      video_dir: SRS.video_dir,
-      start_time: options.start_time,
-      resources_id: SRS.unique_id,
-    });
-  }
-  options.sourcePath =
-    SRS.file_type === "video"
-      ? `rtmp://localhost/live/${SRS.unique_id}`
-      : SRS.video_dir;
+  options.sourcePath = SRS.video_dir;
   // 构建 ffmpeg 命令行参数
   const args = await buildFFmpegCommand(options);
   const childProcess = spawn("ffmpeg", args);
