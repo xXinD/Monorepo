@@ -1,13 +1,20 @@
 import { ChildProcess } from "child_process";
 import * as Sentry from "@sentry/node";
 import { liveMismatching } from "../../config/liveMismatching";
-import { asyncHandler } from "../../utils/handler";
+import {
+  asyncHandler,
+  convertToSeconds,
+  secondsToHMS,
+} from "../../utils/handler";
 import redisClient from "../../utils/redisClient";
 import { childProcesses, LiveOptions, updateLiveStreamStatus } from "./index";
 import { LiveStream } from "../../models/LiveStream";
 import { startLive } from "../../controllers/live";
 
 export function onData(childProcess: ChildProcess, options: LiveOptions) {
+  const ssSeconds = convertToSeconds(options.start_time ?? "00:00:00");
+  const interval = 30000; // 30 seconds in milliseconds
+  let lastLogTime = Date.now();
   childProcess.stderr.on("data", async (data) => {
     const hasError = liveMismatching.some((keyword) => data.includes(keyword));
     if (hasError) {
@@ -23,7 +30,29 @@ export function onData(childProcess: ChildProcess, options: LiveOptions) {
         await updateLiveStreamStatus(options.unique_id, 2);
       }, "直播间被封禁");
     } else {
-      // console.log(`【直播推流】标准日志: ${data}`);
+      const now = Date.now();
+      if (now - lastLogTime >= interval) {
+        const liveSteam = await LiveStream.findById(options.unique_id);
+        const logString = data.toString();
+        const timeRegex = /time=(\d{2}:\d{2}:\d{2}.\d{2})/;
+        const match = logString.match(timeRegex);
+        let timeValue;
+        if (match) {
+          [, timeValue] = match; // 直接为已声明的变量赋值
+          const currentSeconds = convertToSeconds(timeValue);
+          try {
+            await LiveStream.update(options.unique_id, {
+              ...liveSteam,
+              start_time: secondsToHMS(ssSeconds + currentSeconds),
+            });
+          } catch (error) {
+            console.error("修改直播进度出错:", error);
+          }
+          lastLogTime = now;
+        } else {
+          console.log("No match found");
+        }
+      }
     }
   });
 }
@@ -39,24 +68,30 @@ export function onExit(
   options: LiveOptions,
   ctx: any
 ) {
-  childProcess.once("exit", async () => {
+  childProcess.once("exit", async (code) => {
     const isStopped = await redisClient.get(options.unique_id);
     // @ts-ignore
-    if (isStopped !== "true") {
+    if (isStopped !== "true" && code === 0) {
+      const liveSteam = await LiveStream.findById(options.unique_id);
+      try {
+        await LiveStream.update(options.unique_id, {
+          ...liveSteam,
+          start_time: "00:00:00",
+        });
+      } catch (error) {
+        console.error("修改直播进度出错:", error);
+      }
       // 如果没有被停止，就重新开始推流
       await redisClient.del(options.unique_id);
-      if (options.platform === "bilibili" && options.start_broadcasting == 1) {
-        await startLive({
-          request: {
-            body: {
-              ...options,
-              is_restart: true,
-            },
+      await startLive({
+        request: {
+          body: {
+            ...options,
+            start_time: "00:00:00",
+            is_restart: true,
           },
-        });
-      } else {
-        await clearProcess(options.unique_id, 2);
-      }
+        },
+      });
     } else {
       await clearProcess(options.unique_id, 1);
     }

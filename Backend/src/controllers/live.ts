@@ -33,8 +33,6 @@ export function delay(time: number) {
  */
 export async function startLive(ctx: any) {
   const { stream_id, unique_id, is_restart } = ctx.request.body;
-  console.log(ctx.request.body, "ctx.request.body");
-  console.log(stream_id, "stream_id");
   await asyncHandler(async () => {
     const streamAddress = await StreamAddress.findById(stream_id);
     const uniqueId = uuidv4();
