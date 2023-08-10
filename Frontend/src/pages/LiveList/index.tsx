@@ -266,11 +266,11 @@ const LiveList: FC = () => {
             }}
           />
           {_item.status === 0 ? (
-            <Button
-              shape="round"
-              type="text"
-              icon={<IconRecordStop />}
-              onClick={async () => {
+            <Popconfirm
+              focusLock
+              title="停止&删除"
+              content="确认停止当前直播吗？"
+              onOk={async () => {
                 try {
                   await stopLiveStream(_item.unique_id);
                   const { data: liveSteams } = await getLiveStreamingList();
@@ -282,7 +282,9 @@ const LiveList: FC = () => {
                   });
                 }
               }}
-            />
+            >
+              <Button shape="round" type="text" icon={<IconRecordStop />} />
+            </Popconfirm>
           ) : (
             <Button
               shape="round"
