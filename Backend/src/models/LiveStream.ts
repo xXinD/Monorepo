@@ -166,7 +166,7 @@ export class LiveStream {
         unique_id: options.unique_id || null,
         stream_id: options.stream_id || null,
         room_id: options.room_id || null,
-        start_time: options.start_time || null,
+        start_time: options.start_time || "00:00:00",
         status: "0",
         title: options.title || null,
         video_dir: options.video_dir || null,
