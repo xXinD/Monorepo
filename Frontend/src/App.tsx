@@ -42,6 +42,23 @@ const App: FC = () => {
         },
       ],
     },
+    {
+      key: "2",
+      name: "工具能力",
+      icon: <IconLiveBroadcast />,
+      children: [
+        {
+          key: "2_1",
+          name: "添加水印",
+          path: "watermark",
+        },
+        {
+          key: "2_2",
+          name: "生成播放列表",
+          path: "playlist",
+        },
+      ],
+    },
   ]) as any[];
   const menuRender = useMemo(
     () =>

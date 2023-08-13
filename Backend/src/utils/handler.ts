@@ -1,9 +1,17 @@
 import Koa from "koa";
 import ffmpeg from "fluent-ffmpeg";
+import path from "path";
+import fs from "fs";
+import { v4 as uuidv4 } from "uuid";
 import { globalErrorHandler } from "../middleware/error";
 import { bilibiliService } from "../controllers/bilibili";
 import { updateLiveStreamStatus } from "../scripts/stream";
 import { delay } from "../controllers/live";
+import MyWebSocketServer from "./MyWebSocketServer";
+
+// 分割视频文件，生成ts文件片段
+
+// 生成m3u8
 
 export async function asyncHandler<T>(
   fn: () => Promise<T>,
@@ -135,4 +143,144 @@ export async function handleBilibiliStream(
       area_v2: streamAddress.childAreaId,
     });
   }
+}
+
+// 返回字体列表
+export function getFontList(): { name: string; path: string }[] {
+  const fontsFolder = path.join(__dirname, "../assets/fonts");
+  const fontFiles = fs.readdirSync(fontsFolder);
+  const fontList = fontFiles
+    .filter((file) => file.endsWith(".ttf") || file.endsWith(".otf"))
+    .map((file) => ({
+      name: path.parse(file).name,
+      path: path.join(fontsFolder, file),
+    }));
+  return fontList;
+}
+
+export function generateM3U8(
+  folderPath: string
+): Promise<{ m3u8Path: string; totalDuration: number }> {
+  return new Promise((resolve, reject) => {
+    const videoExtensions = [".ts"];
+    let totalDuration = 0; // 用于存储视频总长度
+
+    const files = fs
+      .readdirSync(folderPath)
+      .filter((file) =>
+        videoExtensions.includes(path.extname(file).toLowerCase())
+      )
+      .sort((a, b) => {
+        const numA = parseInt(a.match(/\d+/)?.[0] || "0", 10);
+        const numB = parseInt(b.match(/\d+/)?.[0] || "0", 10);
+        return numA - numB;
+      });
+
+    let content =
+      "#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:0\n#EXT-X-MEDIA-SEQUENCE:0\n";
+    let maxDuration = 0;
+
+    const processFile = (index: number) => {
+      if (index < files.length) {
+        const filePath = path.join(folderPath, files[index]);
+        ffmpeg.ffprobe(filePath, (err, metadata) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          const duration = parseFloat(metadata.format.duration.toFixed(6));
+          content += `#EXTINF:${duration},\n${filePath.replace(/\\/g, "/")}\n`;
+          if (duration > maxDuration) maxDuration = duration;
+          totalDuration += duration; // 累加每个分段的时长
+          processFile(index + 1);
+        });
+      } else {
+        content = content.replace(
+          "#EXT-X-TARGETDURATION:0",
+          `#EXT-X-TARGETDURATION:${Math.ceil(maxDuration)}`
+        );
+        content += "#EXT-X-ENDLIST\n";
+
+        const playlists = path.resolve(process.cwd(), "./playlists/");
+        if (!fs.existsSync(playlists)) {
+          fs.mkdirSync(playlists);
+        }
+        const m3u8Path = path.join(playlists, `${uuidv4()}.m3u8`);
+        fs.writeFileSync(m3u8Path, content);
+
+        resolve({ m3u8Path, totalDuration }); // 返回m3u8文件路径和视频总长度
+      }
+    };
+
+    processFile(0);
+  });
+}
+
+// 获取视频总长度
+export function getVideoDuration(filePath: string): Promise<number> {
+  return new Promise((resolve, reject) => {
+    ffmpeg.ffprobe(filePath, (err, metadata) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(metadata.format.duration); // 返回视频总长度（秒）
+    });
+  });
+}
+
+export function convertToSegments(
+  input: string,
+  segmentName: string,
+  segmentDuration: number,
+  framerate: number = 25,
+  bitrate: number = 3000 // 码率参数（kbps）
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const myWebSocketServer = MyWebSocketServer.getInstance(9999);
+    // 获取视频和音频的编解码器
+    ffmpeg.ffprobe(input, (err, metadata) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      // 创建目录路径
+      const segmentPath = path.join(path.dirname(input), "playlist");
+      // 确保目录存在
+      if (!fs.existsSync(segmentPath)) {
+        fs.mkdirSync(segmentPath);
+      }
+      // 创建输出模式
+      const outputPattern = path.join(segmentPath, `${segmentName}_%03d.ts`);
+      ffmpeg(input)
+        .videoCodec("libx264")
+        .audioCodec("aac")
+        .addOption("-strict", "experimental")
+        .addOption("-segment_time", String(segmentDuration))
+        .addOption("-f", "segment")
+        .addOption("-r", String(framerate)) // 添加帧率
+        .addOption("-b:v", `${bitrate}k`) // 添加视频码率
+        .addOption(
+          "-force_key_frames",
+          `expr:gte(t,n_forced*${segmentDuration})`
+        )
+        .output(outputPattern)
+        .on("start", (commandLine) => {
+          console.log("Spawned Ffmpeg with command:", commandLine);
+          resolve(); // 这里解析Promise，告知start事件已被触发
+        })
+        .on("stderr", (stderrLine) => {
+          myWebSocketServer.sendMessage(stderrLine);
+        })
+        .on("error", (err, stdout, stderr) => {
+          console.error("Error:", err.message);
+          reject(err); // 这里拒绝Promise，告知发生错误
+        })
+        .on("end", () => {
+          console.log("end");
+        })
+        .run();
+    });
+  });
 }

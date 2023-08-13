@@ -58,6 +58,7 @@ module.exports = {
         "no-console": "off",
         "import/no-extraneous-dependencies": "off",
         "no-param-reassign": "off",
+        "no-plusplus": "off",
       },
     },
   ],

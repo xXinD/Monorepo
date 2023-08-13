@@ -40,3 +40,4 @@ Thumbs.db
 /Backend/src/logs/
 /Backend/config/
 /pnpm-lock.yaml
+/Backend/playlists/
