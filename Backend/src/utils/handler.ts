@@ -161,7 +161,7 @@ export function getFontList(): { name: string; path: string }[] {
 
 export function generateM3U8(
   folderPath: string
-): Promise<{ m3u8Path: string; totalDuration: number }> {
+): Promise<{ m3u8Path: string; totalDuration: number; progress: number }> {
   return new Promise((resolve, reject) => {
     const videoExtensions = [".ts"];
     let totalDuration = 0; // 用于存储视频总长度
@@ -193,6 +193,11 @@ export function generateM3U8(
           content += `#EXTINF:${duration},\n${filePath.replace(/\\/g, "/")}\n`;
           if (duration > maxDuration) maxDuration = duration;
           totalDuration += duration; // 累加每个分段的时长
+
+          // 计算进度并打印
+          const progress = ((index + 1) / files.length) * 100;
+          console.log(`Progress: ${progress.toFixed(2)}%`);
+
           processFile(index + 1);
         });
       } else {
@@ -209,7 +214,7 @@ export function generateM3U8(
         const m3u8Path = path.join(playlists, `${uuidv4()}.m3u8`);
         fs.writeFileSync(m3u8Path, content);
 
-        resolve({ m3u8Path, totalDuration }); // 返回m3u8文件路径和视频总长度
+        resolve({ m3u8Path, totalDuration, progress: 100 }); // 返回m3u8文件路径、视频总长度和进度
       }
     };
 
