@@ -289,6 +289,7 @@ export function convertToSegments(
         resolve(); // 这里解析Promise，告知start事件已被触发
       })
       .on("stderr", (stderrLine) => {
+        console.log(stderrLine);
         myWebSocketServer.sendMessage(stderrLine);
       })
       .on("error", (err, stdout, stderr) => {
