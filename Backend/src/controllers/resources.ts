@@ -94,10 +94,12 @@ export async function createResources(ctx: any) {
   const data = ctx.request.body;
   const uniqueId = uuidv4();
   try {
+    let video_dir = "";
     let totalTime = 0;
     switch (data.file_type) {
       case "m3u8": {
         const { m3u8Path, totalDuration } = await generateM3U8(data.video_dir);
+        video_dir = m3u8Path;
         totalTime = totalDuration;
         break;
       }
@@ -116,7 +118,7 @@ export async function createResources(ctx: any) {
       update_date: data.update_date,
       file_type: data.file_type,
       name: data.name,
-      video_dir: data.video_dir,
+      video_dir: data.file_type === "m3u8" ? video_dir : data.video_dir,
       srs_address:
         data.file_type === "pull_address" ? data.video_dir : uniqueId,
       status: 1,

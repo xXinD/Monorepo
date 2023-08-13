@@ -162,9 +162,9 @@ export function getFontList(): { name: string; path: string }[] {
 export function generateM3U8(
   folderPath: string
 ): Promise<{ m3u8Path: string; totalDuration: number }> {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const videoExtensions = [".ts"];
-    let maxDuration = 0;
+    let totalDuration = 0; // 用于存储视频总长度
 
     const files = fs
       .readdirSync(folderPath)
@@ -177,43 +177,25 @@ export function generateM3U8(
         return numA - numB;
       });
 
-    // 使用 Promise.all 保证所有异步操作都已完成
-    const promises = files.map(
-      (file) =>
-        new Promise<{ duration: number; content: string }>(
-          (resolve, reject) => {
-            const filePath = path.join(folderPath, file);
-            ffmpeg.ffprobe(filePath, (err, metadata) => {
-              if (err) {
-                reject(err);
-              } else {
-                const duration = parseFloat(
-                  metadata.format.duration.toFixed(6)
-                );
-                const content = `#EXTINF:${duration},\n${filePath.replace(
-                  /\\/g,
-                  "/"
-                )}\n`;
-                if (duration > maxDuration) maxDuration = duration;
-                resolve({ duration, content });
-              }
-            });
+    let content =
+      "#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:0\n#EXT-X-MEDIA-SEQUENCE:0\n";
+    let maxDuration = 0;
+
+    const processFile = (index: number) => {
+      if (index < files.length) {
+        const filePath = path.join(folderPath, files[index]);
+        ffmpeg.ffprobe(filePath, (err, metadata) => {
+          if (err) {
+            reject(err);
+            return;
           }
-        )
-    );
-
-    Promise.all(promises)
-      .then((results) => {
-        let content =
-          "#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:0\n#EXT-X-MEDIA-SEQUENCE:0\n";
-        let totalDuration = 0;
-
-        // 按顺序组装内容
-        for (const result of results) {
-          content += result.content;
-          totalDuration += result.duration;
-        }
-
+          const duration = parseFloat(metadata.format.duration.toFixed(6));
+          content += `#EXTINF:${duration},\n${filePath.replace(/\\/g, "/")}\n`;
+          if (duration > maxDuration) maxDuration = duration;
+          totalDuration += duration; // 累加每个分段的时长
+          processFile(index + 1);
+        });
+      } else {
         content = content.replace(
           "#EXT-X-TARGETDURATION:0",
           `#EXT-X-TARGETDURATION:${Math.ceil(maxDuration)}`
@@ -227,9 +209,11 @@ export function generateM3U8(
         const m3u8Path = path.join(playlists, `${uuidv4()}.m3u8`);
         fs.writeFileSync(m3u8Path, content);
 
-        resolve({ m3u8Path, totalDuration });
-      })
-      .catch((err) => reject(err));
+        resolve({ m3u8Path, totalDuration }); // 返回m3u8文件路径和视频总长度
+      }
+    };
+
+    processFile(0);
   });
 }
 
@@ -276,7 +260,9 @@ export function convertToSegments(
   framerate: number = 25,
   bitrate: number = 3000 // 码率参数（kbps）
 ): Promise<void> {
+  console.log(framerate, bitrate);
   return new Promise((resolve, reject) => {
+    const myWebSocketServer = MyWebSocketServer.getInstance(9999);
     // 获取视频和音频的编解码器
 
     // 创建目录路径
@@ -287,22 +273,24 @@ export function convertToSegments(
     }
     // 创建输出模式
     const outputPattern = path.join(segmentPath, `${segmentName}_%03d.ts`);
-    const m3u8File = path.join(segmentPath, "playlist.m3u8");
     ffmpeg(input)
       .videoCodec(getHardwareAcceleration())
       .audioCodec("aac")
       .audioFrequency(44100)
       .addOption("-strict", "experimental")
-      .addOption("-hls_time", String(segmentDuration))
-      .addOption("-hls_list_size", "0")
-      .addOption("-hls_segment_filename", outputPattern)
+      .addOption("-segment_time", String(segmentDuration))
+      .addOption("-f", "segment")
       .addOption("-r", String(framerate)) // 添加帧率
       .addOption("-b:v", `${bitrate}k`) // 添加视频码率
       .addOption("-force_key_frames", `expr:gte(t,n_forced*${segmentDuration})`)
-      .output(m3u8File)
+      .output(outputPattern)
       .on("start", (commandLine) => {
         console.log("Spawned Ffmpeg with command:", commandLine);
         resolve(); // 这里解析Promise，告知start事件已被触发
+      })
+      .on("stderr", (stderrLine) => {
+        console.log(stderrLine, "stderrLine");
+        myWebSocketServer.sendMessage(stderrLine);
       })
       .on("error", (err, stdout, stderr) => {
         console.error("Error:", err.message);

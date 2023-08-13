@@ -14,6 +14,7 @@ export async function onData(
   options: LiveOptions & { totalTime: number },
   data: any
 ) {
+  console.log(data.toString());
   const ssSeconds = options.start_time
     ? convertToSeconds(options.start_time) % options.totalTime
     : convertToSeconds("00:00:00");
