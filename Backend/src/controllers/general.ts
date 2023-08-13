@@ -122,9 +122,16 @@ export async function postWatermarkToVideo(ctx: any) {
  * @param ctx
  */
 export async function postPlaylist(ctx: any) {
-  const { sourcePath, segmentName, segmentDuration } = ctx.request.body;
+  const { sourcePath, segmentName, segmentDuration, framerate, bitrate } =
+    ctx.request.body;
   await asyncHandler(async () => {
-    await convertToSegments(sourcePath, segmentName, segmentDuration);
+    await convertToSegments(
+      sourcePath,
+      segmentName,
+      segmentDuration,
+      framerate,
+      bitrate
+    );
     const myWebSocketServer = MyWebSocketServer.getInstance(8080);
     ctx.body = {
       message: "已开启分割任务",

@@ -159,7 +159,7 @@ export class LiveStream {
     return await asyncHandler(async () => {
       const VideoResolution =
         options.fileType === "video"
-          ? await getVideoResolution(options.video_dir)
+          ? await getVideoResolution(options.sourcePath)
           : { height: "-", width: "-" };
       const db = getDb();
       const data = {

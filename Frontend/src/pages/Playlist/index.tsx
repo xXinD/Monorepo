@@ -55,6 +55,12 @@ const Playlist: FC = observer(() => {
         >
           <InputNumber placeholder="请输入播放列表片段时长" min={10} />
         </FormItem>
+        <FormItem field="framerate" label="帧率">
+          <InputNumber placeholder="请输入帧率" min={24} />
+        </FormItem>
+        <FormItem field="bitrate" label="码率">
+          <InputNumber placeholder="请输入码率" min={100} />
+        </FormItem>
 
         <FormItem wrapperCol={{ offset: 5 }}>
           <Button

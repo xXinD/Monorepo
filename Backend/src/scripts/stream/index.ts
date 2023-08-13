@@ -112,6 +112,7 @@ export async function playVideoFiles(
 
   // 检查是否需要SRS转发，并且判断是否有 SRS 进程
   const SRS = await Resources.findById(options.video_dir);
+  console.log(SRS, "SRS");
   options.sourcePath = SRS.video_dir;
   options.fileType = SRS.file_type;
   options.totalTime = SRS.totalTime;
@@ -125,7 +126,6 @@ export async function playVideoFiles(
   });
   const childProcess = ffmpeg()
     .input(options.sourcePath) // 指定输入源
-    // .inputOptions(inputOptions)
     .inputOptions(inputOptions)
     .outputOptions(outputOptions)
     .output(output)

@@ -236,6 +236,7 @@ export function convertToSegments(
   framerate: number = 25,
   bitrate: number = 3000 // 码率参数（kbps）
 ): Promise<void> {
+  console.log(framerate, bitrate);
   return new Promise((resolve, reject) => {
     const myWebSocketServer = MyWebSocketServer.getInstance(9999);
     // 获取视频和音频的编解码器
@@ -256,6 +257,7 @@ export function convertToSegments(
       ffmpeg(input)
         .videoCodec("libx264")
         .audioCodec("aac")
+        .audioFrequency(44100)
         .addOption("-strict", "experimental")
         .addOption("-segment_time", String(segmentDuration))
         .addOption("-f", "segment")
