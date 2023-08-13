@@ -48,7 +48,7 @@ export default class AxiosService {
   constructor() {
     this.axiosInstance = axios.create({
       baseURL: serviceAddressProxy.address,
-      timeout: 10000,
+      timeout: 100000,
       headers: {
         "Content-Type": "application/json",
       },
