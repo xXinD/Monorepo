@@ -1,18 +1,17 @@
-import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import path from "path";
 import fs from "fs";
+import ffmpeg, { FfmpegCommand } from "fluent-ffmpeg";
 import { LiveStream } from "../../models/LiveStream";
 import { asyncHandler } from "../../utils/handler";
 import redisClient from "../../utils/redisClient";
 import { buildFFmpegCommand } from "./buildFFmpegCommand";
-import { onData, onExit, onSpawn } from "./streamEventHandlers";
-import { creatSRS, SRS_ChildProcesses } from "../../controllers/resources";
+import { onData, onError, onExit, onSpawn } from "./streamEventHandlers";
 import { Resources } from "../../models/Resources";
 import { StreamAddress } from "../../models/StreamAdress";
 import { startLive } from "../../controllers/live";
 
 // 子进程统一管理
-export const childProcesses = new Map<string, ChildProcessWithoutNullStreams>();
+export const childProcesses = new Map<string, FfmpegCommand>();
 
 export interface LiveOptions {
   start_broadcasting?: number;
@@ -100,7 +99,7 @@ export async function closeAllStreams(): Promise<void> {
  * @returns {Promise<void>} Promise 对象
  */
 export async function playVideoFiles(
-  options: LiveOptions & StreamAddress,
+  options: LiveOptions & StreamAddress & { totalTime: number },
   ctx: any
 ) {
   // 检查是否有重复推流
@@ -113,14 +112,45 @@ export async function playVideoFiles(
 
   // 检查是否需要SRS转发，并且判断是否有 SRS 进程
   const SRS = await Resources.findById(options.video_dir);
+  console.log(SRS, "SRS");
   options.sourcePath = SRS.video_dir;
+  options.fileType = SRS.file_type;
+  options.totalTime = SRS.totalTime;
   // 构建 ffmpeg 命令行参数
-  const args = await buildFFmpegCommand(options);
-  const childProcess = spawn("ffmpeg", args);
+  const { inputOptions, outputOptions, output } = await buildFFmpegCommand(
+    options
+  );
+  let onStartResolve: (value: unknown) => void;
+  const onStartPromise = new Promise((resolve) => {
+    onStartResolve = resolve;
+  });
+  const childProcess = ffmpeg()
+    .input(options.sourcePath) // 指定输入源
+    .inputOptions(inputOptions)
+    .outputOptions(outputOptions)
+    .output(output)
+    .on("start", async () => {
+      childProcesses.set(options.unique_id, childProcess);
+      onStartResolve(true);
+    })
+    .on("stderr", (stderrLine) => {
+      onData(options, stderrLine);
+    })
+    .on("error", (err) => {
+      if (!err.message.includes("ffmpeg was killed with signal SIGINT")) {
+        console.error(err, "error");
+        onError(options, err);
+      }
+    })
+    .on("end", (code) => {
+      onExit(options, code);
+    });
 
-  onData(childProcess, options);
-  onExit(childProcess, options, ctx);
-  await onSpawn(childProcess, options);
+  childProcess.run();
+  await onStartPromise;
+
+  // 在onStart事件完成后调用await onSpawn(options);
+  await onSpawn(options);
 }
 /**
  * 开始推流

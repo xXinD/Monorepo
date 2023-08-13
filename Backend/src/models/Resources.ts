@@ -25,6 +25,8 @@ export class Resources {
 
   update_date: string;
 
+  totalTime?: number;
+
   /**
    * 查询所有资源
    *

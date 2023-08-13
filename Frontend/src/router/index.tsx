@@ -3,6 +3,8 @@ import LiveList from "../pages/LiveList";
 import VideoList from "../pages/ResourcesList";
 import StreamList from "../pages/StreamList";
 import Setting from "../pages/Setting";
+import Watermark from "../pages/Watermark";
+import Playlist from "../pages/Playlist";
 
 export interface RouteConfig {
   path: string;
@@ -32,6 +34,18 @@ const routes = [
   {
     path: "/setting",
     component: Setting,
+    exact: true,
+    isProtected: false,
+  },
+  {
+    path: "/watermark",
+    component: Watermark,
+    exact: true,
+    isProtected: false,
+  },
+  {
+    path: "/playlist",
+    component: Playlist,
     exact: true,
     isProtected: false,
   },

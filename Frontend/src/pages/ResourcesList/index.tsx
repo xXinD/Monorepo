@@ -40,20 +40,24 @@ interface FormItemData {
 }
 const fileTypeOptions = [
   {
-    label: "音频",
-    value: "audio",
-  },
-  {
     label: "视频",
     value: "video",
   },
   {
-    label: "图片",
-    value: "Picture",
+    label: "播放列表",
+    value: "m3u8",
   },
   {
     label: "拉流地址",
     value: "pull_address",
+  },
+  {
+    label: "音频",
+    value: "audio",
+  },
+  {
+    label: "图片",
+    value: "Picture",
   },
 ];
 const ResourcesList: FC = () => {
@@ -95,6 +99,8 @@ const ResourcesList: FC = () => {
             return <Tag color="#b71de8">图片</Tag>;
           case "pull_address":
             return <Tag color="#168cff">转发流</Tag>;
+          case "m3u8":
+            return <Tag color="#509770">播放列表</Tag>;
           default:
             return <Tag color="#7816ff">Unknown</Tag>;
         }

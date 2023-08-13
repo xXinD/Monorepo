@@ -81,7 +81,8 @@ async function initDb(): Promise<Pool> {
     video_dir TEXT,
     srs_address TEXT,
     file_type TEXT,
-    update_date TEXT
+    update_date TEXT,
+    totalTime INT
   )`);
 
     await conn.query(`CREATE TABLE IF NOT EXISTS streaming_addresses (
