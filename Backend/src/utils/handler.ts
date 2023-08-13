@@ -3,6 +3,7 @@ import ffmpeg from "fluent-ffmpeg";
 import path from "path";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
+import { execSync } from "child_process";
 import { globalErrorHandler } from "../middleware/error";
 import { bilibiliService } from "../controllers/bilibili";
 import { updateLiveStreamStatus } from "../scripts/stream";
@@ -229,6 +230,29 @@ export function getVideoDuration(filePath: string): Promise<number> {
   });
 }
 
+function getHardwareAcceleration() {
+  try {
+    const stdout = execSync("ffmpeg -encoders", { encoding: "utf8" });
+
+    if (stdout.includes("h264_nvenc")) {
+      return "h264_nvenc";
+    }
+    if (stdout.includes("h264_amf")) {
+      return "h264_amf";
+    }
+    if (stdout.includes("h264_qsv")) {
+      return "h264_qsv";
+    }
+    if (stdout.includes("h264_videotoolbox")) {
+      return "h264_videotoolbox";
+    }
+    return "libx264";
+  } catch (error) {
+    console.error(error);
+    return "libx264";
+  }
+}
+
 export function convertToSegments(
   input: string,
   segmentName: string,
@@ -240,49 +264,40 @@ export function convertToSegments(
   return new Promise((resolve, reject) => {
     const myWebSocketServer = MyWebSocketServer.getInstance(9999);
     // 获取视频和音频的编解码器
-    ffmpeg.ffprobe(input, (err, metadata) => {
-      if (err) {
-        reject(err);
-        return;
-      }
 
-      // 创建目录路径
-      const segmentPath = path.join(path.dirname(input), "playlist");
-      // 确保目录存在
-      if (!fs.existsSync(segmentPath)) {
-        fs.mkdirSync(segmentPath);
-      }
-      // 创建输出模式
-      const outputPattern = path.join(segmentPath, `${segmentName}_%03d.ts`);
-      ffmpeg(input)
-        .videoCodec("libx264")
-        .audioCodec("aac")
-        .audioFrequency(44100)
-        .addOption("-strict", "experimental")
-        .addOption("-segment_time", String(segmentDuration))
-        .addOption("-f", "segment")
-        .addOption("-r", String(framerate)) // 添加帧率
-        .addOption("-b:v", `${bitrate}k`) // 添加视频码率
-        .addOption(
-          "-force_key_frames",
-          `expr:gte(t,n_forced*${segmentDuration})`
-        )
-        .output(outputPattern)
-        .on("start", (commandLine) => {
-          console.log("Spawned Ffmpeg with command:", commandLine);
-          resolve(); // 这里解析Promise，告知start事件已被触发
-        })
-        .on("stderr", (stderrLine) => {
-          myWebSocketServer.sendMessage(stderrLine);
-        })
-        .on("error", (err, stdout, stderr) => {
-          console.error("Error:", err.message);
-          reject(err); // 这里拒绝Promise，告知发生错误
-        })
-        .on("end", () => {
-          console.log("end");
-        })
-        .run();
-    });
+    // 创建目录路径
+    const segmentPath = path.join(path.dirname(input), "playlist");
+    // 确保目录存在
+    if (!fs.existsSync(segmentPath)) {
+      fs.mkdirSync(segmentPath);
+    }
+    // 创建输出模式
+    const outputPattern = path.join(segmentPath, `${segmentName}_%03d.ts`);
+    ffmpeg(input)
+      .videoCodec(getHardwareAcceleration())
+      .audioCodec("aac")
+      .audioFrequency(44100)
+      .addOption("-strict", "experimental")
+      .addOption("-segment_time", String(segmentDuration))
+      .addOption("-f", "segment")
+      .addOption("-r", String(framerate)) // 添加帧率
+      .addOption("-b:v", `${bitrate}k`) // 添加视频码率
+      .addOption("-force_key_frames", `expr:gte(t,n_forced*${segmentDuration})`)
+      .output(outputPattern)
+      .on("start", (commandLine) => {
+        console.log("Spawned Ffmpeg with command:", commandLine);
+        resolve(); // 这里解析Promise，告知start事件已被触发
+      })
+      .on("stderr", (stderrLine) => {
+        myWebSocketServer.sendMessage(stderrLine);
+      })
+      .on("error", (err, stdout, stderr) => {
+        console.error("Error:", err.message);
+        reject(err); // 这里拒绝Promise，告知发生错误
+      })
+      .on("end", () => {
+        console.log("end");
+      })
+      .run();
   });
 }
