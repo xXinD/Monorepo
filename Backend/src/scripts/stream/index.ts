@@ -1,6 +1,7 @@
 import path from "path";
 import fs from "fs";
 import ffmpeg, { FfmpegCommand } from "fluent-ffmpeg";
+import { on } from "koa";
 import { LiveStream } from "../../models/LiveStream";
 import { asyncHandler } from "../../utils/handler";
 import redisClient from "../../utils/redisClient";
@@ -128,11 +129,13 @@ export async function playVideoFiles(
     .inputOptions(inputOptions)
     .outputOptions(outputOptions)
     .output(output)
-    .on("start", async () => {
+    .on("start", async (sss) => {
+      console.log(sss);
       childProcesses.set(options.unique_id, childProcess);
       onStartResolve(true);
     })
     .on("stderr", (stderrLine) => {
+      console.log(stderrLine);
       onData(options, stderrLine);
     })
     .on("error", (err) => {

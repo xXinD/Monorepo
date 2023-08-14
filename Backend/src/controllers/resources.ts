@@ -9,7 +9,12 @@ import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import fs from "fs";
 import { Resources } from "../models/Resources";
 import { onData, onExit, onSpawn } from "../scripts/SRS_EventHandlers";
-import { generateM3U8, getVideoDuration } from "../utils/handler";
+import {
+  generateConcatFile,
+  generateM3U8,
+  getTotalDuration,
+  getVideoDuration,
+} from "../utils/handler";
 
 export const SRS_ChildProcesses = new Map<
   string,
@@ -103,6 +108,10 @@ export async function createResources(ctx: any) {
         totalTime = totalDuration;
         break;
       }
+      case "playlist":
+        totalTime = (await getTotalDuration(data.video_dir)) as number;
+        video_dir = await generateConcatFile(data.video_dir);
+        break;
       case "video":
       case "audio": {
         const totalDuration = await getVideoDuration(data.video_dir);
@@ -118,7 +127,10 @@ export async function createResources(ctx: any) {
       update_date: data.update_date,
       file_type: data.file_type,
       name: data.name,
-      video_dir: data.file_type === "m3u8" ? video_dir : data.video_dir,
+      video_dir:
+        data.file_type === "m3u8" || data.file_type === "playlist"
+          ? video_dir
+          : data.video_dir,
       srs_address:
         data.file_type === "pull_address" ? data.video_dir : uniqueId,
       status: 1,
@@ -175,7 +187,7 @@ export async function delResources(ctx: any) {
       SRS_ChildProcesses.delete(id);
     }
     const resources = await Resources.findById(id);
-    if (resources.file_type === "m3u8") {
+    if (resources.file_type === "m3u8" || resources.file_type === "playlist") {
       fs.unlinkSync(resources.video_dir);
     }
     await Resources.delete(id);
