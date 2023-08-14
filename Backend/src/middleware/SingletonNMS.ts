@@ -18,6 +18,11 @@ class SingletonNMS {
       mediaroot: "./media",
       allow_origin: "*",
     },
+    hls: {
+      m3u8Path: "./media/hls",
+      hlsM3u8Size: 10,
+      hlsGopSize: 60,
+    },
   };
 
   private constructor() {

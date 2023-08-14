@@ -25,7 +25,9 @@ export async function buildFFmpegCommand(
     options.start_time &&
     convertToSeconds(options.start_time) > options.totalTime
   ) {
-    start_time = convertToSeconds(options.start_time) % options.totalTime;
+    if (options.fileType !== "playlist") {
+      start_time = convertToSeconds(options.start_time) % options.totalTime;
+    }
   } else {
     start_time = options.start_time ?? "00:00:00";
   }
@@ -34,19 +36,7 @@ export async function buildFFmpegCommand(
   let outputOptions;
   let output;
 
-  if (options.fileType === "playlist") {
-    inputOptions = [
-      "-re",
-      "-ss",
-      `${start_time}`,
-      "-f",
-      "concat",
-      "-safe",
-      "0",
-    ];
-    outputOptions = ["-c", "copy", "-f", "flv"];
-    output = `${options.streaming_address}${options.streaming_code}`;
-  } else if (options.is_video_style == 1) {
+  if (options.is_video_style == 1) {
     inputOptions = [
       "-re",
       "-y",
@@ -87,12 +77,10 @@ export async function buildFFmpegCommand(
   } else {
     inputOptions = [
       "-re",
-      "-ss",
-      `${start_time}`,
+      `${options.fileType !== "playlist" && "-ss"}`,
+      `${options.fileType !== "playlist" && start_time}`,
       `${options.fileType === "m3u8" && "-stream_loop"}`,
       `${options.fileType === "m3u8" && "-1"}`,
-      "-i",
-      `${options.sourcePath}`,
     ];
     outputOptions = ["-c", "copy", "-f", "flv"];
     output = `${options.streaming_address}${options.streaming_code}`;
@@ -101,6 +89,5 @@ export async function buildFFmpegCommand(
   // 删除 false 值
   inputOptions = inputOptions.filter((item) => item !== "false");
   outputOptions = outputOptions.filter((item) => item !== "false");
-
   return { inputOptions, outputOptions, output };
 }

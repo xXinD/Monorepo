@@ -111,11 +111,11 @@ export async function playVideoFiles(
   }
   await redisClient.del(options.unique_id);
 
-  // 检查是否需要SRS转发，并且判断是否有 SRS 进程
   const SRS = await Resources.findById(options.video_dir);
   options.sourcePath = SRS.video_dir;
   options.fileType = SRS.file_type;
   options.totalTime = SRS.totalTime;
+
   // 构建 ffmpeg 命令行参数
   const { inputOptions, outputOptions, output } = await buildFFmpegCommand(
     options
@@ -129,13 +129,11 @@ export async function playVideoFiles(
     .inputOptions(inputOptions)
     .outputOptions(outputOptions)
     .output(output)
-    .on("start", async (sss) => {
-      console.log(sss);
+    .on("start", async () => {
       childProcesses.set(options.unique_id, childProcess);
       onStartResolve(true);
     })
     .on("stderr", (stderrLine) => {
-      console.log(stderrLine);
       onData(options, stderrLine);
     })
     .on("error", (err) => {
@@ -145,7 +143,7 @@ export async function playVideoFiles(
       }
     })
     .on("end", (code) => {
-      onExit(options, code);
+      onExit(options);
     });
 
   childProcess.run();

@@ -9,12 +9,7 @@ import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import fs from "fs";
 import { Resources } from "../models/Resources";
 import { onData, onExit, onSpawn } from "../scripts/SRS_EventHandlers";
-import {
-  generateConcatFile,
-  generateM3U8,
-  getTotalDuration,
-  getVideoDuration,
-} from "../utils/handler";
+import { getTotalDuration, getVideoDuration } from "../utils/handler";
 
 export const SRS_ChildProcesses = new Map<
   string,
@@ -42,7 +37,6 @@ export const creatSRS = async (options: {
       "flv",
       `rtmp://localhost/live/${options.streaming_code}`,
     ];
-    console.log(options.resources_id, "options.resources_id");
 
     const childProcess = spawn("ffmpeg", args);
     SRS_ChildProcesses.set(options.streaming_code, childProcess);
@@ -103,14 +97,14 @@ export async function createResources(ctx: any) {
     let totalTime = 0;
     switch (data.file_type) {
       case "m3u8": {
-        const { m3u8Path, totalDuration } = await generateM3U8(data.video_dir);
-        video_dir = m3u8Path;
-        totalTime = totalDuration;
+        // const { m3u8Path, totalDuration } = await generateM3U8(data.video_dir);
+        video_dir = data.video_dir;
+        // totalTime = totalDuration;
+        totalTime = 441;
         break;
       }
       case "playlist":
         totalTime = (await getTotalDuration(data.video_dir)) as number;
-        video_dir = await generateConcatFile(data.video_dir);
         break;
       case "video":
       case "audio": {
@@ -127,10 +121,7 @@ export async function createResources(ctx: any) {
       update_date: data.update_date,
       file_type: data.file_type,
       name: data.name,
-      video_dir:
-        data.file_type === "m3u8" || data.file_type === "playlist"
-          ? video_dir
-          : data.video_dir,
+      video_dir: data.file_type === "m3u8" ? video_dir : data.video_dir,
       srs_address:
         data.file_type === "pull_address" ? data.video_dir : uniqueId,
       status: 1,
@@ -187,7 +178,7 @@ export async function delResources(ctx: any) {
       SRS_ChildProcesses.delete(id);
     }
     const resources = await Resources.findById(id);
-    if (resources.file_type === "m3u8" || resources.file_type === "playlist") {
+    if (resources.file_type === "m3u8") {
       fs.unlinkSync(resources.video_dir);
     }
     await Resources.delete(id);

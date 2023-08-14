@@ -1,5 +1,5 @@
 import Koa from "koa";
-import ffmpeg from "fluent-ffmpeg";
+import ffmpeg, { FfmpegCommand } from "fluent-ffmpeg";
 import path from "path";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
@@ -10,6 +10,7 @@ import { updateLiveStreamStatus } from "../scripts/stream";
 import { delay } from "../controllers/live";
 import MyWebSocketServer from "./MyWebSocketServer";
 
+export const prayListChildProcesses = new Map<string, FfmpegCommand>();
 // 分割视频文件，生成ts文件片段
 
 // 生成m3u8
@@ -128,8 +129,9 @@ export async function getTotalDuration(filePath: string) {
     });
   });
 }
+
 // 00:00:00转为秒数
-export function convertToSeconds(timeStr: string) {
+export function convertToSeconds(timeStr: string = "00:00:00") {
   const [hours, minutes, seconds] = timeStr.split(":").map(Number);
   return hours * 3600 + minutes * 60 + seconds;
 }
@@ -149,6 +151,7 @@ export function secondsToHMS(seconds: number) {
       )}.${millis}`
     : `${formatNumber(hours)}:${formatNumber(minutes)}:${formatNumber(secs)}`;
 }
+
 export async function handleBilibiliStream(
   streamAddress: any,
   unique_id?: string
@@ -311,7 +314,6 @@ export function convertToSegments(
   console.log(framerate, bitrate);
   return new Promise((resolve, reject) => {
     const myWebSocketServer = MyWebSocketServer.getInstance(9999);
-    // 获取视频和音频的编解码器
 
     // 创建目录路径
     const segmentPath = path.join(path.dirname(input), "playlist");
@@ -321,6 +323,8 @@ export function convertToSegments(
     }
     // 创建输出模式
     const outputPattern = path.join(segmentPath, `${segmentName}_%03d.ts`);
+    const playlistFile = path.join(segmentPath, `${segmentName}.m3u8`);
+
     ffmpeg(input)
       .videoCodec(getHardwareAcceleration())
       .audioCodec("aac")
@@ -332,6 +336,9 @@ export function convertToSegments(
       .addOption("-b:v", `${bitrate}k`) // 添加视频码率
       .addOption("-force_key_frames", `expr:gte(t,n_forced*${segmentDuration})`)
       .output(outputPattern)
+      .addOption("-segment_format", "mpeg_ts")
+      .addOption("-segment_list", playlistFile) // 添加播放列表文件
+      .addOption("-segment_list_type", "m3u8") // 指定播放列表格式
       .on("start", (commandLine) => {
         console.log("Spawned Ffmpeg with command:", commandLine);
         resolve(); // 这里解析Promise，告知start事件已被触发
@@ -350,43 +357,5 @@ export function convertToSegments(
         myWebSocketServer.sendMessage("任务完成！");
       })
       .run();
-  });
-}
-
-// 生成concat可用的txt
-export async function generateConcatFile(folderPath: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    // 定义支持的视频扩展名
-    const videoExtensions = [".mp4", ".avi", ".mkv", ".flv", ".mov"];
-
-    fs.readdir(folderPath, (err, files) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-
-      // 筛选视频文件
-      const videoFiles = files.filter((file) =>
-        videoExtensions.includes(path.extname(file).toLowerCase())
-      );
-
-      // 创建文件的完整路径
-      const playlists = path.resolve(process.cwd(), "./playlists/");
-      if (!fs.existsSync(playlists)) {
-        fs.mkdirSync(playlists);
-      }
-      const concatFilePath = path.join(playlists, "filepath.txt");
-      const writeStream = fs.createWriteStream(concatFilePath);
-
-      // 写入文件
-      videoFiles.forEach((file) => {
-        const fullPath = path.join(folderPath, file).replace(/\\/g, "\\\\");
-        writeStream.write(`file '${fullPath}'\n`);
-      });
-
-      writeStream.end(() => {
-        resolve(concatFilePath);
-      });
-    });
   });
 }
