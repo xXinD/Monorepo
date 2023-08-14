@@ -129,7 +129,7 @@ export async function playVideoFiles(
     .inputOptions(inputOptions)
     .outputOptions(outputOptions)
     .output(output)
-    .on("start", async () => {
+    .on("start", async (aaa) => {
       childProcesses.set(options.unique_id, childProcess);
       onStartResolve(true);
     })

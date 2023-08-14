@@ -11,6 +11,7 @@ export interface StreamAddress {
   streaming_code: string;
   start_broadcasting: number;
   description?: string;
+  isSrt?: number;
 }
 // 获取所有的地址
 export const getStreamAddressList = () => axiosInstance.get("/stream_address");

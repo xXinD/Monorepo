@@ -91,6 +91,7 @@ async function initDb(): Promise<Pool> {
     platform TEXT,
     room_id TEXT,
     start_broadcasting INT,
+    isSrt INT,
     streaming_address TEXT,
     streaming_code TEXT,
     title TEXT,
