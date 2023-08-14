@@ -359,3 +359,16 @@ export function convertToSegments(
       .run();
   });
 }
+
+// 判断是否为hevc
+export async function checkHEVC(filePath: string) {
+  return new Promise<boolean>((resolve, reject) => {
+    ffmpeg.ffprobe(filePath, (err, metadata) => {
+      if (err) reject(err);
+      else
+        resolve(
+          metadata.streams.some((stream) => stream.codec_name === "hevc")
+        );
+    });
+  });
+}

@@ -1,7 +1,7 @@
 import si from "systeminformation";
 import { LiveOptions } from "./index";
 import { StreamAddress } from "../../models/StreamAdress";
-import { convertToSeconds } from "../../utils/handler";
+import { checkHEVC, convertToSeconds } from "../../utils/handler";
 
 export async function buildFFmpegCommand(
   options: LiveOptions & StreamAddress & { totalTime: number }
@@ -35,7 +35,7 @@ export async function buildFFmpegCommand(
   let inputOptions;
   let outputOptions;
   let output;
-
+  const isHEVC = await checkHEVC(options.sourcePath);
   if (options.is_video_style == 1) {
     inputOptions = [
       "-re",
@@ -70,7 +70,7 @@ export async function buildFFmpegCommand(
       "0:s:0?",
       "-qp",
       "20",
-      "-f",
+      isHEVC ? "mpegts" : "flv",
       "flv",
     ];
     output = `${options.streaming_address}${options.streaming_code}`;
@@ -82,7 +82,8 @@ export async function buildFFmpegCommand(
       `${options.fileType === "m3u8" && "-stream_loop"}`,
       `${options.fileType === "m3u8" && "-1"}`,
     ];
-    outputOptions = ["-c", "copy", "-f", "flv"];
+    // outputOptions = ["-c", "copy", "-f", "flv"];
+    outputOptions = ["-c", "copy", "-f", isHEVC ? "mpegts" : "flv"];
     output = `${options.streaming_address}${options.streaming_code}`;
   }
 

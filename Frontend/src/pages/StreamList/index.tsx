@@ -123,6 +123,7 @@ const StreamList: FC = () => {
     setBilibiliLoginVerificationInformation,
   ] = useState<null | { qr_code: string; qrcode_key: string }>(null);
   const [addr, setAddr] = useState<any>(null);
+  const [isSrt, setIsSrt] = useState(2);
   const [form] = Form.useForm();
   const queryList = async () => {
     const {
@@ -181,6 +182,7 @@ const StreamList: FC = () => {
     {
       title: "直播地址",
       dataIndex: "streaming_address",
+      ellipsis: true,
     },
     {
       title: "直播码",
@@ -311,7 +313,7 @@ const StreamList: FC = () => {
           type: "input",
           placeholder: "请输入直播地址",
           disabled: true,
-          defaultValue: addr.rtmp.addr,
+          defaultValue: isSrt === 1 ? addr.srt.addr : addr.rtmp.addr,
         },
         {
           label: "推流码",
@@ -320,7 +322,7 @@ const StreamList: FC = () => {
           type: "input",
           placeholder: "请输入直播码",
           disabled: true,
-          defaultValue: addr.rtmp.code,
+          defaultValue: isSrt === 1 ? addr.srt.code : addr.rtmp.code,
         },
         {
           label: "分区",
@@ -338,6 +340,14 @@ const StreamList: FC = () => {
           type: "switch",
           defaultValue: editData?.start_broadcasting,
           tooltip: "开启后，将监控直播间状态，如果被封禁，在解封后会自动开播",
+        },
+        {
+          label: "使用srt地址",
+          disabled: !!editData,
+          field: "isSrt",
+          type: "switch",
+          defaultValue: editData?.isSrt,
+          tooltip: "直播源编码如是HEVC，必须开启此项",
         }
       );
     } else {
@@ -348,8 +358,9 @@ const StreamList: FC = () => {
         type: "image",
       });
     }
+    console.log(isSrt, addr, "isSrt");
     return FromItemData;
-  }, [editVisible, platform, addr, areaList]);
+  }, [editVisible, platform, addr, areaList, isSrt]);
   const getFormElement = (item: FormItemData) => {
     switch (item.type) {
       case "input":
@@ -389,6 +400,14 @@ const StreamList: FC = () => {
         return (
           <Switch
             defaultChecked={editData ? item.defaultValue === 1 : false}
+            onChange={(value) => {
+              form.setFieldsValue({
+                ...form.getFieldsValue(),
+                streaming_address: value ? addr.srt.addr : addr.rtmp.addr,
+                streaming_code: value ? addr.srt.code : addr.rtmp.code,
+              });
+              setIsSrt(value ? 1 : 2);
+            }}
             disabled={item.disabled}
           />
         );
@@ -525,6 +544,7 @@ const StreamList: FC = () => {
       bilibiliLoginVerificationInformation,
       addr,
       areaList,
+      isSrt,
     ]
   );
 

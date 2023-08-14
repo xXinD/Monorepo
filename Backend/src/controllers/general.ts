@@ -3,7 +3,6 @@ import path from "path";
 import { asyncHandler, convertToSegments, getFontList } from "../utils/handler";
 import { reloadDb } from "../db";
 import { EmailService } from "../utils/sendEmail";
-import VideoProcessor from "../scripts/drawText";
 import MyWebSocketServer from "../utils/MyWebSocketServer";
 
 export async function getServerConfig(ctx: any) {
@@ -71,44 +70,6 @@ export async function getTheListOfSystemFonts(ctx: any) {
     ctx.body = {
       message: "查询字体列表成功",
       data: fontList,
-    };
-  }, "查询字体列表失败");
-}
-
-/**
- * 给视频添加水印
- *
- * @async
- * @returns {Object}
- * @throws {Error}
- * @param ctx
- */
-export async function postWatermarkToVideo(ctx: any) {
-  console.log(ctx.request.body);
-  const {
-    text,
-    outputPath,
-    source,
-    fontFile,
-    textSize,
-    textColor,
-    strokeColor,
-    strokeSize,
-  } = ctx.request.body;
-  await asyncHandler(async () => {
-    const videoProcessor = new VideoProcessor(outputPath)
-      .inputPath(source)
-      .setFontFile(fontFile)
-      .setFontSize(textSize)
-      .setFontColor(textColor)
-      .setBorderSize(strokeSize)
-      .setBorderColor(strokeColor);
-    if (text) {
-      videoProcessor.text(text);
-    }
-    videoProcessor.execute();
-    ctx.body = {
-      message: "查询字体列表成功",
     };
   }, "查询字体列表失败");
 }
