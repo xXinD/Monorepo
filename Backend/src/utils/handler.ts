@@ -299,10 +299,12 @@ export function convertToSegments(
       })
       .on("error", (err, stdout, stderr) => {
         console.error("Error:", err.message);
+        myWebSocketServer.sendMessage(`任务失败：${err.message}`);
         reject(err); // 这里拒绝Promise，告知发生错误
       })
       .on("end", () => {
         console.log("end");
+        myWebSocketServer.sendMessage("任务完成！");
       })
       .run();
   });

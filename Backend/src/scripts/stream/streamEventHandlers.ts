@@ -10,16 +10,18 @@ import { childProcesses, LiveOptions, updateLiveStreamStatus } from "./index";
 import { LiveStream } from "../../models/LiveStream";
 import { startLive } from "../../controllers/live";
 
+const lastLogTimes: Record<string, number> = {};
 export async function onData(
   options: LiveOptions & { totalTime: number },
   data: any
 ) {
-  console.log(data.toString());
   const ssSeconds = options.start_time
     ? convertToSeconds(options.start_time) % options.totalTime
     : convertToSeconds("00:00:00");
   const interval = 30000; // 30 seconds in milliseconds
-  let lastLogTime = Date.now();
+  const lastLogTime = lastLogTimes[options.unique_id];
+  const now = Date.now();
+
   const hasError = liveMismatching.some((keyword) => data.includes(keyword));
   if (hasError) {
     Sentry.setContext("streaming", {
@@ -32,30 +34,27 @@ export async function onData(
       }
       await updateLiveStreamStatus(options.unique_id, 2);
     }, "直播间被封禁");
-  } else {
-    const now = Date.now();
-    if (now - lastLogTime >= interval) {
-      const liveSteam = await LiveStream.findById(options.unique_id);
-      const logString = data.toString();
-      const timeRegex = /time=(\d{2}:\d{2}:\d{2}.\d{2})/;
-      const match = logString.match(timeRegex);
+  } else if (lastLogTime === undefined || now - lastLogTime >= interval) {
+    const liveSteam = await LiveStream.findById(options.unique_id);
+    const logString = data.toString();
+    const timeRegex = /time=(\d{2}:\d{2}:\d{2}.\d{2})/;
+    const match = logString.match(timeRegex);
 
-      let timeValue;
-      if (match) {
-        [, timeValue] = match; // 直接为已声明的变量赋值
-        const currentSeconds = convertToSeconds(timeValue);
-        try {
-          await LiveStream.update(options.unique_id, {
-            ...liveSteam,
-            start_time: secondsToHMS(ssSeconds + currentSeconds),
-          });
-        } catch (error) {
-          console.error("修改直播进度出错:", error);
-        }
-        lastLogTime = now;
-      } else {
-        console.log("No match found");
+    let timeValue;
+    if (match) {
+      [, timeValue] = match; // 直接为已声明的变量赋值
+      const currentSeconds = convertToSeconds(timeValue);
+      try {
+        await LiveStream.update(options.unique_id, {
+          ...liveSteam,
+          start_time: secondsToHMS(ssSeconds + currentSeconds),
+        });
+      } catch (error) {
+        console.error("修改直播进度出错:", error);
       }
+      lastLogTimes[options.unique_id] = now; // 更新时间戳
+    } else {
+      console.log("No match found");
     }
   }
 }
@@ -97,6 +96,7 @@ export async function onExit(options: LiveOptions, code?: number) {
 
 export async function onSpawn(options: LiveOptions & { totalTime: number }) {
   await asyncHandler(async () => {
+    lastLogTimes[options.unique_id] = Date.now();
     // 更新直播状态为 'running'
     const live = await LiveStream.findById(options.unique_id);
     if (!live) {
