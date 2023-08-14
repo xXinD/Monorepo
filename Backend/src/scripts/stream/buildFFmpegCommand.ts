@@ -34,7 +34,19 @@ export async function buildFFmpegCommand(
   let outputOptions;
   let output;
 
-  if (options.is_video_style == 1) {
+  if (options.fileType === "playlist") {
+    inputOptions = [
+      "-re",
+      "-ss",
+      `${start_time}`,
+      "-f",
+      "concat",
+      "-safe",
+      "0",
+    ];
+    outputOptions = ["-c", "copy", "-f", "flv"];
+    output = `${options.streaming_address}${options.streaming_code}`;
+  } else if (options.is_video_style == 1) {
     inputOptions = [
       "-re",
       "-y",

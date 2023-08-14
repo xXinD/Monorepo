@@ -75,13 +75,56 @@ export async function getTotalFrames(filePath: string) {
 // 获取视频总时长
 export async function getTotalDuration(filePath: string) {
   return new Promise((resolve, reject) => {
-    ffmpeg.ffprobe(filePath, (err, metadata) => {
+    fs.stat(filePath, (err, stats) => {
       if (err) {
         reject(err);
         return;
       }
-      const videoDuration = metadata.streams[0].duration;
-      resolve(videoDuration);
+
+      if (stats.isFile()) {
+        ffmpeg.ffprobe(filePath, (err, metadata) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          const videoDuration = metadata.streams[0]?.duration || 0;
+          resolve(videoDuration);
+        });
+      } else if (stats.isDirectory()) {
+        let totalDuration = 0;
+        fs.readdir(filePath, (err, files) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          const videoFiles = files.filter((file) => {
+            // 你可以根据需要添加或删除支持的视频格式
+            const videoExtensions = [".mp4", ".avi", ".mkv", ".flv", ".mov"];
+            return videoExtensions.includes(path.extname(file).toLowerCase());
+          });
+
+          let videoFileCount = videoFiles.length;
+          if (videoFileCount === 0) resolve(0);
+
+          videoFiles.forEach((file) => {
+            const fullPath = path.join(filePath, file);
+            ffmpeg.ffprobe(fullPath, (err, metadata) => {
+              if (err) {
+                reject(err);
+                return;
+              }
+              // 将时长转换为数字
+              const videoDuration = parseFloat(
+                metadata.streams[0]?.duration || "0"
+              );
+              totalDuration += videoDuration;
+              if (--videoFileCount === 0) resolve(totalDuration);
+            });
+          });
+        });
+      } else {
+        reject(new Error("路径既不是文件也不是文件夹"));
+      }
     });
   });
 }
@@ -307,5 +350,43 @@ export function convertToSegments(
         myWebSocketServer.sendMessage("任务完成！");
       })
       .run();
+  });
+}
+
+// 生成concat可用的txt
+export async function generateConcatFile(folderPath: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    // 定义支持的视频扩展名
+    const videoExtensions = [".mp4", ".avi", ".mkv", ".flv", ".mov"];
+
+    fs.readdir(folderPath, (err, files) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      // 筛选视频文件
+      const videoFiles = files.filter((file) =>
+        videoExtensions.includes(path.extname(file).toLowerCase())
+      );
+
+      // 创建文件的完整路径
+      const playlists = path.resolve(process.cwd(), "./playlists/");
+      if (!fs.existsSync(playlists)) {
+        fs.mkdirSync(playlists);
+      }
+      const concatFilePath = path.join(playlists, "filepath.txt");
+      const writeStream = fs.createWriteStream(concatFilePath);
+
+      // 写入文件
+      videoFiles.forEach((file) => {
+        const fullPath = path.join(folderPath, file).replace(/\\/g, "\\\\");
+        writeStream.write(`file '${fullPath}'\n`);
+      });
+
+      writeStream.end(() => {
+        resolve(concatFilePath);
+      });
+    });
   });
 }

@@ -44,8 +44,12 @@ const fileTypeOptions = [
     value: "video",
   },
   {
-    label: "播放列表",
+    label: "m3u8文件列表",
     value: "m3u8",
+  },
+  {
+    label: "播放列表",
+    value: "playlist",
   },
   {
     label: "拉流地址",
@@ -100,7 +104,9 @@ const ResourcesList: FC = () => {
           case "pull_address":
             return <Tag color="#168cff">转发流</Tag>;
           case "m3u8":
-            return <Tag color="#509770">播放列表</Tag>;
+            return <Tag color="#509770">m3u8文件列表</Tag>;
+          case "playlist":
+            return <Tag color="#7816ff">播放列表</Tag>;
           default:
             return <Tag color="#7816ff">Unknown</Tag>;
         }
