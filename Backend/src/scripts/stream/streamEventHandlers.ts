@@ -9,6 +9,7 @@ import redisClient from "../../utils/redisClient";
 import { childProcesses, LiveOptions, updateLiveStreamStatus } from "./index";
 import { LiveStream } from "../../models/LiveStream";
 import { startLive } from "../../controllers/live";
+import { StreamAddress } from "../../models/StreamAdress";
 
 const lastLogTimes: Record<string, number> = {};
 export async function onData(
@@ -34,7 +35,10 @@ export async function onData(
       }
       await updateLiveStreamStatus(options.unique_id, 2);
     }, "直播间被封禁");
-  } else if (lastLogTime === undefined || now - lastLogTime >= interval) {
+  } else if (
+    (lastLogTime === undefined || now - lastLogTime >= interval) &&
+    options.fileType !== "playlist"
+  ) {
     const liveSteam = await LiveStream.findById(options.unique_id);
     const logString = data.toString();
     const timeRegex = /time=(\d{2}:\d{2}:\d{2}.\d{2})/;
@@ -65,10 +69,12 @@ async function clearProcess(unique_id: string, status: number) {
   }
   await updateLiveStreamStatus(unique_id, status);
 }
-export async function onExit(options: LiveOptions, code?: number) {
+export async function onExit(
+  options: LiveOptions & StreamAddress & { totalTime: number }
+) {
   const isStopped = await redisClient.get(options.unique_id);
   // @ts-ignore
-  if (isStopped !== "true" && code === 0) {
+  if (isStopped !== "true") {
     const liveSteam = await LiveStream.findById(options.unique_id);
     try {
       await LiveStream.update(options.unique_id, {
