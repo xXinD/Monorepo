@@ -400,14 +400,18 @@ const StreamList: FC = () => {
         return (
           <Switch
             defaultChecked={editData ? item.defaultValue === 1 : false}
-            onChange={(value) => {
-              form.setFieldsValue({
-                ...form.getFieldsValue(),
-                streaming_address: value ? addr.srt.addr : addr.rtmp.addr,
-                streaming_code: value ? addr.srt.code : addr.rtmp.code,
-              });
-              setIsSrt(value ? 1 : 2);
-            }}
+            onChange={
+              item.field === "isSrt"
+                ? (value) => {
+                    form.setFieldsValue({
+                      ...form.getFieldsValue(),
+                      streaming_address: value ? addr.srt.addr : addr.rtmp.addr,
+                      streaming_code: value ? addr.srt.code : addr.rtmp.code,
+                    });
+                    setIsSrt(value ? 1 : 2);
+                  }
+                : undefined
+            }
             disabled={item.disabled}
           />
         );
