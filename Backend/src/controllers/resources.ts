@@ -9,7 +9,11 @@ import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import fs from "fs";
 import { Resources } from "../models/Resources";
 import { onData, onExit, onSpawn } from "../scripts/SRS_EventHandlers";
-import { getTotalDuration, getVideoDuration } from "../utils/handler";
+import {
+  generateM3U8,
+  getTotalDuration,
+  getVideoDuration,
+} from "../utils/handler";
 
 export const SRS_ChildProcesses = new Map<
   string,
@@ -97,10 +101,9 @@ export async function createResources(ctx: any) {
     let totalTime = 0;
     switch (data.file_type) {
       case "m3u8": {
-        // const { m3u8Path, totalDuration } = await generateM3U8(data.video_dir);
-        video_dir = data.video_dir;
-        // totalTime = totalDuration;
-        totalTime = 441;
+        const { m3u8Path, totalDuration } = await generateM3U8(data.video_dir);
+        video_dir = m3u8Path;
+        totalTime = totalDuration;
         break;
       }
       case "playlist":
