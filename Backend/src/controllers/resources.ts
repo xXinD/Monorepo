@@ -107,13 +107,11 @@ export async function createResources(ctx: any) {
         totalTime = (await getTotalDuration(data.video_dir)) as number;
         break;
       case "video":
-      case "audio": {
-        const totalDuration = await getVideoDuration(data.video_dir);
-        totalTime = totalDuration;
+        totalTime = await getVideoDuration(data.video_dir);
         break;
-      }
       default:
         totalTime = undefined;
+        break;
     }
 
     await Resources.create({
