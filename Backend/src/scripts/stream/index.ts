@@ -1,7 +1,6 @@
 import path from "path";
 import fs from "fs";
 import ffmpeg, { FfmpegCommand } from "fluent-ffmpeg";
-import { on } from "koa";
 import { LiveStream } from "../../models/LiveStream";
 import { asyncHandler } from "../../utils/handler";
 import redisClient from "../../utils/redisClient";

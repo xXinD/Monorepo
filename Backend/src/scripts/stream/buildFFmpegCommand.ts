@@ -70,8 +70,8 @@ export async function buildFFmpegCommand(
       "0:s:0?",
       "-qp",
       "20",
+      "-f",
       isHEVC ? "mpegts" : "flv",
-      "flv",
     ];
     output = `${options.streaming_address}${options.streaming_code}`;
   } else {
