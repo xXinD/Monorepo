@@ -26,7 +26,6 @@ RUN apt-get update && \
 
 
 RUN npm install -g pm2
-RUN npm install -g npm@latest
 RUN npm install -g typescript
 
 RUN npm install
