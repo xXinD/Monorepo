@@ -1,10 +1,25 @@
 import React, { useEffect, useRef } from "react";
 import createREGL from "regl";
+import createTransition from "regl-transition";
+import transitions from "gl-transitions";
 
 const VideoPlayer: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   let regl: any;
   let texture: any;
+  let transition: any;
+
+  console.log(transitions[0]);
+  const initTransition = (fromTexture: any, toTexture: any) => {
+    if (regl && !transition) {
+      transition = createTransition(regl, {
+        from: fromTexture,
+        to: toTexture,
+        transition: transitions[0],
+        duration: 1,
+      });
+    }
+  };
 
   const playVideo: (video: HTMLVideoElement) => void = (video) => {
     if (!regl) {
@@ -12,18 +27,16 @@ const VideoPlayer: React.FC = () => {
         canvas: canvasRef.current as HTMLCanvasElement,
       });
     }
-    texture = regl.texture({
+
+    const newTexture = regl.texture({
       width: video.videoWidth,
       height: video.videoHeight,
       format: "rgba",
     });
-    if (!texture) {
-      texture = regl.texture({
-        width: video.videoWidth,
-        height: video.videoHeight,
-        format: "rgba",
-      });
-    }
+
+    // initTransition(texture, newTexture);
+
+    texture = newTexture;
 
     const drawVideo = regl({
       frag: `
@@ -60,6 +73,9 @@ const VideoPlayer: React.FC = () => {
     });
 
     regl.frame(() => {
+      if (transition) {
+        transition.tick();
+      }
       texture.subimage(video);
       drawVideo();
     });
@@ -79,7 +95,6 @@ const VideoPlayer: React.FC = () => {
         playNextVideo();
       };
     });
-
   const playNextVideo: () => void = () => {
     if (regl) {
       // eslint-disable-next-line no-underscore-dangle
@@ -88,6 +103,7 @@ const VideoPlayer: React.FC = () => {
       regl = null;
       texture = null;
     }
+
     const nextVideoSrc = require("./2.mp4");
     loadVideo(nextVideoSrc).then((video) => {
       playVideo(video);
