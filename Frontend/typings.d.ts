@@ -14,3 +14,6 @@ declare module "*.svg" {
   const url: string;
   export default url;
 }
+declare module 'gl-transitions'
+declare module 'regl-transition'
+

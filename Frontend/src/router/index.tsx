@@ -5,6 +5,7 @@ import StreamList from "../pages/StreamList";
 import Setting from "../pages/Setting";
 import Watermark from "../pages/Watermark";
 import Playlist from "../pages/Playlist";
+import WebGL from "../pages/WebGL";
 
 export interface RouteConfig {
   path: string;
@@ -46,6 +47,12 @@ const routes = [
   {
     path: "/playlist",
     component: Playlist,
+    exact: true,
+    isProtected: false,
+  },
+  {
+    path: "/gl_transition",
+    component: WebGL,
     exact: true,
     isProtected: false,
   },

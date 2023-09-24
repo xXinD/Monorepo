@@ -62,6 +62,13 @@ module.exports = () => {
           type: "asset/resource",
         },
         {
+          test: /\.mp4$/,
+          type: "asset/resource",
+          generator: {
+            filename: "videos/[hash][ext][query]",
+          },
+        },
+        {
           enforce: "pre",
           test: /\.js$/,
           loader: "source-map-loader",

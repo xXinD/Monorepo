@@ -47,6 +47,7 @@ module.exports = {
     "prettier/prettier": ["error"],
     "jsx-a11y/media-has-caption": "off",
     eqeqeq: "off",
+    "import/no-extraneous-dependencies": "off",
   },
   overrides: [
     {

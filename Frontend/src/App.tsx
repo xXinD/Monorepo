@@ -57,6 +57,11 @@ const App: FC = () => {
           name: "生成播放列表",
           path: "playlist",
         },
+        {
+          key: "2_3",
+          name: "gl-transition",
+          path: "gl_transition",
+        },
       ],
     },
   ]) as any[];
