@@ -8,11 +8,13 @@ import streamAddressRoutes from "./streamAddressRoutes";
 import generalRoutes from "./generalRoutes";
 import bilibili_login from "./bilibiliRoutes/login";
 import bilibili_live from "./bilibiliRoutes/live";
+import FFCreatorRoutes from "./ffcreatorRoutes";
 
 const router = new Router();
 router.use(escapeParams);
 router.use("/live", liveRoutes.routes(), liveRoutes.allowedMethods());
 router.use("/general", generalRoutes.routes(), generalRoutes.allowedMethods());
+
 router.use(
   "/resources",
   resourcesRoutes.routes(),
@@ -31,4 +33,5 @@ router.use(
   bilibili_live.allowedMethods()
 );
 
+router.use("/ffCreator", FFCreatorRoutes.routes(), FFCreatorRoutes.allowedMethods());
 export default router;
